@@ -8,8 +8,13 @@ This is a general task list for project management.
 
 * [x] Define project scope and goals
 * [x] Create Product Requirements Document (PRD)
-* [x] Set up version control (e.g., Git repository)
-* [ ] Configure development environment
+* [x] Set up version control (Git repository)
+* [x] Configure development environment
+* [x] Initialize Angular 20 project
+* [x] Set up SCSS for styling
+* [x] Configure project structure and naming conventions
+* [x] Set up global styles and CSS reset
+* [x] Configure environment files for development and production
 * [ ] Set up Firebase Project with Authentication, Firestore, Cloud Functions and AppHosting
 
 ---
