@@ -28,7 +28,12 @@ This is a general task list for project management.
     * [x] Refine application header styling
     * [x] Add descriptive text to FileConverter component
     * [x] Clean up SCSS comments and remove unused _theme.scss
-* [ ] Develop CSV upload functionality (frontend input in place, backend logic pending)
+* [x] Develop CSV upload functionality (Initial frontend and backend for upload in place)
+    * [x] Create file input element in FileConverter component (UI only)
+    * [x] Implement file selection handling in FileConverter component (frontend)
+    * [x] Implement 'Convert' button action to upload selected file to Cloud Function (frontend)
+    * [x] Configure HttpClient for HTTP requests (using provideHttpClient)
+    * (Backend) [x] Create Cloud Function endpoint for file upload (basic file reception)
 * [ ] Implement data parsing and transformation logic
 * [ ] Create output generation (JSON/CSV)
 * [ ] Design database schema

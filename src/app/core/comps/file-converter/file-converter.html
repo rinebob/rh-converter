@@ -6,7 +6,7 @@
     <p class="app-description">Easily convert your Robinhood transaction CSVs into organized JSON and CSV files for use in other applications. Upload your file, and we'll transform it into clean, structured data. Transactions are automatically categorized into standard and dividend activity, with dates and numbers formatted for easy use.</p>
     <div class="file-input-container">
       <label for="file-upload" class="file-upload-label">Choose CSV file:</label>
-      <input id="file-upload" type="file" accept=".csv">
+      <input id="file-upload" type="file" accept=".csv" (change)="onFileSelected($event)">
     </div>
     <!-- Placeholder for conversion options -->
     <div class="conversion-options">
@@ -14,6 +14,6 @@
     </div>
   </mat-card-content>
   <mat-card-actions align="end">
-    <button mat-raised-button color="primary">Convert</button>
+    <button mat-raised-button color="primary" (click)="onConvertClicked()">Convert</button>
   </mat-card-actions>
 </mat-card>
