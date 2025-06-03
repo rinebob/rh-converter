@@ -1,81 +1,14 @@
-import { onRequest } from "firebase-functions/v2/https";
-import * as logger from "firebase-functions/logger";
-import * as BusboyModule from 'busboy'; // Aliased import for clarity
-
 /**
- * Handles CSV file uploads from the frontend.
- * Parses multipart/form-data to extract the file.
+ * Main entry point for all Firebase Functions.
+ * Each function should be defined in its own file and imported here.
  */
-export const uploadCsv = onRequest(
-  { cors: true }, // Enable CORS for all origins by default, can be configured more strictly
-  (request, response) => {
-    if (request.method === "OPTIONS") {
-      // Handle CORS preflight requests.
-      // política de CORS definida acima deve ser suficiente,
-      // mas podemos adicionar headers específicos se necessário.
-      response.status(204).send("");
-      return;
-    }
 
-    if (request.method !== "POST") {
-      response.status(405).send("Method Not Allowed");
-      return;
-    }
+import { uploadCsv } from './upload-csv';
 
-    // #Reason: Using busboy to parse multipart/form-data for file uploads.
-    // It handles the streaming data and emits events for files and fields.
-    const bb = BusboyModule.default({ headers: request.headers });
-    let fileData: Buffer[] = [];
-    let originalFileName = '';
-
-    // This event will be triggered for each file in the form.
-    bb.on('file', (fieldname: string, file: NodeJS.ReadableStream, info: BusboyModule.FileInfo) => {
-      const { filename, encoding, mimeType } = info;
-      logger.info(`File [${fieldname}]: filename: ${filename}, encoding: ${encoding}, mimeType: ${mimeType}`);
-      originalFileName = filename;
-
-      file.on('data', (data: Buffer) => {
-        logger.info(`File [${fieldname}] got ${data.length} bytes`);
-        fileData.push(data);
-      });
-
-      file.on('end', () => {
-        logger.info(`File [${fieldname}] Finished`);
-      });
-
-      file.on('error', (err: Error) => {
-        logger.error(`File [${fieldname}] Error:`, err);
-      });
-    });
-
-    // This event will be triggered when all parts have been processed.
-    bb.on('finish', () => {
-      if (originalFileName && fileData.length > 0) {
-        const fullFile = Buffer.concat(fileData);
-        logger.info(`Received file ${originalFileName} with size ${fullFile.length} bytes.`);
-        // TODO: Actual file processing logic will go here (e.g., save to GCS, parse CSV)
-        response.status(200).json({ 
-          message: `File '${originalFileName}' uploaded successfully. Size: ${fullFile.length} bytes.`,
-          filename: originalFileName,
-          size: fullFile.length
-        });
-      } else {
-        logger.warn('No file was uploaded or file data is empty.');
-        response.status(400).json({ message: 'No file uploaded or file is empty.' });
-      }
-    });
-
-    bb.on('error', (err: Error) => {
-      logger.error('Busboy error:', err);
-      response.status(500).json({ message: 'Error processing file upload.', error: err.message });
-    });
-
-    // Pipe the request to busboy for processing.
-    // For Node.js v10+ environments (like Firebase Functions), request is already a readable stream.
-    if (request.rawBody) {
-      bb.end(request.rawBody);
-    } else {
-      request.pipe(bb);
-    }
-  }
-);
+// Export all functions for Firebase to discover and deploy.
+export {
+  uploadCsv,
+  // Add other functions here as they are created, e.g.:
+  // anotherFunction,
+  // yetAnotherFunction
+};
