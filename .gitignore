@@ -40,3 +40,5 @@ testem.log
 # System files
 .DS_Store
 Thumbs.db
+functions/firebase-debug.log
+src/assets/txns_250402-250415.csv
