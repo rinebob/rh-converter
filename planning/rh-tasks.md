@@ -15,20 +15,27 @@ This is a general task list for project management.
 * [x] Configure project structure and naming conventions
 * [x] Set up global styles and CSS reset
 * [x] Configure environment files for development and production
-* [ ] Set up Firebase Project with Authentication, Firestore, Cloud Functions and AppHosting
+* [x] Add Angular CDK and @angular-devkit/build-angular@20.0.0 to the project
+* [x] Set up Firebase Project with Authentication, Firestore, Cloud Functions and AppHosting
+* [x] Resolve Firebase App Hosting build failures
 
 ---
 
 ## Phase 2: Development
-* [ ] Build user interface for conversion
-* [ ] Design database schema
-* [ ] Implement user authentication
-* [ ] Develop CSV upload functionality
+* [x] Build user interface for conversion (FileConverter component, Material styling, descriptive text)
+    * [x] Integrate Angular Material with prebuilt azure-blue theme
+    * [x] Style FileConverter component (card, header, content, input areas)
+    * [x] Refine application header styling
+    * [x] Add descriptive text to FileConverter component
+    * [x] Clean up SCSS comments and remove unused _theme.scss
+* [ ] Develop CSV upload functionality (frontend input in place, backend logic pending)
 * [ ] Implement data parsing and transformation logic
 * [ ] Create output generation (JSON/CSV)
-* [ ] Integrate payment gateway (Stripe)
-* [ ] Implement free tier limit enforcement
+* [ ] Design database schema
+* [ ] Implement user authentication
 * [ ] Develop subscription management features
+* [ ] Implement free tier limit enforcement
+* [ ] Integrate payment gateway (Stripe)
 
 ---
 

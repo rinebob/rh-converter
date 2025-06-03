@@ -1,6 +1,6 @@
 /* Global Styles and Reset */
 
-// Base colors
+// Base colors (can be kept for non-Material components or overridden by Material theme)
 $primary-color: #2c3e50;
 $background-color: #f5f7fa;
 $text-color: #2c3e50;
@@ -62,8 +62,10 @@ html, body {
 }
 
 * {
-  color: $text-color;
   margin: 0;
   padding: 0;
   box-sizing: border-box;
 }
+
+html, body { height: 100%; }
+body { margin: 0; font-family: Roboto, "Helvetica Neue", sans-serif; }
