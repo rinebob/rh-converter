@@ -34,7 +34,12 @@ This is a general task list for project management.
     * [x] Implement 'Convert' button action to upload selected file to Cloud Function (frontend)
     * [x] Configure HttpClient for HTTP requests (using provideHttpClient)
     * (Backend) [x] Create Cloud Function endpoint for file upload (basic file reception)
-* [ ] Implement data parsing and transformation logic
+* [x] Implement data parsing and transformation logic
+    * [x] Create utility functions for CSV parsing and processing
+    * [x] Implement transaction type detection and processing
+    * [x] Handle different transaction types (dividends, recurring investments, etc.)
+    * [x] Implement error handling and validation
+    * [x] Create interfaces for strongly-typed data structures
 * [ ] Create output generation (JSON/CSV)
 * [ ] Design database schema
 * [ ] Implement user authentication

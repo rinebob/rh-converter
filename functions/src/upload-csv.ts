@@ -1,73 +1,98 @@
-import { onRequest } from "firebase-functions/v2/https";
-import * as logger from "firebase-functions/logger";
-import * as BusboyModule from 'busboy'; // Aliased import for clarity
+import { onRequest } from 'firebase-functions/v2/https';
+import { Request, Response } from './interfaces-fn';
+
+// Firebase Functions v2 handles CORS and request parsing automatically
+import { 
+  processDividendTransaction, 
+  processRecord,
+  parseCSV,
+  handleError,
+  sendSuccessResponse,
+  handleFileUpload
+} from './utils-fn';
 
 /**
  * Handles CSV file uploads from the frontend.
  * Parses multipart/form-data to extract the file.
  */
+/**
+ * Cloud Function to handle CSV file uploads and process transaction data
+ */
 export const uploadCsv = onRequest(
-  { cors: true }, // Enable CORS for all origins by default, can be configured more strictly
-  (request, response) => {
-    if (request.method === "OPTIONS") {
-      // Handle CORS preflight requests.
-      response.status(204).send("");
+  { cors: true },
+  async (request: Request, response: Response) => {
+    // Handle CORS preflight requests
+    if (request.method === 'OPTIONS') {
+      response.status(204).send('');
       return;
     }
 
-    if (request.method !== "POST") {
-      response.status(405).send("Method Not Allowed");
+    // Only allow POST requests
+    if (request.method !== 'POST') {
+      response.status(405).send('Method Not Allowed');
       return;
     }
 
-    const bb = BusboyModule.default({ headers: request.headers });
-    let fileData: Buffer[] = [];
-    let originalFileName = '';
+    try {
+      // Process the file using the utility function
+      const { fileData, originalFileName } = await handleFileUpload(request);
+      
+      console.log(`fn uC Received file ${originalFileName} with size ${fileData.length} bytes.`);
 
-    bb.on('file', (fieldname: string, file: NodeJS.ReadableStream, info: BusboyModule.FileInfo) => {
-      const { filename, encoding, mimeType } = info;
-      logger.info(`File [${fieldname}]: filename: ${filename}, encoding: ${encoding}, mimeType: ${mimeType}`);
-      originalFileName = filename;
+      const standardTransactions: Record<string, any>[] = [];
+      const dividendTransactions: Record<string, any>[] = [];
+      
+      const fileContentString = fileData.toString('utf-8');
+      
+      // Parse the CSV content using our utility function
+      const records = await parseCSV(fileContentString);
 
-      file.on('data', (data: Buffer) => {
-        logger.info(`File [${fieldname}] got ${data.length} bytes`);
-        fileData.push(data);
-      });
+      console.log(`fn uC Parsed ${records.length} records from CSV.`);
 
-      file.on('end', () => {
-        logger.info(`File [${fieldname}] Finished`);
-      });
+      let validRecordCount = 0;
 
-      file.on('error', (err: Error) => {
-        logger.error(`File [${fieldname}] Error:`, err);
-      });
-    });
+      for (const record of records) {
+        // Process the record using helper functions
+        const processedRecord = processRecord(record);
+        
+        // Skip null records (empty or footer)
+        if (!processedRecord) {
+          console.log('fn uC Skipping empty or footer record');
+          continue;
+        }
+        
+        validRecordCount++;
+        
+        // console.log(`fn uC [${validRecordCount}/${records.length}] Processing record:`, {
+        //   rawRecord: record,
+        //   processedRecord
+        // });
 
-    bb.on('finish', () => {
-      if (originalFileName && fileData.length > 0) {
-        const fullFile = Buffer.concat(fileData);
-        logger.info(`Received file ${originalFileName} with size ${fullFile.length} bytes.`);
-        // TODO: Actual file processing logic will go here (e.g., save to GCS, parse CSV)
-        response.status(200).json({ 
-          message: `File '${originalFileName}' uploaded successfully. Size: ${fullFile.length} bytes.`,
-          filename: originalFileName,
-          size: fullFile.length
-        });
-      } else {
-        logger.warn('No file was uploaded or file data is empty.');
-        response.status(400).json({ message: 'No file uploaded or file is empty.' });
+        // Categorize transaction based on transaction code
+        const transactionType = (processedRecord['Trans Code'] || '').toString().trim().toUpperCase();
+        console.log(`fn uC Transaction type: '${transactionType}'`);
+        
+        if (transactionType === 'CDIV') {
+          console.log('fn uC Found CDIV transaction, processing...');
+          // Process dividend-specific fields
+          processDividendTransaction(processedRecord);
+          dividendTransactions.push(processedRecord);
+          console.log('fn uC CDIV transaction processed successfully');
+        } else {
+          console.log('fn uC Standard transaction, adding to standardTransactions');
+          standardTransactions.push(processedRecord);
+        }
       }
-    });
-
-    bb.on('error', (err: Error) => {
-      logger.error('Busboy error:', err);
-      response.status(500).json({ message: 'Error processing file upload.', error: err.message });
-    });
-
-    if (request.rawBody) {
-      bb.end(request.rawBody);
-    } else {
-      request.pipe(bb);
+      
+      sendSuccessResponse(response, {
+        standardTransactions,
+        dividendTransactions,
+        originalFileName,
+        message: `Successfully processed ${standardTransactions.length} standard transactions and ${dividendTransactions.length} dividend transactions`
+      });
+      
+    } catch (error) {
+      handleError(error, response, 'processing file upload');
     }
   }
 );
