@@ -1,7 +1,12 @@
-import { Component, inject } from '@angular/core';
-import { HttpClient } from '@angular/common/http';
-import { MatCardModule } from '@angular/material/card';
+import { Component, inject, OnInit, signal, computed } from '@angular/core';
+import { CommonModule } from '@angular/common';
+import { FormBuilder, FormControl, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
 import { MatButtonModule } from '@angular/material/button';
+import { MatCardModule } from '@angular/material/card';
+import { MatIconModule } from '@angular/material/icon';
+import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
+import { MatRadioModule } from '@angular/material/radio';
+import { HttpClient } from '@angular/common/http';
 import { CLOUD_FUNCTION_URLS } from '../../constants';
 
 /**
@@ -10,14 +15,74 @@ import { CLOUD_FUNCTION_URLS } from '../../constants';
  */
 @Component({
   selector: 'rh-file-converter',
-  imports: [MatCardModule, MatButtonModule],
+  imports: [
+    CommonModule,
+    ReactiveFormsModule,
+    MatButtonModule,
+    MatCardModule,
+    MatIconModule,
+    MatProgressSpinnerModule,
+    MatRadioModule
+  ],
   templateUrl: './file-converter.html',
   styleUrl: './file-converter.scss'
 })
-export class FileConverter {
+export class FileConverter implements OnInit {
   private http = inject(HttpClient);
+  private fb = inject(FormBuilder);
+  
+  // Form group with typed form controls
+  form = this.fb.group({
+    fileInput: [null as File | null, [Validators.required]],
+    downloadFormat: ['json' as 'json' | 'csv' | 'both']
+  });
+  
+  // Typed form controls
+  get fileInput() { return this.form.get('fileInput')!; }
+  get downloadFormat() { return this.form.get('downloadFormat')! as FormControl<'json' | 'csv' | 'both'>; }
+  
+  // State
   selectedFile: File | null = null;
+  isProcessing = signal(false);
   readonly cloudFunctionUrl = CLOUD_FUNCTION_URLS.UPLOAD_CSV;
+  
+  // Button disabled state based on form status and processing state
+  isButtonDisabled = signal(true);
+  
+  // Update button state based on file selection and processing state
+  private updateButtonState() {
+    const shouldDisable = !this.selectedFile || this.isProcessing();
+    this.isButtonDisabled.set(shouldDisable);
+    
+    console.log('Button state updated:', {
+      disabled: shouldDisable,
+      hasFile: !!this.selectedFile,
+      isProcessing: this.isProcessing()
+    });
+  }
+  
+  // Available download formats
+  readonly formats = [
+    { value: 'json', label: 'JSON' },
+    { value: 'csv', label: 'CSV' },
+    { value: 'both', label: 'Both' }
+  ] as const;
+
+  ngOnInit(): void {
+    // Initial button state
+    this.updateButtonState();
+    
+    // Update button state when file selection changes
+    this.fileInput.valueChanges.subscribe(() => {
+      this.updateButtonState();
+    });
+    
+    // Initial log
+    console.log('Form initialized', {
+      hasFile: !!this.selectedFile,
+      isProcessing: this.isProcessing()
+    });
+  }
 
   /**
    * Handles the file selection event from the input field.
@@ -25,50 +90,155 @@ export class FileConverter {
    */
   onFileSelected(event: Event): void {
     const input = event.target as HTMLInputElement;
+    
     if (input.files && input.files.length > 0) {
       this.selectedFile = input.files[0];
-      // #Reason: Logging selected file for debugging purposes during development.
-      console.log('File selected:', this.selectedFile.name);
+      this.fileInput.setValue(this.selectedFile, { emitEvent: true });
     } else {
       this.selectedFile = null;
+      this.fileInput.setValue(null, { emitEvent: true });
+    }
+    
+    // Update button state
+    this.updateButtonState();
+  }
+  
+  /**
+   * Handles the 'Convert' button click and initiates file processing
+   */
+  onConvertClicked(): void {
+    if (this.isButtonDisabled() || !this.selectedFile) {
+      console.warn('Cannot process file. Invalid state:', {
+        isButtonDisabled: this.isButtonDisabled(),
+        selectedFile: !!this.selectedFile,
+        isProcessing: this.isProcessing()
+      });
+      return;
+    }
+    
+    this.isProcessing.set(true);
+    this.updateButtonState();
+    
+    try {
+      const format = this.downloadFormat.value as 'json' | 'csv' | 'both';
+      this.processFile(format);
+    } catch (error) {
+      console.error('Error processing file:', error);
+      this.isProcessing.set(false);
+      this.updateButtonState();
     }
   }
 
   /**
-   * Handles the 'Convert' button click.
-   * Uploads the selected file to the Cloud Function.
+   * Handles the download of a file from a blob
+   * @param blob The blob to download
+   * @param filename The name of the file to download
    */
-  onConvertClicked(): void {
+  private downloadFile(blob: Blob, filename: string): void {
+    try {
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = filename;
+      document.body.appendChild(a);
+      a.click();
+      window.URL.revokeObjectURL(url);
+      document.body.removeChild(a);
+      
+      console.log('File download initiated:', { filename, size: blob.size });
+    } catch (error) {
+      console.error('Error downloading file:', error);
+      throw error;
+    }
+  }
+
+  /**
+   * Processes the selected file and triggers the download
+   * @param format The format to download the file in ('json' | 'csv' | 'both')
+   */
+  private processFile(format: 'json' | 'csv' | 'both'): void {
     if (!this.selectedFile) {
-      // #Reason: Logging error for debugging and providing feedback if no file is selected.
-      console.error('No file selected.');
-      // TODO: Implement user-friendly message (e.g., Angular Material Snackbar)
+      console.error('No file selected');
+      this.isProcessing.set(false);
+      this.updateButtonState();
       return;
     }
-
+    
     const formData = new FormData();
-    formData.append('file', this.selectedFile, this.selectedFile.name);
-
-    // #Reason: Logging upload target for debugging.
-    console.log('Uploading file to:', this.cloudFunctionUrl);
-
-    // #Reason: Using HttpClient to send a POST request with FormData,
-    // # which is the standard way to upload files. The response/error/completion
-    // # is logged for now; will be replaced with user-facing feedback.
-    this.http.post(this.cloudFunctionUrl, formData).subscribe({
+    formData.append('file', this.selectedFile);
+    
+    const url = new URL(this.cloudFunctionUrl);
+    url.searchParams.append('format', format);
+    
+    // Get the original filename without extension
+    const originalName = this.selectedFile.name.replace(/\.csv$/i, '');
+    const timestamp = new Date().toISOString().replace(/[:.]/g, '-');
+    
+    console.log('Sending file to server...', {
+      url: url.toString(),
+      format,
+      fileName: this.selectedFile.name,
+      originalName,
+      timestamp
+    });
+    
+    this.http.post(url.toString(), formData, { 
+      responseType: 'blob',
+      observe: 'response',
+      headers: {
+        'Accept': 'application/zip, application/json, text/csv',
+        'Cache-Control': 'no-cache',
+        'Pragma': 'no-cache'
+      },
+      withCredentials: false
+    }).subscribe({
       next: (response) => {
-        console.log('Upload successful:', response);
-        // TODO: Handle successful upload (e.g., show success message, display results)
+        console.log('Received response from server');
+        
+        if (!response.body) {
+          throw new Error('Empty response from server');
+        }
+
+        // Get the filename from Content-Disposition header
+        const contentDisposition = response.headers.get('Content-Disposition');
+        if (!contentDisposition) {
+          throw new Error('Missing Content-Disposition header in response');
+        }
+        
+        const matches = /filename[^;=\n]*=((['"]).*?\2|[^;\n]*)/i.exec(contentDisposition);
+        if (!matches?.[1]) {
+          throw new Error('Invalid Content-Disposition header format');
+        }
+        
+        const filename = matches[1].replace(/['"]/g, '');
+
+        // Create a blob with the correct content type
+        const blob = new Blob([response.body], { 
+          type: response.headers.get('Content-Type') || 'application/octet-stream' 
+        });
+
+        console.log('Initiating file download:', { 
+          filename, 
+          type: blob.type,
+          size: blob.size 
+        });
+        
+        this.downloadFile(blob, filename);
       },
       error: (error) => {
         console.error('Upload failed:', error);
-        // TODO: Handle upload error (e.g., show error message)
       },
       complete: () => {
-        console.log('Upload request completed.');
+        console.log('File processing complete');
+        this.isProcessing.set(false);
+        this.selectedFile = null;
+        
+        // Reset the file input
+        const fileInput = document.querySelector('input[type="file"]') as HTMLInputElement;
+        if (fileInput) {
+          fileInput.value = '';
+        }
       }
     });
   }
-
-
 }

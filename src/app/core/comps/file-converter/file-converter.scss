@@ -1,22 +1,41 @@
+// Visually hide elements but keep them accessible
+.visually-hidden {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+
 .file-converter-card {
-  max-width: 600px;
+  max-width: 800px;
   margin: 1.5rem auto; 
-  padding: 1.5rem; 
-  box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2); 
+  padding: 2rem; 
+  box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+  position: relative;
+  border-radius: 8px;
+  overflow: hidden;
 
   .mat-mdc-card-header {
     display: flex;
     flex-direction: column;
     align-items: center;
     text-align: center;
-    padding-bottom: 2rem;
+    padding: 0 0 1.5rem 0;
+    margin-bottom: 1.5rem;
+    border-bottom: 1px solid #eee;
   }
 
   .mat-mdc-card-title {
     font-size: 1.8rem;
     font-weight: 500;
     margin-bottom: 0.5rem;
-    line-height: 1.3; 
+    line-height: 1.3;
+    color: #2c3e50;
   }
 
   .mat-mdc-card-subtitle {
@@ -25,57 +44,163 @@
   }
 
   .mat-mdc-card-content {
-    padding-top: 0;
-  }
-}
-
-.app-description {
-  margin-bottom: 1.5rem; 
-}
-
-.file-input-container {
-  margin-bottom: 2rem;
-  padding: 1.5rem;
-  border: 1px dashed #ccc;
-  border-radius: 8px;
-  background-color: #f9f9f9;
-  text-align: center;
-
-  label.file-upload-label {
-    display: block;
-    margin-bottom: 1rem;
-    font-weight: 500;
-    font-size: 1.1rem;
-    color: #333;
+    padding: 1.5rem 0;
   }
 
-  input[type="file"] {
-    width: 100%;
-    padding: 0.75rem;
-    border: 1px solid #ddd;
-    border-radius: 4px;
-    background-color: #fff;
+  .app-description {
+    margin-bottom: 2rem;
+    color: #555;
+    line-height: 1.7;
+    font-size: 1.05rem;
+  }
+
+  .file-input-container {
+    margin: 2rem 0;
+    display: flex;
+    flex-direction: column;
+    gap: 1.5rem;
+    align-items: center;
+    padding: 2rem;
+    border: 2px dashed #ddd;
+    border-radius: 8px;
+    background-color: #f9f9f9;
+    transition: all 0.3s ease;
+
+    &:hover {
+      border-color: #007bff;
+      background-color: #f0f7ff;
+    }
+
+    input[type="file"] {
+      display: none;
+    }
+
+    button {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      padding: 0.75rem 1.5rem;
+      font-weight: 500;
+      transition: all 0.2s ease;
+
+      &:hover {
+        transform: translateY(-1px);
+        box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+      }
+    }
+  }
+
+  .download-format-section {
+    margin: 2.5rem 0;
+    padding: 1.5rem;
+    border: 1px solid #e0e0e0;
+    border-radius: 8px;
+    background-color: #f9f9f9;
+
+    .format-title {
+      margin: 0 0 1.25rem 0;
+      font-size: 1.1rem;
+      color: #2c3e50;
+      font-weight: 600;
+    }
+
+    .format-options {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 1.5rem;
+      align-items: center;
+
+      .mdc-form-field {
+        margin: 0;
+        display: flex;
+        align-items: center;
+      }
+
+      .mdc-radio {
+        margin-right: 0.5rem;
+      }
+    }
+  }
+
+  .action-buttons {
+    margin-top: 2.5rem;
+    text-align: right;
+
+    .convert-button {
+      min-width: 220px;
+      height: 48px;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 10px;
+      padding: 0 28px;
+      font-size: 1rem;
+      font-weight: 500;
+      border-radius: 6px;
+      transition: all 0.2s ease;
+
+      &:hover:not([disabled]) {
+        transform: translateY(-1px);
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+      }
+
+      .spinner {
+        margin-right: 8px;
+      }
+    }
+  }
+
+  .loading-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background-color: rgba(255, 255, 255, 0.9);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    z-index: 1000;
+    gap: 1.5rem;
+    text-align: center;
+    padding: 2rem;
+    backdrop-filter: blur(2px);
+
+    p {
+      margin-top: 1rem;
+      font-size: 1.1rem;
+      color: #2c3e50;
+      font-weight: 500;
+      max-width: 400px;
+      line-height: 1.6;
+    }
   }
 }
 
 .conversion-options {
-  margin-bottom: 2rem;
-  padding: 1rem;
-  border-left: 3px solid #007bff;
-  background-color: #eef7ff;
-  text-align: left;
+  margin: 2rem 0;
+  padding: 1.25rem;
+  border-left: 4px solid #007bff;
+  background-color: #f0f8ff;
+  border-radius: 0 6px 6px 0;
+
   p {
-    font-style: normal;
-    color: #444;
+    margin: 0;
+    color: #2c3e50;
     font-size: 0.95rem;
-    line-height: 1.6;
+    line-height: 1.7;
   }
 }
 
 mat-card-actions {
   display: flex;
   justify-content: flex-end;
-  padding-top: 1rem;
+  padding: 1.25rem 0 0;
+  margin-top: 1.5rem;
   border-top: 1px solid #eee;
-  margin-top: 1rem;
+
+  button {
+    margin-left: 0.75rem;
+  }
 }
