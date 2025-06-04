@@ -1,13 +1,15 @@
-import { Component, inject, OnInit, signal, computed } from '@angular/core';
+import { Component, OnInit, inject, signal, computed } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormBuilder, FormControl, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
 import { MatButtonModule } from '@angular/material/button';
 import { MatCardModule } from '@angular/material/card';
+import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatIconModule } from '@angular/material/icon';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { MatRadioModule } from '@angular/material/radio';
 import { HttpClient } from '@angular/common/http';
 import { CLOUD_FUNCTION_URLS } from '../../constants';
+import { DownloadFormat } from '@shared/enums';
 
 /**
  * JSDoc for FileConverter component
@@ -34,12 +36,12 @@ export class FileConverter implements OnInit {
   // Form group with typed form controls
   form = this.fb.group({
     fileInput: [null as File | null, [Validators.required]],
-    downloadFormat: ['json' as 'json' | 'csv' | 'both']
+    downloadFormat: [DownloadFormat.JSON]
   });
   
   // Typed form controls
   get fileInput() { return this.form.get('fileInput')!; }
-  get downloadFormat() { return this.form.get('downloadFormat')! as FormControl<'json' | 'csv' | 'both'>; }
+  get downloadFormat() { return this.form.get('downloadFormat')! as FormControl<DownloadFormat>; }
   
   // State
   selectedFile: File | null = null;
@@ -63,9 +65,9 @@ export class FileConverter implements OnInit {
   
   // Available download formats
   readonly formats = [
-    { value: 'json', label: 'JSON' },
-    { value: 'csv', label: 'CSV' },
-    { value: 'both', label: 'Both' }
+    { value: DownloadFormat.JSON, label: 'JSON' },
+    { value: DownloadFormat.CSV, label: 'CSV' },
+    { value: DownloadFormat.BOTH, label: 'Both' }
   ] as const;
 
   ngOnInit(): void {
@@ -120,7 +122,7 @@ export class FileConverter implements OnInit {
     this.updateButtonState();
     
     try {
-      const format = this.downloadFormat.value as 'json' | 'csv' | 'both';
+      const format = this.downloadFormat.value as DownloadFormat;
       this.processFile(format);
     } catch (error) {
       console.error('Error processing file:', error);
@@ -154,9 +156,9 @@ export class FileConverter implements OnInit {
 
   /**
    * Processes the selected file and triggers the download
-   * @param format The format to download the file in ('json' | 'csv' | 'both')
+   * @param format The format to download the file in
    */
-  private processFile(format: 'json' | 'csv' | 'both'): void {
+  private processFile(format: DownloadFormat): void {
     if (!this.selectedFile) {
       console.error('No file selected');
       this.isProcessing.set(false);

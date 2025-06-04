@@ -2,7 +2,10 @@ import { onRequest } from 'firebase-functions/v2/https';
 import { 
   Request, 
   Response, 
-  RecordType 
+  RecordType,
+  BaseHeader,
+  TransactionCode,
+  DownloadFormat 
 } from './interfaces-fn';
 import { convertToCsv } from './utils-fn';
 
@@ -81,15 +84,15 @@ export const uploadCsv = onRequest(
           validRecordCount++;
           
           // Categorize transaction based on transaction code - get it from the raw record
-          const transactionType = (record['Trans Code'] || '').toString().trim().toUpperCase();
-          const description = (processedRecord['Description'] || '').toString();
+          const transactionType = record[BaseHeader.TransCode]?.toString().trim().toUpperCase() || '';
+          const description = processedRecord.description?.toString() || '';
           
           console.log(`fn uC [${validRecordCount}/${records.length}] Processing record - ` +
             `Type: '${transactionType}', ` +
             `Description: '${description.substring(0, 50)}${description.length > 50 ? '...' : ''}'`);
           
-          // Check for dividend transactions (CDIV)
-          if (transactionType === 'CDIV') {
+          // Check for dividend transactions
+          if (transactionType === TransactionCode.Dividend) {
             console.log('fn uC Found CDIV transaction, processing...');
             console.log('fn uC Record before processDividendTransaction:', JSON.stringify(processedRecord, null, 2));
             
@@ -110,8 +113,8 @@ export const uploadCsv = onRequest(
       }
       
       // Get the requested format (defaults to 'both' if not specified or invalid)
-      const format = request.query.format === 'csv' ? 'csv' : 
-                    request.query.format === 'json' ? 'json' : 'both';
+      const format = request.query.format === DownloadFormat.CSV ? DownloadFormat.CSV : 
+                    request.query.format === DownloadFormat.JSON ? DownloadFormat.JSON : DownloadFormat.BOTH;
       
       // Get the base name from the original file (without .csv extension)
       const baseName = originalFileName.replace(/\.csv$/i, '');
@@ -127,7 +130,7 @@ export const uploadCsv = onRequest(
         let contentType: string;
         let filename: string;
 
-        if (format === 'json') {
+        if (format === DownloadFormat.JSON) {
           // Create JSON data
           const jsonData = JSON.stringify({
             success: true,
@@ -153,26 +156,27 @@ export const uploadCsv = onRequest(
           response.status(200).send(responseData);
           return;
           
-        } else if (format === 'csv') {
+        } else if (format === DownloadFormat.CSV) {
           // For CSV format, create a ZIP with both CSVs
           const JSZip = (await import('jszip')).default;
           const zip = new JSZip();
           
-          // Always include both CSVs, even if empty
-          const regularCsv = standardTransactions.length > 0 
-            ? convertToCsv(standardTransactions, RecordType.Regular)
-            : 'Activity Date,Process Date,Settle Date,Instrument,Description,Trans Code,Quantity,Price,Amount,CUSIP,Is Recurring\n';
+          // Only include CSV files for record types that have data
+          if (standardTransactions.length > 0) {
+            const regularCsv = convertToCsv(standardTransactions, RecordType.Regular);
+            zip.file(`${baseFilename}_regular.csv`, regularCsv);
+            console.log(`CSV: Added ${standardTransactions.length} regular transactions`);
+          } else {
+            console.log('No regular transactions to include in CSV');
+          }
           
-          const dividendCsv = dividendTransactions.length > 0
-            ? convertToCsv(dividendTransactions, RecordType.Dividend)
-            : 'Activity Date,Process Date,Settle Date,Instrument,Description,Trans Code,Quantity,Price,Amount,CUSIP,Is Recurring,Shares Owned,Dividend Per Share\n';
-          
-          // Add both CSV files to the ZIP
-          zip.file(`${baseFilename}_regular.csv`, regularCsv);
-          zip.file(`${baseFilename}_dividend.csv`, dividendCsv);
-          
-          console.log(`CSV: Added regular transactions with ${standardTransactions.length} records`);
-          console.log(`CSV: Added dividend transactions with ${dividendTransactions.length} records`);
+          if (dividendTransactions.length > 0) {
+            const dividendCsv = convertToCsv(dividendTransactions, RecordType.Dividend);
+            zip.file(`${baseFilename}_dividend.csv`, dividendCsv);
+            console.log(`CSV: Added ${dividendTransactions.length} dividend transactions`);
+          } else {
+            console.log('No dividend transactions to include in CSV');
+          }
           
           // Generate the ZIP file
           responseData = await zip.generateAsync({
@@ -242,14 +246,6 @@ export const uploadCsv = onRequest(
           response.status(200).send(responseData);
           return;
         }
-        
-        // Set appropriate headers
-        response.setHeader('Content-Type', contentType);
-        response.setHeader('Content-Disposition', `attachment; filename="${filename}"`);
-        response.setHeader('Content-Length', responseData.length.toString());
-        
-        console.log(`Sending ${contentType} file: ${filename} (${responseData.length} bytes)`);
-        response.status(200).send(responseData);
         
       } catch (error) {
         console.error('Error generating files:', error);

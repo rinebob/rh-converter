@@ -40,7 +40,12 @@ This is a general task list for project management.
     * [x] Handle different transaction types (dividends, recurring investments, etc.)
     * [x] Implement error handling and validation
     * [x] Create interfaces for strongly-typed data structures
-* [ ] Create output generation (JSON/CSV)
+* [x] Create output generation (JSON/CSV)
+    * [x] Implement CSV header enums and type definitions
+    * [x] Create CSV generation logic for different transaction types
+    * [x] Add support for ZIP file generation
+    * [x] Implement proper field mapping for Regular and Dividend transactions
+    * [x] Fix file content handling in ZIP generation
 * [ ] Design database schema
 * [ ] Implement user authentication
 * [ ] Develop subscription management features
@@ -49,7 +54,23 @@ This is a general task list for project management.
 
 ---
 
-## Phase 3: Testing & Deployment
+## Phase 3: Refactoring & Code Quality
+* [x] Consolidate CSV header enums and types
+    * [x] Move enums from shared directory to interfaces-fn.ts
+    * [x] Update all imports to use consolidated enums
+    * [x] Clean up TypeScript configurations
+    * [x] Remove unused shared types directory
+    * [x] Fix type safety issues with Amount field
+* [x] Standardize enums between frontend and backend
+    * [x] Create shared enums module with DownloadFormat, RecordType, and TransactionCode
+    * [x] Update frontend to use shared enums
+    * [x] Update backend to use shared enums
+    * [x] Configure TypeScript path aliases for shared imports
+    * [x] Remove duplicate enum definitions
+
+---
+
+## Phase 4: Testing & Deployment
 
 * [ ] Conduct manual testing of core features
 * [ ] Fix identified bugs
@@ -60,7 +81,7 @@ This is a general task list for project management.
 
 ---
 
-## Phase 4: Post-Launch
+## Phase 5: Post-Launch
 
 * [ ] Set up monitoring and logging
 * [ ] Gather user feedback

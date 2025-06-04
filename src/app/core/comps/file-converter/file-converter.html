@@ -1,6 +1,6 @@
 <mat-card class="file-converter-card">
   <mat-card-header>
-    <mat-card-title>Convert your Robinhood<br />transactions file</mat-card-title>
+    <mat-card-title>Convert your Robinhood transactions file</mat-card-title>
   </mat-card-header>
   <mat-card-content>
     <p class="app-description">Easily convert your Robinhood transaction CSVs into organized JSON and CSV files for use in other applications. Upload your file, and we'll transform it into clean, structured data. Transactions are automatically categorized into standard and dividend activity, with dates and numbers formatted for easy use.</p>
@@ -35,26 +35,6 @@
       </div>
     </div>
 
-    <div class="action-buttons">
-      <button 
-        mat-raised-button 
-        color="primary" 
-        (click)="onConvertClicked()"
-        [disabled]="isButtonDisabled()"
-        class="convert-button">
-        @if (!isProcessing()) {
-          <mat-icon>download</mat-icon>
-        } @else {
-          <mat-spinner diameter="20" class="spinner"></mat-spinner>
-        }
-        @if (isProcessing()) {
-          Processing...
-        } @else {
-          Convert & Download
-        }
-      </button>
-    </div>
-
     @if (isProcessing()) {
       <div class="loading-overlay">
         <mat-spinner diameter="50"></mat-spinner>
@@ -63,5 +43,22 @@
     }
   </mat-card-content>
   <mat-card-actions align="end">
+    <button 
+      mat-raised-button 
+      color="primary" 
+      (click)="onConvertClicked()"
+      [disabled]="isButtonDisabled()"
+      class="convert-button">
+      @if (!isProcessing()) {
+        <mat-icon>download</mat-icon>
+      } @else {
+        <mat-spinner diameter="20" class="spinner"></mat-spinner>
+      }
+      @if (isProcessing()) {
+        Processing...
+      } @else {
+        Convert & Download
+      }
+    </button>
   </mat-card-actions>
 </mat-card>

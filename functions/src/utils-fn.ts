@@ -3,30 +3,17 @@ import * as BusboyModule from 'busboy';
 import { 
   Request, 
   Response, 
-  ProcessedRecord, 
+  ProcessedRecord,
+  RecordType,
+  BaseHeader, 
+  RegularTransactionHeader,
+  DividendTransactionHeader,
+  DownloadFormat,
   FileUploadResult,
   ConversionResponse,
-  BaseHeader, 
-  RegularTransactionHeader, 
-  DividendTransactionHeader,
-  RecordType 
+  ProcessedRecordField,
+  createFieldMappings
 } from './interfaces-fn';
-
-// Define the output formats that can be generated
-export type OutputFormat = 'json' | 'csv';
-
-// Define the structure of the output data
-export interface ConversionResult {
-  success: boolean;
-  data: {
-    standard: any[];
-    dividends: any[];
-  };
-  format: OutputFormat;
-  timestamp: string;
-  recordCount: number;
-  error?: string;
-}
 
 /**
  * Converts processed records to the specified output format
@@ -38,19 +25,19 @@ export interface ConversionResult {
 export function convertToOutput(
   standard: ProcessedRecord[],
   dividends: ProcessedRecord[],
-  format: OutputFormat = 'json'
-): string {
+  format: DownloadFormat = DownloadFormat.JSON
+): string | ConversionResponse {
   const timestamp = new Date().toISOString();
   const recordCount = standard.length + dividends.length;
 
-  if (format === 'json') {
+  if (format === DownloadFormat.JSON) {
     const response: ConversionResponse = {
       success: true,
       data: { 
         regularTransactions: standard, 
         dividends 
       },
-      format: 'json',
+      format: DownloadFormat.JSON,
       timestamp,
       recordCount
     };
@@ -58,7 +45,7 @@ export function convertToOutput(
   }
 
   // For CSV, we'll create separate CSV strings for standard and dividend transactions
-  if (format === 'csv') {
+  if (format === DownloadFormat.CSV) {
     // Define the CSV headers based on the available fields
     const headers = [
       BaseHeader.ActivityDate,
@@ -108,27 +95,30 @@ export function convertToOutput(
 
 /**
  * Converts an array of processed records to CSV format
- * @param records - Array of processed records
- * @param recordType - Type of records ('regular' or 'dividend')
+ * @param records - Array of ProcessedRecord objects to convert to CSV
+ * @param isDividend - Whether the records are dividend transactions
  * @returns CSV string
  */
 export const convertToCsv = (records: ProcessedRecord[], recordType: RecordType): string => {
-  // Use the appropriate headers based on record type
-  const baseHeaders: BaseHeader[] = [
+  const isDividend = recordType === RecordType.Dividend;
+  // Create field mappings
+  const fieldMappings = createFieldMappings();
+  
+  // Get the appropriate headers based on record type
+  const baseHeaders = [
     BaseHeader.ActivityDate,
     BaseHeader.ProcessDate,
     BaseHeader.SettleDate,
     BaseHeader.Instrument,
     BaseHeader.Description,
-    BaseHeader.TransCode
+    BaseHeader.TransCode,
+    BaseHeader.Amount
   ];
+
+  let headers: string[] = [];
   
-  // Add transaction type specific headers
-  let headers: (BaseHeader | RegularTransactionHeader | DividendTransactionHeader)[] = [...baseHeaders];
-  
-  if (recordType === RecordType.Regular) {
-    // For regular transactions, include Quantity, Price, CUSIP, Is Recurring
-    const regularHeaders: RegularTransactionHeader[] = [
+  if (!isDividend) {
+    const regularHeaders = [
       RegularTransactionHeader.Quantity,
       RegularTransactionHeader.Price,
       RegularTransactionHeader.CUSIP,
@@ -139,8 +129,7 @@ export const convertToCsv = (records: ProcessedRecord[], recordType: RecordType)
       ...regularHeaders
     ];
   } else {
-    // For dividend transactions, include Shares Owned, Dividend Per Share
-    const dividendHeaders: DividendTransactionHeader[] = [
+    const dividendHeaders = [
       DividendTransactionHeader.SharesOwned,
       DividendTransactionHeader.DividendPerShare
     ];
@@ -152,39 +141,45 @@ export const convertToCsv = (records: ProcessedRecord[], recordType: RecordType)
 
   // Convert a single record to a CSV row
   const recordToCsvRow = (record: ProcessedRecord): string => {
-    console.log('fn util cTC recordToCsvRow - Record keys:', Object.keys(record));
-    console.log('fn util cTC recordToCsvRow - Record CUSIP:', record.cusip);
+    console.log('fn util cTC input record:', record);
+    // console.log('fn util cTC recordToCsvRow - Record keys:', Object.keys(record));
     
     return headers.map(header => {
+      // Get the field name from our mapping
+      const fieldName = fieldMappings.get(header);
+      if (!fieldName) {
+        console.warn(`fn util cTC No mapping found for header: ${header}`);
+        return '';
+      }
+      
       let value: any = '';
       
       // Handle special fields using the enum values for comparison
       switch (header) {
-        case DividendTransactionHeader.SharesOwned.toString():
-          value = record.shares_owned ?? '';
+        case DividendTransactionHeader.SharesOwned:
+          value = record.sharesOwned ?? '';
           console.log('fn util cTC recordToCsvRow - Processing Shares Owned:', value);
           break;
           
-        case DividendTransactionHeader.DividendPerShare.toString():
-          value = record.dividend_per_share_amount ?? '';
+        case DividendTransactionHeader.DividendPerShare:
+          value = record.dividendPerShareAmount ?? '';
           console.log('fn util cTC recordToCsvRow - Processing Dividend Per Share:', value);
           break;
           
-        case RegularTransactionHeader.IsRecurring.toString():
-          value = record.is_recurring ?? false;
+        case RegularTransactionHeader.IsRecurring:
+          value = record.isRecurring ?? false;
           console.log('fn util cTC recordToCsvRow - Processing Is Recurring:', value);
           break;
           
-        case RegularTransactionHeader.CUSIP.toString():
+        case RegularTransactionHeader.CUSIP:
           value = record.cusip ?? '';
           console.log('fn util cTC recordToCsvRow - Processing CUSIP:', value);
           break;
           
         default:
-          // For standard fields, convert header to the format used in the record object
-          const key = header.toLowerCase().replace(/ /g, '_') as keyof ProcessedRecord;
-          value = record[key] ?? '';
-          console.log(`fn util cTC recordToCsvRow - Processing ${header}:`, value);
+          // For standard fields, use the field name from our mapping
+          value = record[fieldName] ?? '';
+          console.log(`fn util cTC header/field: ${header}/${fieldName} = ${value}`);
       }
       
       // Convert to string, escape quotes, and wrap in quotes
@@ -209,10 +204,10 @@ export const convertToCsv = (records: ProcessedRecord[], recordType: RecordType)
  */
 export function prepareDownload(
   data: string,
-  format: OutputFormat = 'json'
+  format: DownloadFormat = DownloadFormat.JSON
 ): { contentType: string; data: string } {
   // For CSV, we want to send the raw CSV string directly
-  if (format === 'csv') {
+  if (format === DownloadFormat.CSV) {
     return {
       contentType: 'text/csv',
       data: data
@@ -223,7 +218,7 @@ export function prepareDownload(
   const response: ConversionResponse = {
     success: true,
     data: JSON.parse(data),
-    format: 'json',
+    format: DownloadFormat.JSON,
     timestamp: new Date().toISOString(),
     recordCount: Array.isArray(JSON.parse(data).regularTransactions) 
       ? JSON.parse(data).regularTransactions.length + (JSON.parse(data).dividends?.length || 0)
@@ -242,6 +237,7 @@ export function prepareDownload(
  * @returns Formatted date string or undefined if invalid
  */
 export const formatDate = (dateString: string): string | undefined => {
+  console.log(`fn util fD dateString: ${dateString}`);
   if (!dateString) return undefined;
   try {
     const date = new Date(dateString);
@@ -429,9 +425,9 @@ export const parseCSV = async (fileContentString: string): Promise<Record<string
 };
 
 /**
- * Processes a raw record into a ProcessedRecord with proper types and derived fields
+ * Processes a raw record into an IProcessedRecord with proper types and derived fields
  * @param record - The raw record to process
- * @returns Processed record with proper types and derived fields, or null if record should be skipped
+ * @returns IProcessedRecord object with proper types and derived fields, or null if record should be skipped
  */
 export const processRecord = (record: Record<string, string>): ProcessedRecord | null => {
   // Skip empty records or records that are just the footer
@@ -440,32 +436,27 @@ export const processRecord = (record: Record<string, string>): ProcessedRecord |
     return null;
   }
 
-  const processedRecord: ProcessedRecord = {};
+  const processedRecord: Partial<ProcessedRecord> = {};
   
-  // Map of original header names to our normalized field names
-  const fieldMappings: Record<string, string> = {
-    [BaseHeader.ActivityDate]: 'activity_date',
-    [BaseHeader.ProcessDate]: 'process_date',
-    [BaseHeader.SettleDate]: 'settle_date',
-    [BaseHeader.Instrument]: 'instrument',
-    [BaseHeader.Description]: 'description',
-    [BaseHeader.TransCode]: 'trans_code',
-    [RegularTransactionHeader.Quantity]: 'quantity',
-    [RegularTransactionHeader.Price]: 'price',
-    [BaseHeader.Amount]: 'amount',
-    [RegularTransactionHeader.CUSIP]: 'cusip',
-    [RegularTransactionHeader.IsRecurring]: 'is_recurring',
-    [DividendTransactionHeader.SharesOwned]: 'shares_owned',
-    [DividendTransactionHeader.DividendPerShare]: 'dividend_per_share'
-  };
+  // Create field mappings
+  const fieldMappings = createFieldMappings();
+  
+  console.log('-------------------------------------------');
+  console.log('uT fN pR field mappings: ', fieldMappings);
   
   // Type guard to check if a field is a date field
   const isDateField = (field: string): boolean => {
-    return [
+    const dateFields = [
+      ProcessedRecordField.ActivityDate,
+      ProcessedRecordField.ProcessDate,
+      ProcessedRecordField.SettleDate,
       BaseHeader.ActivityDate,
       BaseHeader.ProcessDate,
       BaseHeader.SettleDate
-    ].includes(field as BaseHeader);
+    ];
+    const isDate = dateFields.includes(field as any);
+    console.log(`fn util isDateField('${field}') = ${isDate}`);
+    return isDate;
   };
   
   // Type guard to check if a field is a number field
@@ -482,21 +473,29 @@ export const processRecord = (record: Record<string, string>): ProcessedRecord |
     if (value === null || value === '') continue;
     
     // Get the normalized field name
-    const fieldName = fieldMappings[key] || key.toLowerCase().replace(/ /g, '_');
+    const fieldName = fieldMappings.get(key);
+    console.log(`fn util pR fieldName: ${fieldName}`);
     
     // Process based on field type
     if (isDateField(key)) {
+      console.log(`fn util pR Processing date field '${key}' as '${fieldName}' with value: ${value}`);
       const formattedDate = formatDate(value);
-      if (formattedDate) processedRecord[fieldName] = formattedDate;
+      console.log(`fn util pR Formatted date: ${formattedDate}`);
+      if (formattedDate) {
+        // Type assertion is safe here because we've already checked the field name
+        (processedRecord as Record<string, any>)[fieldName as string] = formattedDate;
+      }
     } else if (isNumberField(key)) {
       const num = parseNumber(value);
       if (num !== undefined) {
-        processedRecord[fieldName] = num;
+        // Type assertion is safe here because we've already checked the field name
+        (processedRecord as Record<string, any>)[fieldName as string] = num;
       } else {
         console.warn(`fn util pR Could not parse sanitized number for key '${key}': Original='${value}'`);
       }
     } else {
-      processedRecord[fieldName] = value;
+      // Type assertion is safe here because we've already checked the field name
+      (processedRecord as Record<string, any>)[fieldName as string] = value;
     }
   }
 
@@ -509,10 +508,10 @@ export const processRecord = (record: Record<string, string>): ProcessedRecord |
       processedRecord.cusip = cusip;
       console.log(`fn util pR Set CUSIP on record: ${processedRecord.cusip}`);
     }
-    processedRecord.is_recurring = isRecurring(processedRecord.description);
+    processedRecord.isRecurring = isRecurring(processedRecord.description);
   }
 
-  return processedRecord;
+  return processedRecord as ProcessedRecord;
 };
 
 /**
@@ -565,22 +564,24 @@ export const sendSuccessResponse = <T>(
 export const handleFileUpload = (request: Request): Promise<FileUploadResult> => {
   return new Promise((resolve, reject) => {
     const bb = BusboyModule.default({ headers: request.headers });
-    const fileData: Buffer[] = [];
-    let fileInfo: Omit<FileUploadResult, 'fileData'> | null = null;
+    let fileBuffer: Buffer = Buffer.alloc(0);
+    let fileInfo: FileUploadResult | null = null;
 
     bb.on('file', (fieldname: string, file: NodeJS.ReadableStream, info: BusboyModule.FileInfo) => {
-      const { filename, encoding, mimeType } = info;
-      console.log(`fn util hFU File [${fieldname}]: filename: ${filename}, encoding: ${encoding}, mimeType: ${mimeType}`);
+      const { filename, mimeType } = info;
+      console.log(`fn util hFU File [${fieldname}]: filename: ${filename}, mimeType: ${mimeType}`);
       
       fileInfo = {
+        filename,
+        mimetype: mimeType || 'application/octet-stream',
         originalFileName: filename,
-        mimeType,
-        encoding
-      };
+        fileData: Buffer.alloc(0), // Will be filled with file data
+        fileContent: ''
+      } as FileUploadResult;
 
       file.on('data', (data: Buffer) => {
         console.log(`fn util hFU File [${fieldname}] got ${data.length} bytes`);
-        fileData.push(data);
+        fileBuffer = Buffer.concat([fileBuffer, data]);
       });
 
       file.on('end', () => {
@@ -599,15 +600,15 @@ export const handleFileUpload = (request: Request): Promise<FileUploadResult> =>
         return;
       }
 
-      if (fileData.length === 0) {
+      if (fileBuffer.length === 0) {
         reject(new Error('Uploaded file is empty'));
-        return;
+      } else if (fileInfo) {
+        fileInfo.fileData = fileBuffer;
+        fileInfo.fileContent = fileBuffer.toString('utf-8');
+        resolve(fileInfo);
+      } else {
+        reject(new Error('File info not available'));
       }
-
-      resolve({
-        ...fileInfo,
-        fileData: Buffer.concat(fileData)
-      });
     });
 
     bb.on('error', (err: Error) => {
