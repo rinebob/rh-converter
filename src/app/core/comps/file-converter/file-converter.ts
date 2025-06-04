@@ -1,9 +1,8 @@
-import { Component, OnInit, inject, signal, computed } from '@angular/core';
+import { Component, OnInit, inject, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { FormBuilder, FormControl, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
+import { FormControl, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
 import { MatButtonModule } from '@angular/material/button';
 import { MatCardModule } from '@angular/material/card';
-import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatIconModule } from '@angular/material/icon';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { MatRadioModule } from '@angular/material/radio';
@@ -31,25 +30,48 @@ import { DownloadFormat } from '@shared/enums';
 })
 export class FileConverter implements OnInit {
   private http = inject(HttpClient);
-  private fb = inject(FormBuilder);
   
-  // Form group with typed form controls
-  form = this.fb.group({
-    fileInput: [null as File | null, [Validators.required]],
-    downloadFormat: [DownloadFormat.JSON]
+  // Form controls
+  fileInput = new FormControl<File | null>(null, { 
+    validators: [Validators.required],
+    nonNullable: false
   });
   
-  // Typed form controls
-  get fileInput() { return this.form.get('fileInput')!; }
-  get downloadFormat() { return this.form.get('downloadFormat')! as FormControl<DownloadFormat>; }
+  downloadFormat = new FormControl<DownloadFormat>(DownloadFormat.JSON, {
+    nonNullable: true
+  });
+  
+  // Form group
+  form = new FormGroup({
+    fileInput: this.fileInput,
+    downloadFormat: this.downloadFormat
+  });
   
   // State
   selectedFile: File | null = null;
   isProcessing = signal(false);
   readonly cloudFunctionUrl = CLOUD_FUNCTION_URLS.UPLOAD_CSV;
   
+  // Available download formats
+  readonly formats = [
+    { value: DownloadFormat.JSON, label: 'JSON' },
+    { value: DownloadFormat.CSV, label: 'CSV' },
+    { value: DownloadFormat.BOTH, label: 'Both (ZIP)' }
+  ] as const;
+  
   // Button disabled state based on form status and processing state
   isButtonDisabled = signal(true);
+
+  /**
+   * Clears the selected file and resets the file input
+   * @param event - The click event
+   */
+  clearFile(event: Event): void {
+    event.stopPropagation();
+    this.selectedFile = null;
+    this.fileInput.setValue(null);
+    this.isButtonDisabled.set(true);
+  }
   
   // Update button state based on file selection and processing state
   private updateButtonState() {
@@ -62,13 +84,6 @@ export class FileConverter implements OnInit {
       isProcessing: this.isProcessing()
     });
   }
-  
-  // Available download formats
-  readonly formats = [
-    { value: DownloadFormat.JSON, label: 'JSON' },
-    { value: DownloadFormat.CSV, label: 'CSV' },
-    { value: DownloadFormat.BOTH, label: 'Both' }
-  ] as const;
 
   ngOnInit(): void {
     // Initial button state
