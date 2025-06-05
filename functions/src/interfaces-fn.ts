@@ -1,7 +1,56 @@
-// Import and re-export shared enums
-import { RecordType, TransactionCode, DownloadFormat } from '@shared/enums';
+/**
+ * Enums used throughout the application
+ */
 
-export { RecordType, TransactionCode, DownloadFormat };
+export enum RecordType {
+  Regular = 'regular',
+  Dividend = 'dividend'
+}
+
+export enum TransactionCode {
+  Buy = 'Buy',
+  Sell = 'Sell',
+  Dividend = 'Dividend',
+  Transfer = 'Transfer',
+  Adjustment = 'Adjustment',
+  Expired = 'Expired',
+  Assigned = 'Assigned',
+  Expiration = 'Expiration',
+  Cancel = 'Cancel',
+  Correction = 'Correction',
+  Interest = 'Interest',
+  Split = 'Split',
+  SpinOff = 'Spin-off',
+  Merger = 'Merger',
+  NameChange = 'Name Change',
+  Tender = 'Tender',
+  WarrantExercise = 'Warrant Exercise',
+  WarrantAssignment = 'Warrant Assignment',
+  WarrantExpiration = 'Warrant Expiration',
+  WarrantCancel = 'Warrant Cancel',
+  WarrantCorrection = 'Warrant Correction',
+  OptionExercise = 'Option Exercise',
+  OptionAssignment = 'Option Assignment',
+  OptionExpiration = 'Option Expiration',
+  OptionCancel = 'Option Cancel',
+  OptionCorrection = 'Option Correction',
+  OptionExpired = 'Option Expired',
+  OptionAssigned = 'Option Assigned',
+  OptionExpiredWorthless = 'Option Expired Worthless',
+  OptionAssignedWorthless = 'Option Assigned Worthless'
+}
+
+export enum DownloadFormat {
+  JSON = 'json',
+  CSV = 'csv',
+  BOTH = 'both'
+}
+
+export enum Note {
+  Recurring = 'Recurring',
+  DividendReinvestment = 'Dividend Reinvestment',
+  ManualEntry = 'Manual Entry'
+}
 
 /**
  * Base headers that are common to all record types
@@ -23,7 +72,7 @@ export enum RegularTransactionHeader {
   Quantity = 'Quantity',
   Price = 'Price',
   CUSIP = 'CUSIP',
-  IsRecurring = 'Is Recurring'
+  Notes = 'Notes'
 }
 
 /**
@@ -48,7 +97,7 @@ export enum ProcessedRecordField {
   Price = 'price',
   Amount = 'amount',
   CUSIP = 'cusip',
-  IsRecurring = 'isRecurring',
+  Notes = 'notes',
   SharesOwned = 'sharesOwned',
   DividendPerShareAmount = 'dividendPerShareAmount'
 }
@@ -70,9 +119,10 @@ export interface ProcessedRecord {
   
   // Derived fields
   cusip?: string;
-  isRecurring?: boolean;
+  notes?: Note[];
   sharesOwned?: number;
   dividendPerShareAmount?: number;
+  recordType?: RecordType;
   
   // Allow dynamic access for any other fields
   [key: string]: any;
@@ -102,7 +152,7 @@ export const createFieldMappings = (): FieldMappings => {
   mappings.set(RegularTransactionHeader.Quantity, ProcessedRecordField.Quantity);
   mappings.set(RegularTransactionHeader.Price, ProcessedRecordField.Price);
   mappings.set(RegularTransactionHeader.CUSIP, ProcessedRecordField.CUSIP);
-  mappings.set(RegularTransactionHeader.IsRecurring, ProcessedRecordField.IsRecurring);
+  mappings.set(RegularTransactionHeader.Notes, ProcessedRecordField.Notes);
   
   // Dividend transaction headers
   mappings.set(DividendTransactionHeader.SharesOwned, ProcessedRecordField.SharesOwned);
@@ -116,25 +166,23 @@ export const createFieldMappings = (): FieldMappings => {
  * @param record - Raw record with string keys
  * @returns Processed record with proper types and camelCase keys
  */
-export const toProcessedRecord = (record: Record<string, any>): ProcessedRecord => {
-  return {
-    // Map from header enums to camelCase properties
-    activityDate: record[BaseHeader.ActivityDate],
-    processDate: record[BaseHeader.ProcessDate],
-    settleDate: record[BaseHeader.SettleDate],
-    instrument: record[BaseHeader.Instrument],
-    description: record[BaseHeader.Description],
-    transCode: record[BaseHeader.TransCode],
-    quantity: record[RegularTransactionHeader.Quantity],
-    price: record[RegularTransactionHeader.Price],
-    amount: record[BaseHeader.Amount],
-    cusip: record[RegularTransactionHeader.CUSIP],
-    isRecurring: record[RegularTransactionHeader.IsRecurring],
-    sharesOwned: record[DividendTransactionHeader.SharesOwned],
-    dividendPerShareAmount: record[DividendTransactionHeader.DividendPerShare],
-    ...record // Keep any additional fields
-  };
-};
+export const toProcessedRecord = (record: Record<string, any>): ProcessedRecord => ({
+  // Map from header enums to camelCase properties
+  activityDate: record[BaseHeader.ActivityDate],
+  processDate: record[BaseHeader.ProcessDate],
+  settleDate: record[BaseHeader.SettleDate],
+  instrument: record[BaseHeader.Instrument],
+  description: record[BaseHeader.Description],
+  transCode: record[BaseHeader.TransCode],
+  quantity: record[RegularTransactionHeader.Quantity],
+  price: record[RegularTransactionHeader.Price],
+  amount: record[BaseHeader.Amount],
+  cusip: record[RegularTransactionHeader.CUSIP],
+  notes: record[RegularTransactionHeader.Notes] ? [record[RegularTransactionHeader.Notes]] : [],
+  sharesOwned: record[DividendTransactionHeader.SharesOwned],
+  dividendPerShareAmount: record[DividendTransactionHeader.DividendPerShare],
+  ...record // Spread the rest of the record
+});
 
 /**
  * Result of a file upload operation

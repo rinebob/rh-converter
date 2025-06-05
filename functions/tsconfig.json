@@ -9,10 +9,7 @@
     "sourceMap": true,
     "strict": true,
     "target": "es2017",
-    "baseUrl": "..",
-    "paths": {
-      "@shared/*": ["shared/*"]
-    },
+
     "typeRoots": [
       "./node_modules/@types",
       "./src/types"
@@ -20,7 +17,9 @@
   },
   "compileOnSave": true,
   "include": [
-    "src",
-    "../shared"
+    "src/**/*.ts"
+  ],
+  "exclude": [
+    "node_modules"
   ]
 }

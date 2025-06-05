@@ -3,14 +3,10 @@ import {
   Request, 
   Response, 
   RecordType,
-  BaseHeader,
-  TransactionCode,
-  DownloadFormat 
+  DownloadFormat
 } from './interfaces-fn';
-import { convertToCsv } from './utils-fn';
-
-// Firebase Functions v2 handles CORS and request parsing automatically
 import { 
+  convertToCsv, 
   processDividendTransaction, 
   processRecord,
   parseCSV,
@@ -83,28 +79,26 @@ export const uploadCsv = onRequest(
           
           validRecordCount++;
           
-          // Categorize transaction based on transaction code - get it from the raw record
-          const transactionType = record[BaseHeader.TransCode]?.toString().trim().toUpperCase() || '';
           const description = processedRecord.description?.toString() || '';
           
           console.log(`fn uC [${validRecordCount}/${records.length}] Processing record - ` +
-            `Type: '${transactionType}', ` +
+            `Type: '${processedRecord.recordType || 'unknown'}', ` +
+            `TransCode: '${processedRecord.transCode || 'none'}', ` +
             `Description: '${description.substring(0, 50)}${description.length > 50 ? '...' : ''}'`);
           
-          // Check for dividend transactions
-          if (transactionType === TransactionCode.Dividend) {
-            console.log('fn uC Found CDIV transaction, processing...');
-            console.log('fn uC Record before processDividendTransaction:', JSON.stringify(processedRecord, null, 2));
-            
-            // Process dividend-specific fields
-            processDividendTransaction(processedRecord);
-            
-            console.log('fn uC Record after processDividendTransaction:', JSON.stringify(processedRecord, null, 2));
-            dividendTransactions.push(processedRecord);
-            console.log(`fn uC Added to dividendTransactions (now ${dividendTransactions.length} items)`);
+          // Categorize transaction based on recordType
+          if (processedRecord.recordType === RecordType.Dividend) {
+            try {
+              processDividendTransaction(processedRecord);
+              dividendTransactions.push(processedRecord);
+            } catch (error) {
+              console.error('fn uC Error processing dividend transaction:', error);
+              // Convert to regular transaction if dividend processing fails
+              processedRecord.recordType = RecordType.Regular;
+              standardTransactions.push(processedRecord);
+            }
           } else {
             standardTransactions.push(processedRecord);
-            console.log(`fn uC Added to standardTransactions (now ${standardTransactions.length} items)`);
           }
         } catch (error) {
           console.error(`fn uC Error processing record ${index + 1}:`, error);
@@ -112,9 +106,11 @@ export const uploadCsv = onRequest(
         }
       }
       
-      // Get the requested format (defaults to 'both' if not specified or invalid)
-      const format = request.query.format === DownloadFormat.CSV ? DownloadFormat.CSV : 
-                    request.query.format === DownloadFormat.JSON ? DownloadFormat.JSON : DownloadFormat.BOTH;
+      // Determine the requested format (defaults to 'json' if not specified or invalid)
+      type ResponseFormat = 'json' | 'csv' | 'both';
+      const format: ResponseFormat = 
+        request.query.format === DownloadFormat.CSV ? 'csv' : 
+        request.query.format === DownloadFormat.JSON ? 'json' : 'both';
       
       // Get the base name from the original file (without .csv extension)
       const baseName = originalFileName.replace(/\.csv$/i, '');
@@ -126,35 +122,31 @@ export const uploadCsv = onRequest(
       try {
         console.log('Generating files...');
         
-        let responseData: Buffer | string;
-        let contentType: string;
-        let filename: string;
-
         if (format === DownloadFormat.JSON) {
-          // Create JSON data
           const jsonData = JSON.stringify({
             success: true,
             data: {
               regularTransactions: standardTransactions,
               dividends: dividendTransactions
             },
-            format: 'json',
+            format: DownloadFormat.JSON,
             timestamp: new Date().toISOString(),
             recordCount: standardTransactions.length + dividendTransactions.length
           }, null, 2);
           
-          responseData = Buffer.from(jsonData, 'utf-8');
-          contentType = 'application/json';
-          filename = `${baseFilename}.json`;
+          const responseData = Buffer.from(jsonData, 'utf-8');
+          const contentType = 'application/json';
+          const filename = `${baseFilename}.json`;
           
-          // Set appropriate headers
+          console.log(`Sending JSON file: ${filename} (${responseData.length} bytes)`);
+          
+          // Set headers and send the response
           response.setHeader('Content-Type', contentType);
           response.setHeader('Content-Disposition', `attachment; filename="${filename}"`);
           response.setHeader('Content-Length', responseData.length.toString());
           
           console.log(`Sending JSON file: ${filename} (${responseData.length} bytes)`);
           response.status(200).send(responseData);
-          return;
           
         } else if (format === DownloadFormat.CSV) {
           // For CSV format, create a ZIP with both CSVs
@@ -179,15 +171,15 @@ export const uploadCsv = onRequest(
           }
           
           // Generate the ZIP file
-          responseData = await zip.generateAsync({
+          const responseData = await zip.generateAsync({
             type: 'nodebuffer',
             compression: 'DEFLATE',
             compressionOptions: { level: 9 }
           });
           
           // Set headers for ZIP file
-          contentType = 'application/zip';
-          filename = `${baseFilename}.zip`;
+          const contentType = 'application/zip';
+          const filename = `${baseFilename}.zip`;
           
           // Set appropriate headers
           response.setHeader('Content-Type', contentType);
@@ -198,19 +190,18 @@ export const uploadCsv = onRequest(
           response.status(200).send(responseData);
           return;
           
-        } else { // both
+        } else { // DownloadFormat.BOTH
           // For 'both' format, create a ZIP with JSON and both CSVs
           const JSZip = (await import('jszip')).default;
           const zip = new JSZip();
           
-          // Add JSON file to ZIP
           const jsonData = JSON.stringify({
             success: true,
             data: {
               regularTransactions: standardTransactions,
               dividends: dividendTransactions
             },
-            format: 'both',
+            format: DownloadFormat.BOTH,
             timestamp: new Date().toISOString(),
             recordCount: standardTransactions.length + dividendTransactions.length
           }, null, 2);
@@ -227,15 +218,15 @@ export const uploadCsv = onRequest(
           }
           
           // Generate the ZIP file
-          responseData = await zip.generateAsync({
+          const responseData = await zip.generateAsync({
             type: 'nodebuffer',
             compression: 'DEFLATE',
             compressionOptions: { level: 9 }
           });
           
           // Set headers for ZIP file
-          contentType = 'application/zip';
-          filename = `${baseFilename}.zip`;
+          const contentType = 'application/zip';
+          const filename = `${baseFilename}.zip`;
           
           // Set appropriate headers
           response.setHeader('Content-Type', contentType);

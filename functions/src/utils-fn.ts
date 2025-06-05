@@ -3,25 +3,86 @@ import * as BusboyModule from 'busboy';
 import { 
   Request, 
   Response, 
-  ProcessedRecord,
   RecordType,
-  BaseHeader, 
+  BaseHeader,
   RegularTransactionHeader,
   DividendTransactionHeader,
+  ProcessedRecord,
+  ProcessedRecordField,
+  FieldMappings,
   DownloadFormat,
   FileUploadResult,
-  ConversionResponse,
-  ProcessedRecordField,
-  createFieldMappings
+  Note,
+  createFieldMappings,
+  ConversionResponse
 } from './interfaces-fn';
 
 /**
- * Converts processed records to the specified output format
- * @param standard - Array of standard transactions
- * @param dividends - Array of dividend transactions
- * @param format - The desired output format ('json' or 'csv')
- * @returns A string containing the converted data in the specified format
+ * Creates a function that converts a ProcessedRecord to a CSV row
+ * @param headers - Array of header strings
+ * @param fieldMappings - Map of header strings to field names
+ * @returns Function that converts a ProcessedRecord to a CSV row string
  */
+function createCsvRowConverter(
+  headers: readonly string[],
+  fieldMappings: FieldMappings
+): (record: ProcessedRecord) => string {
+  return (record: ProcessedRecord): string => {
+    console.log('---------------- Processing record for CSV --------------------------')
+    console.log('fn util rTCR - input record:', record);
+    
+    return headers.map(header => {
+      // Get the field name from our mapping
+      const fieldName = fieldMappings.get(header);
+      if (!fieldName) {
+        console.warn(`fn util rTCR No mapping found for header: ${header}`);
+        return '';
+      }
+      
+      let value: any = '';
+      
+      // Get the value from the record using the field name
+      // The field name is the value from ProcessedRecordField
+      switch (fieldName) {
+        case ProcessedRecordField.SharesOwned:
+          value = record.sharesOwned ?? '';
+          console.log('fn util cCRC Getting sharesOwned:', { 
+            hasValue: record.sharesOwned !== undefined,
+            value: record.sharesOwned
+          });
+          break;
+          
+        case ProcessedRecordField.DividendPerShareAmount:
+          value = record.dividendPerShareAmount ?? '';
+          console.log('fn util cCRC Getting dividendPerShareAmount:', { 
+            hasValue: record.dividendPerShareAmount !== undefined,
+            value: record.dividendPerShareAmount
+          });
+          break;
+          
+        case ProcessedRecordField.Notes:
+          // There will be only one note value if it exists
+          value = record[ProcessedRecordField.Notes]?.[0]?.replace(/"/g, '""') || '';
+          console.log('fn util rTCR recordToCsvRow - Processing Notes:', value);
+          break;
+          
+        case ProcessedRecordField.CUSIP:
+          value = record[ProcessedRecordField.CUSIP] ?? '';
+          console.log('fn util rTCR recordToCsvRow - Processing CUSIP:', value);
+          break;
+          
+        default:
+          // For standard fields, use the field name from our mapping
+          value = record[fieldName as keyof ProcessedRecord] ?? '';
+          console.log(`fn util rTCR header/field: ${header}/${fieldName} = ${value}`);
+      }
+      
+      // Convert to string, escape quotes, and wrap in quotes
+      return `"${String(value).replace(/"/g, '""')}"`;
+    }).join(',');
+  };
+}
+
 export function convertToOutput(
   standard: ProcessedRecord[],
   dividends: ProcessedRecord[],
@@ -34,14 +95,14 @@ export function convertToOutput(
     const response: ConversionResponse = {
       success: true,
       data: { 
-        regularTransactions: standard, 
+        regularTransactions: standard,
         dividends 
       },
       format: DownloadFormat.JSON,
       timestamp,
       recordCount
     };
-    return JSON.stringify(response);
+    return JSON.stringify(response, null, 2);
   }
 
   // For CSV, we'll create separate CSV strings for standard and dividend transactions
@@ -58,22 +119,16 @@ export function convertToOutput(
       RegularTransactionHeader.Quantity,
       RegularTransactionHeader.Price,
       RegularTransactionHeader.CUSIP,
-      RegularTransactionHeader.IsRecurring,
+      RegularTransactionHeader.Notes,
       DividendTransactionHeader.SharesOwned,
       DividendTransactionHeader.DividendPerShare
     ] as const;
 
-    // Convert a single record to a CSV row
-    const recordToCsvRow = (record: ProcessedRecord): string => {
-      return headers.map(header => {
-        // Convert header to the format used in the record object
-        const key = header.toLowerCase().replace(/ /g, '_') as keyof ProcessedRecord;
-        // Get the value or empty string if undefined/null
-        const value = record[key] ?? '';
-        // Convert to string, escape quotes, and wrap in quotes
-        return `"${String(value).replace(/"/g, '""')}"`;
-      }).join(',');
-    };
+    // Create field mappings for these headers
+    const fieldMappings = createFieldMappings();
+    
+    // Create a row converter function
+    const recordToCsvRow = createCsvRowConverter(headers, fieldMappings);
 
     // Generate CSV content for standard transactions
     let csvContent = [headers.join(',')];
@@ -96,15 +151,17 @@ export function convertToOutput(
 /**
  * Converts an array of processed records to CSV format
  * @param records - Array of ProcessedRecord objects to convert to CSV
- * @param isDividend - Whether the records are dividend transactions
+ * @param recordType - The type of records being converted (Regular or Dividend)
  * @returns CSV string
  */
 export const convertToCsv = (records: ProcessedRecord[], recordType: RecordType): string => {
   const isDividend = recordType === RecordType.Dividend;
+  console.log(`Converting ${isDividend ? 'dividend' : 'regular'} records to CSV`);
+  
   // Create field mappings
   const fieldMappings = createFieldMappings();
   
-  // Get the appropriate headers based on record type
+  // Base headers that are common to all record types
   const baseHeaders = [
     BaseHeader.ActivityDate,
     BaseHeader.ProcessDate,
@@ -115,84 +172,45 @@ export const convertToCsv = (records: ProcessedRecord[], recordType: RecordType)
     BaseHeader.Amount
   ];
 
-  let headers: string[] = [];
+  // Initialize headers array with base headers
+  let headers: string[] = [...baseHeaders];
   
-  if (!isDividend) {
-    const regularHeaders = [
+  // Add type-specific headers
+  if (isDividend) {
+    // For dividend transactions, add dividend-specific headers
+    headers.push(
+      DividendTransactionHeader.SharesOwned,
+      DividendTransactionHeader.DividendPerShare
+    );
+  } else {
+    // For regular transactions, add regular transaction headers
+    headers.push(
       RegularTransactionHeader.Quantity,
       RegularTransactionHeader.Price,
       RegularTransactionHeader.CUSIP,
-      RegularTransactionHeader.IsRecurring
-    ];
-    headers = [
-      ...baseHeaders,
-      ...regularHeaders
-    ];
-  } else {
-    const dividendHeaders = [
-      DividendTransactionHeader.SharesOwned,
-      DividendTransactionHeader.DividendPerShare
-    ];
-    headers = [
-      ...baseHeaders,
-      ...dividendHeaders
-    ];
+      RegularTransactionHeader.Notes
+    );
   }
 
-  // Convert a single record to a CSV row
-  const recordToCsvRow = (record: ProcessedRecord): string => {
-    console.log('fn util cTC input record:', record);
-    // console.log('fn util cTC recordToCsvRow - Record keys:', Object.keys(record));
-    
-    return headers.map(header => {
-      // Get the field name from our mapping
-      const fieldName = fieldMappings.get(header);
-      if (!fieldName) {
-        console.warn(`fn util cTC No mapping found for header: ${header}`);
-        return '';
-      }
-      
-      let value: any = '';
-      
-      // Handle special fields using the enum values for comparison
-      switch (header) {
-        case DividendTransactionHeader.SharesOwned:
-          value = record.sharesOwned ?? '';
-          console.log('fn util cTC recordToCsvRow - Processing Shares Owned:', value);
-          break;
-          
-        case DividendTransactionHeader.DividendPerShare:
-          value = record.dividendPerShareAmount ?? '';
-          console.log('fn util cTC recordToCsvRow - Processing Dividend Per Share:', value);
-          break;
-          
-        case RegularTransactionHeader.IsRecurring:
-          value = record.isRecurring ?? false;
-          console.log('fn util cTC recordToCsvRow - Processing Is Recurring:', value);
-          break;
-          
-        case RegularTransactionHeader.CUSIP:
-          value = record.cusip ?? '';
-          console.log('fn util cTC recordToCsvRow - Processing CUSIP:', value);
-          break;
-          
-        default:
-          // For standard fields, use the field name from our mapping
-          value = record[fieldName] ?? '';
-          console.log(`fn util cTC header/field: ${header}/${fieldName} = ${value}`);
-      }
-      
-      // Convert to string, escape quotes, and wrap in quotes
-      return `"${String(value).replace(/"/g, '""')}"`;
-    }).join(',');
-  };
+  console.log(`Generated headers for ${isDividend ? 'dividend' : 'regular'} CSV:`, headers);
+  
+  // Create the row converter with the appropriate headers
+  const recordToCsvRow = createCsvRowConverter(headers, fieldMappings);
 
   // Generate CSV content
   const csvContent = [
     headers.join(','), // Header row
-    ...records.map(recordToCsvRow) // Data rows
+    ...records.map(record => {
+      console.log(`Processing record for CSV:`, JSON.stringify(record, null, 2));
+      return recordToCsvRow(record);
+    }) // Data rows with logging
   ].join('\n');
 
+  console.log('======================================');
+  console.log(`Generated ${isDividend ? 'dividend' : 'regular'} CSV content (${records.length} records):`);
+  console.log(csvContent.substring(0, 500) + (csvContent.length > 500 ? '...' : ''));
+  console.log('======================================');
+  
   return csvContent;
 };
 
@@ -287,23 +305,10 @@ export const extractCusip = (description: string): string | undefined => {
 };
 
 /**
- * Checks if a description indicates a recurring transaction
- * @param description - The description to check
- * @returns True if the description indicates a recurring transaction
- */
-export const isRecurring = (description: string): boolean => {
-  // Match "Recurring" by itself or as part of "Recurring Investment" or "Recurring Dividend"
-  const recurringRegex = /\bRecurring(?: (?:Investment|Dividend))?\b/i;
-  return recurringRegex.test(description);
-};
-
-/**
  * Processes a dividend transaction to extract shares and dividend per share
  * @param record - The record to process
  */
 export const processDividendTransaction = (record: ProcessedRecord): void => {
-  console.log('fn util pDT Processing dividend transaction:', record);
-  
   // Clear quantity and price fields for dividend transactions
   record[RegularTransactionHeader.Quantity] = undefined;
   record[RegularTransactionHeader.Price] = undefined;
@@ -311,66 +316,55 @@ export const processDividendTransaction = (record: ProcessedRecord): void => {
   // Remove CUSIP for dividend transactions
   record[RegularTransactionHeader.CUSIP] = undefined;
   
-  // Debug log the record to see all available properties
-  console.log('fn util pDT Record keys:', Object.keys(record));
-  console.log('fn util pDT Record values:', record);
+  // Preserve notes if they exist
+  const notes = record.notes || [];
   
-  // Get the description from either 'description' or 'Description' property
-  const description = ('description' in record ? record['description'] : record[BaseHeader.Description]) || '';
-  console.log('fn util pDT Raw description:', description);
+  // Get the description using BaseHeader.Description or fall back to description
+  const description = record[BaseHeader.Description] || record.description || '';
+  
+  // Check for dividend reinvestment in description
+  if (description.toLowerCase().includes('dividend reinvestment') && !notes.includes(Note.DividendReinvestment)) {
+    notes.push(Note.DividendReinvestment);
+  }
+  
+  if (notes.length > 0) {
+    record.notes = [...new Set(notes)]; // Remove duplicates
+  }
   
   // Try to extract shares and dividend per share from the description
   // Format: "... 293.564723 shares at 0.275316"
-  const sharesMatch = description.match(/(\d+\.?\d*)\s*shares?\s*at\s*(\d+\.?\d*)/i);
-  console.log('fn util pDT Shares match:', sharesMatch);
+  const sharesPattern = /(\d+\.?\d*)\s*shares?\s*at\s*(\d+\.?\d*)/i;
+  const sharesMatch = description.match(sharesPattern);
   
   if (sharesMatch) {
     // Extract shares owned (first capture group)
     const shares = parseFloat(sharesMatch[1]);
     if (!isNaN(shares)) {
-      record.shares_owned = shares;
-      console.log('fn util pDT Set shares_owned:', shares);
+      record.sharesOwned = shares;
     }
     
     // Extract dividend per share (second capture group)
     const dividendPerShare = parseFloat(sharesMatch[2]);
     if (!isNaN(dividendPerShare)) {
-      record.dividend_per_share_amount = dividendPerShare;
-      console.log('fn util pDT Set dividend_per_share_amount from match:', dividendPerShare);
+      record.dividendPerShareAmount = dividendPerShare;
     }
   } else {
     // Fallback: Try to extract just the shares and calculate dividend per share from amount
     const fallbackMatch = description.match(/(\d+\.?\d*)\s*shares?/i);
-    console.log('fn util pDT Fallback match:', fallbackMatch);
     
     if (fallbackMatch) {
       const shares = parseFloat(fallbackMatch[1]);
       const amount = Math.abs(record[BaseHeader.Amount] || 0);
       if (!isNaN(shares) && amount > 0 && shares > 0) {
         const divPerShare = amount / shares;
-        record.shares_owned = shares;
-        record.dividend_per_share_amount = divPerShare;
-        console.log('fn util pDT Set from fallback - shares:', shares, 'amount:', amount, 'div per share:', divPerShare);
+        record.sharesOwned = shares;
+        record.dividendPerShareAmount = divPerShare;
       }
     } else if (record[BaseHeader.Amount]) {
       // If we can't parse shares, set dividend per share to the amount
-      const amount = Math.abs(record[BaseHeader.Amount]);
-      record.dividend_per_share_amount = amount;
-      console.log('fn util pDT Set dividend_per_share_amount from amount only:', amount);
+      record.dividendPerShareAmount = Math.abs(record[BaseHeader.Amount]);
     }
   }
-
-  // Debug logging
-  console.log('fn util pDT ===== DIVIDEND TRANSACTION DETAILS =====');
-  console.log('fn util pDT Instrument:', record[BaseHeader.Instrument]);
-  console.log('fn util pDT Amount:', record[BaseHeader.Amount]);
-  console.log('fn util pDT Shares Owned:', record.shares_owned);
-  console.log('fn util pDT Dividend per Share:', record.dividend_per_share_amount);
-  console.log('fn util pDT Description:', record[BaseHeader.Description]);
-  console.log('fn util pDT CUSIP:', record.cusip);
-  console.log('fn util pDT Is Recurring:', record.is_recurring);
-  console.log('fn util pDT Full Record:', JSON.stringify(record, null, 2));
-  console.log('fn util pDT ==================================');
 };
 
 /**
@@ -476,6 +470,9 @@ export const processRecord = (record: Record<string, string>): ProcessedRecord |
     const fieldName = fieldMappings.get(key);
     console.log(`fn util pR fieldName: ${fieldName}`);
     
+    // Skip if we don't have a valid field name
+    if (!fieldName) continue;
+    
     // Process based on field type
     if (isDateField(key)) {
       console.log(`fn util pR Processing date field '${key}' as '${fieldName}' with value: ${value}`);
@@ -483,35 +480,62 @@ export const processRecord = (record: Record<string, string>): ProcessedRecord |
       console.log(`fn util pR Formatted date: ${formattedDate}`);
       if (formattedDate) {
         // Type assertion is safe here because we've already checked the field name
-        (processedRecord as Record<string, any>)[fieldName as string] = formattedDate;
+        processedRecord[fieldName] = formattedDate;
       }
     } else if (isNumberField(key)) {
       const num = parseNumber(value);
       if (num !== undefined) {
         // Type assertion is safe here because we've already checked the field name
-        (processedRecord as Record<string, any>)[fieldName as string] = num;
+        processedRecord[fieldName] = num;
       } else {
         console.warn(`fn util pR Could not parse sanitized number for key '${key}': Original='${value}'`);
       }
     } else {
       // Type assertion is safe here because we've already checked the field name
-      (processedRecord as Record<string, any>)[fieldName as string] = value;
+      processedRecord[fieldName] = value;
     }
   }
 
-  // Extract CUSIP and recurring status from description
+  // Extract CUSIP and notes from description
   if (processedRecord.description) {
-    console.log(`fn util pR Processing description for CUSIP: "${processedRecord.description}"`);
-    const cusip = extractCusip(processedRecord.description);
+    const description = processedRecord.description.toLowerCase();
+    console.log(`fn util pR Processing description: "${description}"`);
+    
+    // Extract CUSIP
+    const cusip = extractCusip(description);
     console.log(`fn util pR Extracted CUSIP: ${cusip || 'Not found'}`);
     if (cusip) {
       processedRecord.cusip = cusip;
       console.log(`fn util pR Set CUSIP on record: ${processedRecord.cusip}`);
     }
-    processedRecord.isRecurring = isRecurring(processedRecord.description);
+    
+    // Process notes
+    const notes: Note[] = [];
+    
+    if (description.includes('recurring')) {
+      notes.push(Note.Recurring);
+    }
+    if (description.includes('dividend reinvestment')) {
+      notes.push(Note.DividendReinvestment);
+    }
+    
+    if (notes.length > 0) {
+      processedRecord.notes = notes;
+      console.log(`fn util pR Set notes on record: ${notes.join(', ')}`);
+    }
+    
+    // Set record type based on transaction code
+    if (processedRecord.transCode) {
+      const transCode = processedRecord.transCode.trim().toUpperCase();
+      processedRecord.recordType = transCode === 'CDIV' ? RecordType.Dividend : RecordType.Regular;
+    } else {
+      // Default to Regular if no transaction code is present
+      processedRecord.recordType = RecordType.Regular;
+    }
   }
 
-  return processedRecord as ProcessedRecord;
+  // Return the processed record with notes
+  return processedRecord;
 };
 
 /**

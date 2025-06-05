@@ -8,7 +8,7 @@ import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { MatRadioModule } from '@angular/material/radio';
 import { HttpClient } from '@angular/common/http';
 import { CLOUD_FUNCTION_URLS } from '../../constants';
-import { DownloadFormat } from '@shared/enums';
+import { DownloadFormat } from '../../interfaces';
 
 /**
  * JSDoc for FileConverter component
