@@ -67,10 +67,31 @@ This is a general task list for project management.
     * [x] Update backend to use shared enums
     * [x] Configure TypeScript path aliases for shared imports
     * [x] Remove duplicate enum definitions
+* [x] Fix CUSIP case sensitivity in output
+    * [x] Update extractCusip function to ensure consistent uppercase output
+    * [x] Add case-insensitive matching for CUSIP extraction
+    * [x] Update function documentation to specify uppercase return value
 
 ---
 
-## Phase 4: Testing & Deployment
+## Phase 4: Project Dependencies
+
+### Core Dependencies
+- [x] @angular/* (v20.0.0) - Angular framework and core modules
+- [x] @angular/material (v20.0.0) - Material Design components
+- [x] @angular/cdk (v20.0.0) - Component Dev Kit
+- [x] @angular/fire (v20.0.0) - Firebase integration for Angular
+- [x] firebase (v11.9.0) - Firebase SDK
+- [x] rxjs (~7.8.0) - Reactive Extensions for JavaScript
+- [x] zone.js (~0.15.0) - Zone-based async operations wrapper
+
+### Development Dependencies
+- [x] @angular/cli (v20.0.0) - Angular CLI
+- [x] typescript (~5.8.2) - TypeScript compiler
+- [x] @types/firebase (^2.4.32) - TypeScript definitions for Firebase
+- [x] Testing tools (Jasmine, Karma)
+
+## Phase 5: Testing & Deployment
 
 * [ ] Conduct manual testing of core features
 * [ ] Fix identified bugs
