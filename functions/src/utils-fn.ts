@@ -294,19 +294,19 @@ export const parseNumber = (value: string): number | undefined => {
 /**
  * Extracts CUSIP from a description string
  * @param description - The description containing the CUSIP
- * @returns Extracted CUSIP or undefined if not found
+ * @returns Extracted CUSIP in uppercase or undefined if not found
  */
 export const extractCusip = (description: string): string | undefined => {
   // Look for CUSIP followed by optional whitespace/colon and then a 9-character alphanumeric code
   const cusipMatch = description.match(/CUSIP[\s:]+([A-Z0-9]{9})/i);
   if (cusipMatch && cusipMatch[1]) {
-    return cusipMatch[1];
+    return cusipMatch[1].toUpperCase();
   }
   
   // Fallback: Look for any 9-character alphanumeric code that might be a CUSIP
   // This is more permissive and might produce false positives
-  const fallbackMatch = description.match(/\b([A-Z0-9]{9})\b/);
-  return fallbackMatch?.[1];
+  const fallbackMatch = description.match(/\b([A-Z0-9]{9})\b/i);
+  return fallbackMatch?.[1]?.toUpperCase();
 };
 
 /**
