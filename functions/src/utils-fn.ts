@@ -62,13 +62,18 @@ function createCsvRowConverter(
           
         case ProcessedRecordField.Notes:
           // There will be only one note value if it exists
-          value = record[ProcessedRecordField.Notes]?.[0]?.replace(/"/g, '""') || '';
+          value = record[ProcessedRecordField.Notes]?.[0] || '';
           console.log('fn util rTCR recordToCsvRow - Processing Notes:', value);
           break;
           
         case ProcessedRecordField.CUSIP:
           value = record[ProcessedRecordField.CUSIP] ?? '';
           console.log('fn util rTCR recordToCsvRow - Processing CUSIP:', value);
+          break;
+
+        case ProcessedRecordField.ActivityDate:
+          value = record[ProcessedRecordField.ActivityDate] ?? '';
+          console.log('fn util rTCR recordToCsvRow - Processing ActivityDate:', value);
           break;
           
         default:
@@ -523,15 +528,15 @@ export const processRecord = (record: Record<string, string>): ProcessedRecord |
       processedRecord.notes = notes;
       console.log(`fn util pR Set notes on record: ${notes.join(', ')}`);
     }
-    
-    // Set record type based on transaction code
-    if (processedRecord.transCode) {
-      const transCode = processedRecord.transCode.trim().toUpperCase();
-      processedRecord.recordType = transCode === 'CDIV' ? RecordType.Dividend : RecordType.Regular;
-    } else {
-      // Default to Regular if no transaction code is present
-      processedRecord.recordType = RecordType.Regular;
-    }
+  }
+  
+  // Set record type based on transaction code
+  if (processedRecord.transCode) {
+    const transCode = processedRecord.transCode.trim().toUpperCase();
+    processedRecord.recordType = transCode === 'CDIV' ? RecordType.Dividend : RecordType.Regular;
+  } else {
+    // Default to Regular if no transaction code is present
+    processedRecord.recordType = RecordType.Regular;
   }
 
   // Return the processed record with notes
