@@ -1,18 +1,52 @@
-rules_version='2'
+rules_version = '2';
 
 service cloud.firestore {
   match /databases/{database}/documents {
+    // Users can read/write their own user document
+    match /users/{userId} {
+      allow read, update, delete: if request.auth != null && request.auth.uid == userId;
+      allow create: if request.auth != null && 
+                   request.auth.uid == userId && 
+                   request.resource.data.uid == userId;
+      
+      // Additional validation for updates
+      allow update: if (
+        // Only allow updating specific fields
+        request.resource.data.diff(resource.data).affectedKeys()
+          .hasOnly(['displayName', 'photoURL', 'lastLogin', 'freeTierUsage'])
+      );
+    }
+    
+    // Users can read their own subscriptions
+    match /subscriptions/{subscriptionId} {
+      allow read: if request.auth != null && 
+        resource.data.userId == request.auth.uid;
+      // Write operations handled by Cloud Functions
+      allow write: if false;
+    }
+    
+    // Public read access to active plans
+    match /plans/{planId} {
+      allow read: if resource.data.isActive == true;
+      // Write operations handled by admin
+      allow write: if false;
+    }
+    
+    // Users can access their own transaction logs
+    match /transactions/{transactionId} {
+      allow read: if request.auth != null && 
+        resource.data.userId == request.auth.uid;
+      // Create allowed for authenticated users with proper data
+      allow create: if request.auth != null && 
+                   request.resource.data.userId == request.auth.uid &&
+                   request.resource.data.timestamp == request.time &&
+                   request.resource.data.recordCount is number &&
+                   request.resource.data.recordCount > 0;
+    }
+    
+    // Deny all other access by default
     match /{document=**} {
-      // This rule allows anyone with your database reference to view, edit,
-      // and delete all data in your database. It is useful for getting
-      // started, but it is configured to expire after 30 days because it
-      // leaves your app open to attackers. At that time, all client
-      // requests to your database will be denied.
-      //
-      // Make sure to write security rules for your app before that time, or
-      // else all client requests to your database will be denied until you
-      // update your rules.
-      allow read, write: if request.time < timestamp.date(2025, 7, 3);
+      allow read, write: if false;
     }
   }
 }
