@@ -1,0 +1,154 @@
+.subscription-card {
+  max-width: 600px;
+  margin: 0 auto;
+  
+  mat-card-header {
+    padding: 16px 16px 0;
+    
+    mat-card-title {
+      font-size: 1.5rem;
+      font-weight: 500;
+      margin: 0;
+    }
+    
+    mat-card-subtitle {
+      font-size: 1rem;
+      margin-top: 4px;
+      color: #666;
+    }
+  }
+  
+  mat-card-content {
+    padding: 16px;
+  }
+  
+  .loading-state, .error-state {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 16px 0;
+    
+    mat-spinner {
+      margin-right: 8px;
+    }
+  }
+  
+  .error-state {
+    color: #d32f2f;
+    
+    mat-icon {
+      margin-right: 8px;
+    }
+  }
+  
+  .usage-container {
+    margin-bottom: 24px;
+    
+    .usage-header {
+      display: flex;
+      justify-content: space-between;
+      margin-bottom: 8px;
+      font-size: 0.9rem;
+      
+      span:last-child {
+        font-weight: 500;
+      }
+    }
+    
+    .usage-bar {
+      height: 8px;
+      border-radius: 4px;
+      margin-bottom: 8px;
+    }
+    
+    .usage-footer {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-top: 12px;
+      
+      .reset-date {
+        font-size: 0.85rem;
+        color: #666;
+      }
+      
+      .action-button {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        
+        mat-icon {
+          font-size: 18px;
+          width: 18px;
+          height: 18px;
+        }
+      }
+    }
+  }
+  
+  .features-container {
+    margin: 24px 0;
+    
+    h3 {
+      margin: 0 0 12px;
+      font-size: 1.1rem;
+      font-weight: 500;
+    }
+    
+    .features-list {
+      list-style: none;
+      padding: 0;
+      margin: 0;
+      display: grid;
+      gap: 8px;
+      
+      li {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        
+        mat-icon {
+          color: #4caf50;
+          font-size: 1.1rem;
+          width: 20px;
+          height: 20px;
+        }
+        
+        span {
+          font-size: 0.95rem;
+        }
+      }
+    }
+  }
+  
+  .billing-info {
+    margin-top: 24px;
+    padding-top: 16px;
+    border-top: 1px solid #eee;
+    
+    h3 {
+      margin: 0 0 12px;
+      font-size: 1.1rem;
+      font-weight: 500;
+    }
+    
+    p {
+      margin: 8px 0;
+      font-size: 0.95rem;
+      color: #555;
+    }
+  }
+  
+  @media (max-width: 600px) {
+    .usage-footer {
+      flex-direction: column;
+      align-items: flex-start;
+      gap: 12px;
+      
+      .action-button {
+        width: 100%;
+        justify-content: center;
+      }
+    }
+  }
+}

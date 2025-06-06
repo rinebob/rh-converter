@@ -1,0 +1,123 @@
+<mat-card class="subscription-card">
+  <mat-card-header>
+    <mat-card-title>Your Subscription</mat-card-title>
+    <mat-card-subtitle *ngIf="currentPlan() as plan">{{ plan?.name || 'Free' }} Plan</mat-card-subtitle>
+  </mat-card-header>
+  
+  <mat-card-content>
+    @if (isLoading()) {
+      <div class="loading-state">
+        <mat-spinner diameter="32"></mat-spinner>
+        <span>Loading subscription details...</span>
+      </div>
+    } @else if (error()) {
+      <div class="error-state">
+        <mat-icon color="warn">error_outline</mat-icon>
+        <span>{{ error() }}</span>
+      </div>
+    } @else {
+      <!-- Current Plan -->
+      @if (currentPlan(); as plan) {
+        <div class="current-plan">
+          <h3>{{ plan.name || 'Free' }} Plan</h3>
+          @if (plan.price !== undefined && plan.price > 0) {
+            <p>
+              {{ plan.price | currency:plan.currency:'symbol':'1.0-0' }}
+              <span class="billing-cycle">
+                /{{ plan.interval === 'year' ? 'year' : 'month' }}
+              </span>
+            </p>
+          } @else {
+            <p>Free Forever</p>
+          }
+        </div>
+      }
+
+      <!-- Usage Progress -->
+      @if (usageInfo) {
+        <div class="usage-progress">
+          <div class="usage-header">
+            <h3>Monthly Usage</h3>
+            <span class="usage-percentage">
+              {{ (usageInfo.currentCount / usageInfo.monthlyLimit) * 100 | number:'1.0-0' }}%
+            </span>
+          </div>
+          <p class="usage-message">{{ usageDescription }}</p>
+          <mat-progress-bar
+            mode="determinate"
+            [value]="(usageInfo.currentCount / usageInfo.monthlyLimit) * 100"
+            [color]="isFreeTier() ? 'warn' : 'primary'"
+            class="usage-bar">
+          </mat-progress-bar>
+          
+          <div class="action-buttons">
+            @if (isFreeTier()) {
+              <button 
+                mat-flat-button 
+                color="primary"
+                (click)="upgradePlan()"
+                class="action-button">
+                <mat-icon>upgrade</mat-icon>
+                <span>Upgrade Plan</span>
+              </button>
+            } @else {
+              <button 
+                mat-stroked-button
+                (click)="manageSubscription()"
+                class="action-button">
+                <mat-icon>settings</mat-icon>
+                <span>Manage Subscription</span>
+              </button>
+            }
+          </div>
+        </div>
+      }
+      
+      <!-- Features List -->
+      @if (currentPlan()?.features?.length) {
+        <div class="features-container">
+          <h3>Plan Features</h3>
+          <mat-list>
+            @for (feature of currentPlan()?.features; track $index) {
+              <mat-list-item>
+                <mat-icon matListItemIcon>check_circle</mat-icon>
+                <div matListItemTitle>{{ feature }}</div>
+              </mat-list-item>
+            }
+          </mat-list>
+        </div>
+      }
+      
+      <!-- Usage Reset Info -->
+      @if (usage()?.resetDate) {
+        <div class="reset-info">
+          <mat-icon>update</mat-icon>
+          <span>Usage resets on {{ usage()?.resetDate | date:'mediumDate' }}</span>
+        </div>
+      }
+      
+      <!-- Billing Info -->
+      @if (currentPlan(); as plan) {
+        @if (plan.price && plan.price > 0) {
+          <div class="billing-info">
+            <h3>Billing Information</h3>
+            <mat-list>
+              <mat-list-item>
+                <mat-icon matListItemIcon>calendar_today</mat-icon>
+                <div matListItemTitle>Billing Cycle</div>
+                <div matListItemLine>{{ plan.interval === 'year' ? 'Annual' : 'Monthly' }}</div>
+              </mat-list-item>
+              @if (!isFreeTier()) {
+                <mat-list-item>
+                  <mat-icon matListItemIcon>credit_card</mat-icon>
+                  <div matListItemTitle>Payment Method</div>
+                  <div matListItemLine>Update in portal</div>
+                </mat-list-item>
+              }
+            </mat-list>
+          </div>
+        }
+      }
+    }
+  </mat-card-content>
+</mat-card>

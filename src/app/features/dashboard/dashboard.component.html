@@ -1,0 +1,75 @@
+<div class="dashboard-container">
+  <h1>Welcome to Robinhood Converter</h1>
+  
+  <div class="dashboard-cards">
+    <!-- Upload Card -->
+    <mat-card class="dashboard-card">
+      <mat-card-header>
+        <div mat-card-avatar class="upload-icon">
+          <mat-icon>publish</mat-icon>
+        </div>
+        <mat-card-title>Convert Your Files</mat-card-title>
+        <mat-card-subtitle>Upload your Robinhood CSV files</mat-card-subtitle>
+      </mat-card-header>
+      
+      <mat-card-content>
+        <p>Easily convert your Robinhood trade history to formats compatible with tax software and portfolio trackers.</p>
+        
+        <div class="card-actions">
+          <button mat-raised-button color="primary" routerLink="/upload">
+            <mat-icon>upload</mat-icon>
+            Upload Files
+          </button>
+        </div>
+      </mat-card-content>
+    </mat-card>
+    
+    <!-- Subscription Status -->
+    <div class="subscription-card">
+      <app-subscription-status></app-subscription-status>
+    </div>
+  </div>
+  
+  <!-- Recent Activity -->
+  <mat-card class="recent-activity">
+    <mat-card-header>
+      <mat-card-title>Recent Activity</mat-card-title>
+    </mat-card-header>
+    
+    <mat-card-content>
+      @if (true) {
+        <div class="empty-state">
+          <mat-icon>history</mat-icon>
+          <h3>No recent activity</h3>
+          <p>Your converted files will appear here</p>
+        </div>
+      }
+      
+      <!-- Activity list would go here -->
+    </mat-card-content>
+  </mat-card>
+  
+  <!-- Quick Actions -->
+  <div class="quick-actions">
+    <h2>Quick Actions</h2>
+    
+    <div class="action-buttons">
+      <button mat-stroked-button>
+        <mat-icon>description</mat-icon>
+        View Documentation
+      </button>
+      
+      <button mat-stroked-button>
+        <mat-icon>contact_support</mat-icon>
+        Get Help
+      </button>
+      
+      @if (subscriptionService.isFreeTier()) {
+        <button mat-stroked-button (click)="upgradePlan()">
+          <mat-icon>upgrade</mat-icon>
+          Upgrade Plan
+        </button>
+      }
+    </div>
+  </div>
+</div>
