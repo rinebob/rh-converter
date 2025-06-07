@@ -3,6 +3,21 @@
  */
 
 /**
+ * Possible status values for a user's subscription
+ */
+export enum SubscriptionStatus {
+  ACTIVE = 'active',
+  CANCELED = 'canceled',
+  PAST_DUE = 'past_due',
+  UNPAID = 'unpaid',
+  INCOMPLETE = 'incomplete',
+  INCOMPLETE_EXPIRED = 'incomplete_expired',
+  TRIALING = 'trialing',
+  PAUSED = 'paused',
+  NONE = 'none'
+}
+
+/**
  * Available download formats for conversion and output
  */
 export enum DownloadFormat {
@@ -92,7 +107,7 @@ export interface BillingInfo {
   /** End of current billing period */
   currentPeriodEnd: Date;
   /** Current status of the subscription */
-  status: 'active' | 'canceled' | 'past_due' | 'unpaid' | 'incomplete' | 'incomplete_expired' | 'trialing' | 'paused' | null;
+  status: SubscriptionStatus;
   /** Whether the subscription is set to cancel at period end */
   cancelAtPeriodEnd: boolean;
   /** Next billing date (if applicable) */
@@ -129,10 +144,40 @@ export interface CustomerPortalResponse {
 }
 
 /**
+ * Represents an active subscription for a user
+ */
+export interface ActiveSubscription {
+  /** Current status of the subscription */
+  status: SubscriptionStatus;
+  /** When the current billing period ends */
+  currentPeriodEnd: string | null;
+  /** Whether the subscription is set to cancel at period end */
+  cancelAtPeriodEnd: boolean;
+  /** The subscription plan details */
+  plan: SubscriptionPlan;
+}
+
+/**
+ * Represents the subscription-related state in the application
+ */
+export interface SubscriptionState {
+  /** List of available subscription plans */
+  plans: SubscriptionPlan[];
+  /** User's current subscription plan */
+  currentPlan: SubscriptionPlan | null;
+  /** Current usage information */
+  usage: UsageInfo | null;
+  /** Whether data is currently being loaded */
+  loading: boolean;
+  /** Current error, if any */
+  error: Error | null;
+}
+
+/**
  * User profile information including subscription status
  */
 export interface UserProfile {
-  /** User ID */
+  /** Unique user ID from Firebase Auth */
   uid: string;
   /** User's email address */
   email: string;
@@ -143,7 +188,7 @@ export interface UserProfile {
   /** User's role */
   role: 'free' | 'paid';
   /** Current subscription status */
-  subscriptionStatus?: 'active' | 'canceled' | 'past_due' | 'unpaid';
+  subscriptionStatus?: SubscriptionStatus;
   /** When the current billing period ends */
   currentPeriodEnd?: Date;
   /** Usage information for free tier */
