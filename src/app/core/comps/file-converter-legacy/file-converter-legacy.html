@@ -1,0 +1,65 @@
+<mat-card class="file-converter-card">
+    <mat-card-header>
+      <mat-card-title>Convert your Robinhood transactions file</mat-card-title>
+    </mat-card-header>
+    <mat-card-content>
+      <p class="app-description">Easily convert your Robinhood transaction CSVs into organized JSON and CSV files for use in other applications. Upload your file, and we'll transform it into clean, structured data. Transactions are automatically categorized into standard and dividend activity, with dates and numbers formatted for easy use.</p>
+      <div class="file-input-container">
+        <input 
+          type="file" 
+          (change)="onFileSelected($event)" 
+          accept=".csv" 
+          #fileInput
+          [disabled]="isProcessing()"
+          class="visually-hidden">
+        <button 
+          mat-raised-button 
+          color="primary" 
+          (click)="fileInput.click()"
+          [disabled]="isProcessing()">
+          <mat-icon>upload</mat-icon>
+          {{ selectedFile ? selectedFile.name : 'Choose File' }}
+        </button>
+      </div>
+  
+      <div class="download-format-section">
+        <h3 class="format-title">Download Format</h3>
+        <div class="format-options">
+          <mat-radio-group 
+            [formControl]="downloadFormat" 
+            aria-label="Download Format">
+            @for (format of formats; track format.value) {
+              <mat-radio-button [value]="format.value">{{ format.label }}</mat-radio-button>
+            }
+          </mat-radio-group>
+        </div>
+      </div>
+  
+      @if (isProcessing()) {
+        <div class="loading-overlay">
+          <mat-spinner diameter="50"></mat-spinner>
+          <p>Processing your file. This may take a moment...</p>
+        </div>
+      }
+    </mat-card-content>
+    <mat-card-actions align="end">
+      <button 
+        mat-raised-button 
+        color="primary" 
+        (click)="onConvertClicked()"
+        [disabled]="isButtonDisabled()"
+        class="convert-button">
+        @if (!isProcessing()) {
+          <mat-icon>download</mat-icon>
+        } @else {
+          <mat-spinner diameter="20" class="spinner"></mat-spinner>
+        }
+        @if (isProcessing()) {
+          Processing...
+        } @else {
+          Convert & Download
+        }
+      </button>
+    </mat-card-actions>
+  </mat-card>
+  
