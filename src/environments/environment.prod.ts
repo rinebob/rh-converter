@@ -16,11 +16,6 @@ export const environment: Environment = {
   },
   api: {
     baseUrl: 'https://us-central1-your-prod-project-id.cloudfunctions.net/api',
-    endpoints: {
-      upload: '/upload',
-      convert: '/convert',
-      export: '/export'
-    }
   },
   features: {
     enableAnalytics: true,

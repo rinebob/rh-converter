@@ -16,11 +16,6 @@ export const environment: Environment = {
   },
   api: {
     baseUrl: 'http://localhost:5001/your-dev-project-id/us-central1/api',
-    endpoints: {
-      upload: '/upload',
-      convert: '/convert',
-      export: '/export'
-    }
   },
   features: {
     enableAnalytics: false,

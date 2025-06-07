@@ -15,11 +15,6 @@ export interface Environment {
   };
   api: {
     baseUrl: string;
-    endpoints: {
-      upload: string;
-      convert: string;
-      export: string;
-    };
   };
   features: {
     enableAnalytics: boolean;
