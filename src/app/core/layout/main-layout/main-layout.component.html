@@ -1,12 +1,31 @@
+<!-- Toolbar with App Title -->
+<mat-toolbar color="primary" class="toolbar">
+  <button mat-icon-button (click)="sidenav.toggle()" class="menu-button">
+    <mat-icon>menu</mat-icon>
+  </button>
+  
+  <h2 class="app-title">Robinhood Converter</h2>
+  
+  <span class="spacer"></span>
+  
+  <button mat-button [matMenuTriggerFor]="userMenu" class="user-menu-button">
+    <mat-icon>account_circle</mat-icon>
+    <span class="user-name">{{ (currentUser$ | async)?.displayName || 'User' }}</span>
+  </button>
+  <mat-menu #userMenu="matMenu">
+    <button mat-menu-item (click)="signOut()">
+      <mat-icon>exit_to_app</mat-icon>
+      <span>Sign Out</span>
+    </button>
+  </mat-menu>
+</mat-toolbar>
+
+<!-- Sidenav and Content Container -->
 <mat-sidenav-container class="sidenav-container">
-  <!-- Sidenav -->
   <mat-sidenav #sidenav 
               [mode]="(isHandset$ | async)?.matches ? 'over' : 'side'"
               [opened]="!(isHandset$ | async)?.matches"
               class="sidenav">
-    <div class="sidenav-header">
-      <h2>Robinhood Converter</h2>
-    </div>
     
     <mat-nav-list>
       <!-- Dashboard -->
@@ -41,40 +60,17 @@
       </div>
     </mat-nav-list>
   </mat-sidenav>
-  
+
   <!-- Main Content -->
-  <mat-sidenav-content>
-    <!-- Toolbar -->
-    <mat-toolbar color="primary" class="toolbar">
-      <button mat-icon-button (click)="sidenav.toggle()" class="menu-button">
-        <mat-icon>menu</mat-icon>
-      </button>
-      
-      <span class="spacer"></span>
-      
-      <!-- User Menu -->
-      <button mat-button [matMenuTriggerFor]="userMenu" class="user-menu-button">
-        <div class="user-info">
-          <span class="user-name">{{ (currentUser$ | async)?.displayName || 'User' }}</span>
-          <span class="user-email">{{ (currentUser$ | async)?.email || '' }}</span>
-        </div>
-        <mat-icon>arrow_drop_down</mat-icon>
-      </button>
-      <mat-menu #userMenu="matMenu">
-        <button mat-menu-item routerLink="/settings">
-          <mat-icon>settings</mat-icon>
-          <span>Settings</span>
-        </button>
-        <button mat-menu-item (click)="signOut()">
-          <mat-icon>logout</mat-icon>
-          <span>Sign Out</span>
-        </button>
-      </mat-menu>
-    </mat-toolbar>
-    
-    <!-- Page Content -->
-    <div class="content">
+  <mat-sidenav-content class="main-content">
+    <div class="page-content">
       <router-outlet></router-outlet>
     </div>
+    <footer class="app-footer">
+      <div class="footer-content">
+        <span>© 2025 RH Converter</span>
+        <span class="disclaimer-text">This file converter does not store or save any of your transaction data. The output provided should be verified for accuracy.</span>
+      </div>
+    </footer>
   </mat-sidenav-content>
 </mat-sidenav-container>

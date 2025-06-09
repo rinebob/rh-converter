@@ -1,14 +1,14 @@
 import { Component } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { FileConverter } from './core/comps/file-converter/file-converter';
+import { RouterModule, RouterOutlet } from '@angular/router';
 
 @Component({
   selector: 'rh-root',
   standalone: true,
-  imports: [CommonModule, FileConverter],
+  imports: [CommonModule, RouterModule, RouterOutlet],
   templateUrl: './app.component.html',
-  styleUrl: './app.component.scss'
+  styles: []
 })
 export class AppComponent {
-  protected title = 'rh-converter';
+  title = 'rh-converter';
 }

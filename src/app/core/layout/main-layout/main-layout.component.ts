@@ -1,43 +1,39 @@
 import { ChangeDetectionStrategy, Component, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { Router, RouterModule } from '@angular/router';
-// Define User interface locally
+import { MatToolbarModule } from '@angular/material/toolbar';
+import { MatIconModule } from '@angular/material/icon';
+import { MatButtonModule } from '@angular/material/button';
+import { MatSidenavModule } from '@angular/material/sidenav';
+import { MatListModule } from '@angular/material/list';
+import { MatProgressBarModule } from '@angular/material/progress-bar';
+import { MatMenuModule } from '@angular/material/menu';
+import { AuthService } from '../../services/auth.service';
+import { SubscriptionService } from '../../services/subscription.service';
+import { BreakpointObserver, Breakpoints } from '@angular/cdk/layout';
+import { Observable } from 'rxjs';
+
+// Define User interface locally since we don't have the model
 interface User {
   displayName?: string | null;
   email?: string | null;
   photoURL?: string | null;
   uid?: string;
 }
-import { Observable } from 'rxjs';
-import { MatToolbarModule } from '@angular/material/toolbar';
-import { MatButtonModule } from '@angular/material/button';
-import { MatIconModule } from '@angular/material/icon';
-import { MatSidenavModule } from '@angular/material/sidenav';
-import { MatListModule } from '@angular/material/list';
-import { MatMenuModule } from '@angular/material/menu';
-import { MatBadgeModule } from '@angular/material/badge';
-import { MatDividerModule } from '@angular/material/divider';
-import { MatProgressBarModule } from '@angular/material/progress-bar';
-import { BreakpointObserver, Breakpoints } from '@angular/cdk/layout';
-import { AuthService } from '../../services/auth.service';
-import { SubscriptionService } from '../../services/subscription.service';
-import { toSignal } from '@angular/core/rxjs-interop';
 
 @Component({
   selector: 'app-main-layout',
   standalone: true,
   imports: [
     CommonModule,
-    RouterModule,
     MatToolbarModule,
-    MatButtonModule,
     MatIconModule,
+    MatButtonModule,
     MatSidenavModule,
     MatListModule,
+    MatProgressBarModule,
     MatMenuModule,
-    MatBadgeModule,
-    MatDividerModule,
-    MatProgressBarModule
+    RouterModule
   ],
   templateUrl: './main-layout.component.html',
   styleUrls: ['./main-layout.component.scss'],
@@ -49,10 +45,7 @@ export class MainLayoutComponent {
   protected authService = inject(AuthService);
   protected subscriptionService = inject(SubscriptionService);
   
-  // Current user observable with proper typing
   currentUser$ = this.authService.currentUser$ as Observable<User | null>;
-  
-  // Responsive breakpoint for mobile view
   isHandset$ = this.breakpointObserver.observe(Breakpoints.Handset);
   
   closeSidenavIfHandset() {
