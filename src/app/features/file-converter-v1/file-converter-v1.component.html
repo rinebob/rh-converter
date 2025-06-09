@@ -1,0 +1,30 @@
+<div class="converter-page">
+  <!-- Header -->
+  <mat-card class="file-converter-card">
+    <mat-card-header>
+      <mat-card-title>Robinhood Transaction File Converter</mat-card-title>
+      <mat-card-subtitle>Convert Robinhood CSV files to JSON and CSV</mat-card-subtitle>
+      <mat-card-subtitle>Free Tier - Limited to 25 transactions per file. 
+        <a routerLink="/signup">Sign up</a> for unlimited conversions and additional features!
+      </mat-card-subtitle>
+    </mat-card-header>
+    
+    <!-- SIGNIN BUTTON DO NOT DELETE -->
+    <!-- <mat-card-actions align="end">
+      <button mat-raised-button color="primary" routerLink="/login" class="signin-button">
+        <mat-icon>login</mat-icon>
+        Sign In
+      </button>
+    </mat-card-actions> -->
+    
+  </mat-card>
+  
+  <!-- Legacy converter -->
+  <rh-file-converter-legacy />
+  
+  <!-- Footer -->
+  <footer class="app-footer">
+    <p>© 2025 RH Converter</p>
+    <p class="disclaimer-text">This file converter does not store or save any of your transaction data. The output provided should be verified for accuracy.</p>
+  </footer>
+</div>

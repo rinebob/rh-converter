@@ -1,4 +1,5 @@
-import { Component, OnInit, inject, signal } from '@angular/core';
+import { Component, OnInit, inject, signal, Input } from '@angular/core';
+import { ActivatedRoute, Router } from '@angular/router';
 import { CommonModule } from '@angular/common';
 import { FormControl, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
 import { MatButtonModule } from '@angular/material/button';
@@ -7,8 +8,8 @@ import { MatIconModule } from '@angular/material/icon';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { MatRadioModule } from '@angular/material/radio';
 import { HttpClient } from '@angular/common/http';
-import { CLOUD_FUNCTION_URLS } from '../../constants';
-import { DownloadFormat } from '../../interfaces';
+import { CLOUD_FUNCTION_URLS } from '../../common/constants';
+import { DownloadFormat } from '../../common/interfaces';
 
 /**
  * JSDoc for FileConverter component
@@ -30,6 +31,12 @@ import { DownloadFormat } from '../../interfaces';
 })
 export class FileConverter implements OnInit {
   private http = inject(HttpClient);
+  private route = inject(ActivatedRoute);
+  private router = inject(Router);
+  
+  // Tier information
+  isFreeTier = false;
+  MAX_FREE_TRANSACTIONS = 10;
   
   // Form controls
   fileInput = new FormControl<File | null>(null, { 
@@ -46,6 +53,9 @@ export class FileConverter implements OnInit {
     fileInput: this.fileInput,
     downloadFormat: this.downloadFormat
   });
+  
+  // Make DownloadFormat enum available in template
+  DownloadFormat = DownloadFormat;
   
   // State
   selectedFile: File | null = null;
@@ -86,6 +96,15 @@ export class FileConverter implements OnInit {
   }
 
   ngOnInit(): void {
+    // Check if this is the free tier version
+    this.isFreeTier = this.route.snapshot.data['isFreeTier'] || false;
+    
+    if (this.isFreeTier) {
+      // Apply any free tier specific restrictions
+      // For example, limit the download format options
+      this.downloadFormat.setValue(DownloadFormat.JSON);
+    }
+    
     // Initial button state
     this.updateButtonState();
     

@@ -1,4 +1,4 @@
-import { Component, OnInit, inject, signal } from '@angular/core';
+import { Component, OnInit, inject, signal, ChangeDetectionStrategy } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormControl, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
 import { MatButtonModule } from '@angular/material/button';
@@ -28,7 +28,8 @@ import { DownloadFormat } from '../../common/interfaces';
     MatRadioModule
   ],
   templateUrl: './file-converter-legacy.html',
-  styleUrl: './file-converter-legacy.scss'
+  styleUrls: ['./file-converter-legacy.scss'],
+  changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class FileConverterLegacy implements OnInit {
   private http = inject(HttpClient);
