@@ -5,10 +5,15 @@
   "compilerOptions": {
     "outDir": "./out-tsc/spec",
     "types": [
-      "jasmine"
-    ]
+      "jasmine",
+      "node",
+      "jest"
+    ],
+    "esModuleInterop": true,
+    "module": "commonjs"
   },
   "include": [
-    "src/**/*.ts"
+    "src/**/*.spec.ts",
+    "src/**/*.d.ts"
   ]
 }

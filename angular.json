@@ -65,7 +65,10 @@
           "defaultConfiguration": "production"
         },
         "serve": {
-          "builder": "@angular/build:dev-server",
+          "builder": "@angular-devkit/build-angular:dev-server",
+          "options": {
+            "buildTarget": "rh-converter:build"
+          },
           "configurations": {
             "production": {
               "buildTarget": "rh-converter:build:production"
@@ -80,7 +83,7 @@
           "builder": "@angular/build:extract-i18n"
         },
         "test": {
-          "builder": "@angular/build:karma",
+          "builder": "@angular-devkit/build-angular:karma",
           "options": {
             "polyfills": [
               "zone.js",
