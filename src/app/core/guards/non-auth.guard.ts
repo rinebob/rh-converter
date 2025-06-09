@@ -4,22 +4,21 @@ import { map, take } from 'rxjs/operators';
 import { AuthService } from '@core/services/auth.service';
 
 /**
- * Auth guard that protects paid routes
- * Redirects to the free tier if user is not authenticated
+ * Non-auth guard that prevents authenticated users from accessing public routes
+ * Redirects to the dashboard if user is already authenticated
  */
-export const authGuard: CanActivateFn = () => {
+export const nonAuthGuard: CanActivateFn = () => {
   const authService = inject(AuthService);
   const router = inject(Router);
 
   return authService.currentUser$.pipe(
     take(1),
     map(user => {
-      if (user) {
-        return true; // Allow access for authenticated users
+      if (!user) {
+        return true; // Allow access if not authenticated
       }
-      
-      // For unauthenticated users, redirect to the file converter (free tier)
-      return router.createUrlTree(['/']);
+      // Redirect to dashboard if already authenticated
+      return router.createUrlTree(['/dashboard']);
     })
   );
 };

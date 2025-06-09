@@ -4,14 +4,9 @@ import { Observable, from } from 'rxjs';
 import { map, switchMap, tap } from 'rxjs/operators';
 import { Auth, signOut, signInWithEmailAndPassword, createUserWithEmailAndPassword, updateProfile, User as FirebaseUser, onAuthStateChanged } from 'firebase/auth';
 
-export const FIREBASE_AUTH = new InjectionToken<Auth>('Firebase Auth');
+import { User } from '../models/user.model';
 
-export interface User {
-  displayName?: string | null;
-  email?: string | null;
-  photoURL?: string | null;
-  uid?: string;
-}
+export const FIREBASE_AUTH = new InjectionToken<Auth>('Firebase Auth');
 
 @Injectable({
   providedIn: 'root'
