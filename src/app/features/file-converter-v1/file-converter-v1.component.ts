@@ -7,6 +7,7 @@ import { MatIconModule } from '@angular/material/icon';
 import { MatTabsModule } from '@angular/material/tabs';
 import { MatTableModule, MatTableDataSource } from '@angular/material/table';
 import { MatSort, MatSortModule } from '@angular/material/sort';
+import { FileConverterLegacy } from '../../core/comps/file-converter-legacy/file-converter-legacy';
 
 interface ColumnDefinition {
   name: string;
@@ -24,7 +25,8 @@ interface ColumnDefinition {
     MatIconModule,
     MatTabsModule,
     MatTableModule,
-    MatSortModule
+    MatSortModule,
+    FileConverterLegacy
   ],
   templateUrl: './file-converter-v1.component.html',
   styleUrls: ['./file-converter-v1.component.scss']
