@@ -61,6 +61,24 @@ This is a general task list for project management.
     * [x] Style `BrokersListComponent` to match "File Formats" tab, listing 'Robinhood'
     * [x] Add "Request New Brokerage Support" card to `BrokersListComponent`
     * [ ] Write Jest unit tests for `BrokersListComponent` (render, content, edge cases) - *Deferred*
+* [x] Refactor Instructions and File Formats tabs into standalone components (2025-06-19)
+    * [x] Generate `instructions-content` standalone component (`ts`/`html`/`scss`)
+    * [x] Move existing Instructions HTML into `instructions-content` template and apply styling
+    * [x] Update `file-converter-v1.component.html` to embed `<app-instructions-content>`
+    * [x] Update `file-converter-v1.component.ts` to import `InstructionsContentComponent`
+    * [x] Generate `file-formats-content` standalone component (`ts`/`html`/`scss`)
+    * [x] Move existing File Formats HTML (tables, etc.) and associated TS logic (data sources, column defs, sorting) into `file-formats-content` component
+    * [x] Move SCSS styles for File Formats into `file-formats-content.component.scss`
+    * [x] Update `file-converter-v1.component.html` to embed `<app-file-formats-content>`
+    * [x] Update `file-converter-v1.component.ts` to import `FileFormatsContentComponent` and remove migrated logic/data
+* [x] Standardize tab headings across all tab content components
+  - [x] Inspect `BrokersListComponent` heading style for reference.
+  - [x] Add centered `<h2>` heading to `InstructionsContentComponent`
+  - [x] Add centered `<h2>` heading to `FileFormatsContentComponent`.
+  - [x] Style `mat-card-title` in `FileConverterLegacy` to match heading spec.
+  - [x] Style `mat-card-title` in `CommentsSectionComponent` to match heading spec.
+  - [x] Apply consistent SCSS for heading centering across components.
+
 * [ ] Design database schema
 * [ ] Implement user authentication
 * [ ] Develop subscription management features

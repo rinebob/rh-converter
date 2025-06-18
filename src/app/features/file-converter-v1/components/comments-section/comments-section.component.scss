@@ -4,7 +4,7 @@
 .comments-container {
   max-width: 800px;
   margin: 0 auto;
-  padding: 1rem;
+  padding: 0 1rem;
 }
 
 .comments-card {
@@ -13,13 +13,19 @@
   overflow: hidden;
   
   .mat-mdc-card-header {
-    padding: 1.5rem 1.5rem 0.5rem;
-    background-color: #f8f9fa;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+    padding: 0;
+    margin-bottom: 2rem;
+    background-color: transparent;
     
     .mat-mdc-card-title {
-      font-size: 1.5rem;
-      font-weight: 500;
+      font-size: 1.8rem;
+      font-weight: 600;
       color: #2c3e50;
+      margin-bottom: 0;
     }
     
     .mat-mdc-card-subtitle {

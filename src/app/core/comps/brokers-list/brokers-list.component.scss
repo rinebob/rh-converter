@@ -3,23 +3,7 @@
 
 // Placeholder for future styles
 .brokers-list-container {
-  padding: 1rem; // Example, use rem() function and variables
-}
-
-// Ensure global variables and mixins are imported if available
-// Example: @use 'path/to/global/variables' as vars;
-
-:host {
-  display: block;
-  // Padding might be better handled by the .tab-content class from the parent or .file-formats-content
-}
-
-// Styles to mimic file-formats-content and its children
-// These are based on the structure of file-converter-v1.component.scss
-// Consider moving common styles to a shared partial for better maintainability.
-
-.file-formats-content { // This class might be better named if it's specific to this component's needs
-  padding: 1rem 1.5rem 2rem; // Consistent with parent tab content padding
+  padding: 0 2rem; // Example, use rem() function and variables
 
   h2 {
     color: #2c3e50; // Using common color variables is recommended
@@ -28,6 +12,14 @@
     text-align: center;
     font-weight: 600;
   }
+}
+
+// Ensure global variables and mixins are imported if available
+// Example: @use 'path/to/global/variables' as vars;
+
+:host {
+  display: block;
+  // Padding might be better handled by the .tab-content class from the parent or .file-formats-content
 }
 
 .format-section {
