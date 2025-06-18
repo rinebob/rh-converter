@@ -1,0 +1,87 @@
+// Styles for the brokers list component
+// As per project rules, use Sass variables and mixins when adding actual styles.
+
+// Placeholder for future styles
+.brokers-list-container {
+  padding: 1rem; // Example, use rem() function and variables
+}
+
+// Ensure global variables and mixins are imported if available
+// Example: @use 'path/to/global/variables' as vars;
+
+:host {
+  display: block;
+  // Padding might be better handled by the .tab-content class from the parent or .file-formats-content
+}
+
+// Styles to mimic file-formats-content and its children
+// These are based on the structure of file-converter-v1.component.scss
+// Consider moving common styles to a shared partial for better maintainability.
+
+.file-formats-content { // This class might be better named if it's specific to this component's needs
+  padding: 1rem 1.5rem 2rem; // Consistent with parent tab content padding
+
+  h2 {
+    color: #2c3e50; // Using common color variables is recommended
+    font-size: 1.8rem;
+    margin: 0 0 2rem 0;
+    text-align: center;
+    font-weight: 600;
+  }
+}
+
+.format-section {
+  background: white;
+  border-radius: 8px;
+  padding: 1.5rem;
+  margin: 0 0 1.5rem 0;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+  border: 1px solid #e1e4e8;
+
+  &:last-child {
+    margin-bottom: 0;
+  }
+
+  h3 {
+    color: #0078d4; // Using theme color variable is recommended
+    font-size: 1.4rem;
+    margin: 0 0 1rem 0;
+    padding-bottom: 0.75rem;
+    font-weight: 500;
+    border-bottom: 1px solid #e1e4e8;
+  }
+
+  .format-description {
+    color: #2c3e50;
+    margin: 0 0 1rem 0;
+    line-height: 1.6;
+    font-size: 0.95rem;
+  }
+
+  .format-note {
+    display: flex;
+    align-items: flex-start;
+    gap: 0.75rem; // Increased gap slightly for better spacing
+    margin-top: 1rem;
+    padding: 0.75rem 1rem;
+    background-color: #f8f9fa; // Light background for the note
+    border: 1px solid #e9ecef;
+    border-radius: 6px;
+    font-size: 0.9rem;
+    color: #495057;
+
+    mat-icon {
+      color: #0078d4; // Theme color for the icon
+      font-size: 1.2rem; // Slightly larger icon
+      width: 1.2rem;
+      height: 1.2rem;
+      margin-top: 0.1rem; // Align with text
+      flex-shrink: 0; // Prevent icon from shrinking
+    }
+
+    span {
+      flex: 1;
+      line-height: 1.5; // Improved readability for note text
+    }
+  }
+}

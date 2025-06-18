@@ -54,6 +54,13 @@ This is a general task list for project management.
         * [x] Set component `:host` to be a full-height flex container.
         * [x] Added `min-height: 0` to the main content column to allow it to shrink correctly.
     * [x] Cleaned up redundant CSS rules after fixing the layout.
+* [x] Add 'Brokers' tab to list supported brokerages (2025-06-18)
+    * [x] Create `brokers-list` component to display supported brokers (`brokers-list.component.ts/.html/.scss`)
+    * [x] Add 'Brokers' tab to the `file-converter-v1` component's tab group and embed `app-brokers-list`
+    * [x] Import `BrokersListComponent` and `MatIconModule` into `file-converter-v1.component.ts` and `brokers-list.component.ts` respectively
+    * [x] Style `BrokersListComponent` to match "File Formats" tab, listing 'Robinhood'
+    * [x] Add "Request New Brokerage Support" card to `BrokersListComponent`
+    * [ ] Write Jest unit tests for `BrokersListComponent` (render, content, edge cases) - *Deferred*
 * [ ] Design database schema
 * [ ] Implement user authentication
 * [ ] Develop subscription management features

@@ -9,6 +9,7 @@ import { MatTableModule, MatTableDataSource } from '@angular/material/table';
 import { MatSort, MatSortModule } from '@angular/material/sort';
 import { FileConverterLegacy } from '../../core/comps/file-converter-legacy/file-converter-legacy';
 import { CommentsSectionComponent } from './components/comments-section/comments-section.component';
+import { BrokersListComponent } from '../../core/comps/brokers-list/brokers-list.component';
 
 interface ColumnDefinition {
   name: string;
@@ -28,7 +29,8 @@ interface ColumnDefinition {
     MatTableModule,
     MatSortModule,
     FileConverterLegacy,
-    CommentsSectionComponent
+    CommentsSectionComponent,
+    BrokersListComponent
   ],
   templateUrl: './file-converter-v1.component.html',
   styleUrls: ['./file-converter-v1.component.scss']

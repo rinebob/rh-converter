@@ -25,7 +25,13 @@
       <mat-tab-group (selectedTabChange)="onTabChange($event.index)" [selectedIndex]="activeTabIndex">
         <mat-tab label="Converter">
           <div class="tab-content">
-            <rh-file-converter-legacy></rh-file-converter-legacy>
+            <rh-file-converter-legacy/>
+          </div>
+        </mat-tab>
+        
+        <mat-tab label="Brokers">
+          <div class="tab-content">
+            <app-brokers-list/>
           </div>
         </mat-tab>
         
@@ -202,7 +208,7 @@
             </div>
           </div>
         </mat-tab>
-        
+
         <mat-tab label="Comments">
           <div class="tab-content">
             <rh-comments-section/>
