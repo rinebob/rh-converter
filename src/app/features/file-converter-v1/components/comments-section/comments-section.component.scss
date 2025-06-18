@@ -1,0 +1,174 @@
+@use 'sass:color';
+@use '@angular/material' as mat;
+
+.comments-container {
+  max-width: 800px;
+  margin: 0 auto;
+  padding: 1rem;
+}
+
+.comments-card {
+  border-radius: 8px;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.08);
+  overflow: hidden;
+  
+  .mat-mdc-card-header {
+    padding: 1.5rem 1.5rem 0.5rem;
+    background-color: #f8f9fa;
+    
+    .mat-mdc-card-title {
+      font-size: 1.5rem;
+      font-weight: 500;
+      color: #2c3e50;
+    }
+    
+    .mat-mdc-card-subtitle {
+      color: #666;
+    }
+  }
+  
+  .mat-mdc-card-content {
+    padding: 1.5rem;
+  }
+}
+
+.comment-form {
+  margin-bottom: 2rem;
+  
+  .full-width {
+    width: 100%;
+    margin-bottom: 1rem;
+  }
+  
+  .form-actions {
+    display: flex;
+    justify-content: flex-end;
+    
+    button {
+      min-width: 160px;
+      
+      mat-icon {
+        margin-right: 8px;
+      }
+    }
+  }
+}
+
+.comments-list {
+  margin-top: 1.5rem;
+  padding: 0;
+  
+  .comment-item { 
+    padding: 0.25rem 0; 
+    height: auto;
+    min-height: auto; 
+    align-items: flex-start;
+    color: #333;
+    
+    &:last-child {
+      border-bottom: none;
+    }
+    
+    .comment-header {
+      display: flex;
+      align-items: center;
+      margin-bottom: 0; 
+      width: 100%;
+      min-height: auto; 
+      padding: 0.1rem 0; 
+
+      .comment-date {
+        font-size: 0.75rem; 
+        color: #6c757d;
+        line-height: 1; 
+      }
+      
+      button {
+        opacity: 0.7;
+        transition: opacity 0.2s ease;
+        transform: scale(0.9); 
+        margin-left: auto;
+
+        &:hover {
+          opacity: 1;
+        }
+      }
+    }
+    
+    // Use ::ng-deep to override styles on the Material-generated span
+    // that wraps the secondary line (our comment text).
+    ::ng-deep .mdc-list-item__secondary-text {
+      white-space: normal;
+      overflow: visible;
+      text-overflow: clip;
+      color: #1c1c1c;
+      padding-top: 0; 
+    }
+
+    // Ensure our specific styles for p.comment-text are also applied forcefully.
+    // This selector assumes matLine is still on the p.comment-text element.
+    ::ng-deep p.comment-text[matLine] {
+      white-space: pre-wrap;
+      overflow: visible;
+      text-overflow: clip;
+      margin: 0;
+      color: #1c1c1c;
+      line-height: 1.3; 
+      font-size: 0.85rem; 
+      opacity: 1;
+      visibility: visible;
+      display: block;
+      padding-bottom: 0.1rem; 
+    }
+  }
+
+  .mat-divider {
+    margin: 0.25rem 0;
+  }
+}
+
+.no-comments {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 3rem 1rem;
+  text-align: center;
+  color: #666;
+  
+  mat-icon {
+    font-size: 3rem;
+    width: 3rem;
+    height: 3rem;
+    margin-bottom: 1rem;
+    opacity: 0.5;
+  }
+  
+  p {
+    margin: 0;
+    font-size: 1.1rem;
+  }
+}
+
+// Responsive adjustments
+@media (max-width: 600px) {
+  .comments-container {
+    padding: 0.5rem;
+  }
+  
+  .comments-card {
+    .mat-mdc-card-header {
+      padding: 1rem 1rem 0.5rem;
+    }
+    
+    .mat-mdc-card-content {
+      padding: 1rem;
+    }
+  }
+  
+  .form-actions {
+    button {
+      width: 100%;
+    }
+  }
+}

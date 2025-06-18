@@ -1,0 +1,62 @@
+<div class="comments-container">
+  <mat-card class="comments-card">
+    <mat-card-header>
+      <mat-card-title>Comments</mat-card-title>
+      <mat-card-subtitle>Add your notes and comments about this conversion</mat-card-subtitle>
+    </mat-card-header>
+
+    <mat-card-content>
+      <form (submit)="$event.preventDefault(); addComment()" class="comment-form">
+        <mat-form-field appearance="outline" class="full-width">
+          <mat-label>Add a comment</mat-label>
+          <textarea 
+            matInput 
+            [(ngModel)]="newComment" 
+            name="newComment"
+            cdkTextareaAutosize
+            cdkAutosizeMinRows="3"
+            cdkAutosizeMaxRows="6"
+            placeholder="Type your comment here..."
+            required>
+          </textarea>
+        </mat-form-field>
+        <div class="form-actions">
+          <button 
+            mat-raised-button 
+            color="primary" 
+            type="submit"
+            [disabled]="!newComment.trim()">
+            <mat-icon>add_comment</mat-icon>
+            Add Comment
+          </button>
+        </div>
+      </form>
+
+      @if (comments().length > 0) {
+        <mat-list class="comments-list">
+          @for (comment of comments(); track comment.id) {
+            <mat-list-item class="comment-item">
+              <div matListItemTitle class="comment-header">
+                <span class="comment-date">{{ formatDate(comment.timestamp) }}</span>
+                <button 
+                  mat-icon-button 
+                  color="warn" 
+                  (click)="removeComment(comment.id)"
+                  aria-label="Remove comment">
+                  <mat-icon>delete</mat-icon>
+                </button>
+              </div>
+              <p matLine class="comment-text">{{ comment.text }}</p>
+            </mat-list-item>
+            <mat-divider></mat-divider>
+          }
+        </mat-list>
+      } @else {
+        <div class="no-comments">
+          <mat-icon>comment</mat-icon>
+          <p>No comments yet. Add your first comment above.</p>
+        </div>
+      }
+    </mat-card-content>
+  </mat-card>
+</div>
