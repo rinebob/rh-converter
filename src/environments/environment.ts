@@ -22,10 +22,10 @@ export const environment: Environment = {
     enablePerformanceMonitoring: false
   },
   app: {
-    name: 'RH Converter (Dev)',
+    name: 'Trade Data File Converter (Dev)',
     version: '0.1.0',
-    description: 'Convert Robinhood CSV files to JSON and CSV',
-    supportEmail: 'support@rhconverter.com'
+    description: 'Convert trade data CSV files to JSON and CSV',
+    supportEmail: 'support@tradedataconverter.com'
   },
   subscription: {
     freeTier: {

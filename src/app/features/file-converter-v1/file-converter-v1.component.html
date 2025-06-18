@@ -3,8 +3,8 @@
     <!-- Header -->
     <div class="app-header">
       <div class="header-content-wrapper">
-        <h1 class="app-title">Robinhood Transaction File Converter</h1>
-        <p class="app-subtitle">Convert Robinhood CSV files to JSON and CSV</p>
+        <h1 class="app-title">Trade Data File Converter</h1>
+        <p class="app-subtitle">Convert brokerage transaction CSV files to JSON and CSV</p>
         <p class="app-subtitle">
           Free Tier - Limited to 25 transactions per file. 
           <a routerLink="/signup">Sign up</a> for unlimited conversions and additional features!
@@ -32,18 +32,17 @@
         <mat-tab label="Instructions">
           <div class="tab-content instructions-content">
             <div class="instructions-container">
-              <h2>How to Convert Your Robinhood Transaction Files</h2>
+              <h2>How to Convert Your Transaction Files</h2>
               
               <div class="instructions-grid">
                 <div class="instruction-card">
                   <div class="step-number">1</div>
                   <h3>Prepare Your File</h3>
                   <ol>
-                    <li>Log in to your Robinhood account</li>
-                    <li>Go to <strong>Account → Reports and Statements</strong></li>
-                    <li>Select account type, start date, and end date</li>
-                    <li>Click <strong>Generate Report</strong></li>
-                    <li>You'll be notified when your report is ready to download</li>
+                    <li>Log in to your brokerage account</li>
+                    <li>Go to <strong>Account → Reports and Statements</strong> (or a similar section)</li>
+                    <li>Select the account, date range, and other relevant filters</li>
+                    <li>Generate and download your transaction history as a CSV file</li>
                   </ol>
                 </div>
                 
@@ -81,9 +80,9 @@
             
             <!-- Input CSV Format -->
             <div class="format-section">
-              <h3>1. Input CSV Format (Robinhood)</h3>
+              <h3>1. Input CSV Format (From Brokerage)</h3>
               <p class="format-description">
-                The converter expects a CSV file from Robinhood with the following columns in this exact order:
+                The converter is designed for CSV files from popular brokerages that use the following columns in this exact order:
                 <code class="code-inline">Activity Date, Process Date, Settle Date, Instrument, Description, Trans Code, Quantity, Price, Amount</code>
                 <br><br>
                 <strong>Note about cash dividends (CDIV):</strong> The Description field for cash dividends should be in the format:<br>
@@ -215,7 +214,7 @@
   
   <!-- Footer -->
   <footer class="app-footer">
-    <p> 2025 RH Converter</p>
+    <p> 2025 Trade Data File Converter</p>
     <p class="disclaimer-text">This file converter does not store or save any of your transaction data. The output provided should be verified for accuracy.</p>
   </footer>
 </div>

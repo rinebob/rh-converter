@@ -10,5 +10,5 @@ import { RouterModule, RouterOutlet } from '@angular/router';
   styles: []
 })
 export class AppComponent {
-  title = 'rh-converter';
+  title = 'trade-data-file-converter';
 }

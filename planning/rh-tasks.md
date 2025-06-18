@@ -63,6 +63,18 @@ This is a general task list for project management.
 ---
 
 ## Phase 3: Refactoring & Code Quality
+
+### In Progress
+
+- [ ] Refactor site text to use "Trade Data File Converter" as the app name (2025-06-18)
+    - [x] Update `<title>` tag in `src/index.html`
+    - [x] Change `AppComponent.title` string to `trade-data-file-converter`
+    - [x] Search & update any remaining hard-coded "Robinhood"/"RH Converter" strings in other templates/components
+    - [ ] Update app name to 'Trade Data File Converter' across UI (Batch 1 & 2 proposed)
+    - [ ] Run the app locally, manually verify no Robinhood references appear and new app name is consistent
+
+### Completed
+
 * [x] Consolidate CSV header enums and types
     * [x] Move enums from shared directory to interfaces-fn.ts
     * [x] Update all imports to use consolidated enums

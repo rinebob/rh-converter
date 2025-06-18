@@ -10,7 +10,7 @@ export const AUTH_ERRORS = {
 
 // App constants
 export const APP = {
-  TITLE: 'Robinhood Converter',
-  DESCRIPTION: 'Convert your Robinhood trade history',
+  TITLE: 'Trade Data File Converter',
+  DESCRIPTION: 'Convert your trade data files',
   VERSION: '1.0.0',
 } as const;

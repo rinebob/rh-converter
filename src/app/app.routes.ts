@@ -8,7 +8,7 @@ export const routes: Routes = [
     path: '',
     loadComponent: () => import('./features/file-converter-v1/file-converter-v1.component')
       .then(m => m.FileConverterV1Component),
-    title: 'Robinhood Converter',
+    title: 'Trade Data File Converter',
     canActivate: [nonAuthGuard]
   },  
   {
