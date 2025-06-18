@@ -1,172 +1,175 @@
 <div class="converter-page">
-  <!-- Header -->
-  <div class="app-header">
-    <h1 class="app-title">Robinhood Transaction File Converter</h1>
-    <p class="app-subtitle">Convert Robinhood CSV files to JSON and CSV</p>
-    <p class="app-subtitle">
-      Free Tier - Limited to 25 transactions per file. 
-      <a routerLink="/signup">Sign up</a> for unlimited conversions and additional features!
-    </p>
+  <div class="main-content-column">
+    <!-- Header -->
+    <div class="app-header">
+      <div class="header-content-wrapper">
+        <h1 class="app-title">Robinhood Transaction File Converter</h1>
+        <p class="app-subtitle">Convert Robinhood CSV files to JSON and CSV</p>
+        <p class="app-subtitle">
+          Free Tier - Limited to 25 transactions per file. 
+          <a routerLink="/signup">Sign up</a> for unlimited conversions and additional features!
+        </p>
+        
+        <!-- SIGNIN BUTTON DO NOT DELETE -->
+        <!-- <div class="header-actions">
+          <button mat-raised-button color="primary" routerLink="/login" class="signin-button">
+            <mat-icon>login</mat-icon>
+            Sign In
+          </button>
+        </div> -->
+      </div>
+    </div>
     
-    <!-- SIGNIN BUTTON DO NOT DELETE -->
-    <!-- <div class="header-actions">
-      <button mat-raised-button color="primary" routerLink="/login" class="signin-button">
-        <mat-icon>login</mat-icon>
-        Sign In
-      </button>
-    </div> -->
-  </div>
-  
-  <!-- Tabs Interface -->
-  <div class="tabs-container">
-    <mat-tab-group (selectedTabChange)="onTabChange($event.index)" [selectedIndex]="activeTabIndex">
-      <mat-tab label="Converter">
-        <div class="tab-content">
-          <rh-file-converter-legacy></rh-file-converter-legacy>
-        </div>
-      </mat-tab>
-      
-      <mat-tab label="Instructions">
-        <div class="tab-content instructions-content">
-          <div class="instructions-container">
-            <h2>How to Convert Your Robinhood Transaction Files</h2>
+    <!-- Tabs Interface -->
+    <div class="tabs-container">
+      <mat-tab-group (selectedTabChange)="onTabChange($event.index)" [selectedIndex]="activeTabIndex">
+        <mat-tab label="Converter">
+          <div class="tab-content">
+            <rh-file-converter-legacy></rh-file-converter-legacy>
+          </div>
+        </mat-tab>
+        
+        <mat-tab label="Instructions">
+          <div class="tab-content instructions-content">
+            <div class="instructions-container">
+              <h2>How to Convert Your Robinhood Transaction Files</h2>
+              
+              <div class="instructions-grid">
+                <div class="instruction-card">
+                  <div class="step-number">1</div>
+                  <h3>Prepare Your File</h3>
+                  <ol>
+                    <li>Log in to your Robinhood account</li>
+                    <li>Go to <strong>Account → Reports and Statements</strong></li>
+                    <li>Select account type, start date, and end date</li>
+                    <li>Click <strong>Generate Report</strong></li>
+                    <li>You'll be notified when your report is ready to download</li>
+                  </ol>
+                </div>
+                
+                <div class="instruction-card">
+                  <div class="step-number">2</div>
+                  <h3>Upload Your File</h3>
+                  <p>Once your file is downloaded, upload it or drag and drop into the upload area.</p>
+                </div>
+                
+                <div class="instruction-card">
+                  <div class="step-number">3</div>
+                  <h3>Select Output Format</h3>
+                  <p>Choose your preferred output format:</p>
+                  <ul>
+                    <li><strong>CSV</strong> - For spreadsheet applications</li>
+                    <li><strong>JSON</strong> - For developers and APIs</li>
+                    <li><strong>Both</strong> - Get files in both formats</li>
+                  </ul>
+                </div>
+                
+                <div class="instruction-card">
+                  <div class="step-number">4</div>
+                  <h3>Download & Verify</h3>
+                  <p>Your converted file will download automatically. Please verify the data for accuracy.</p>
+                  <p class="note">We never store or save your transaction data.</p>
+                </div>
+              </div>
+            </div>
+          </div>
+        </mat-tab>
+        
+        <mat-tab label="File Formats">
+          <div class="tab-content file-formats-content">
+            <h2>File Format Specifications</h2>
             
-            <div class="instructions-grid">
-              <div class="instruction-card">
-                <div class="step-number">1</div>
-                <h3>Prepare Your File</h3>
-                <ol>
-                  <li>Log in to your Robinhood account</li>
-                  <li>Go to <strong>Account → Reports and Statements</strong></li>
-                  <li>Select account type, start date, and end date</li>
-                  <li>Click <strong>Generate Report</strong></li>
-                  <li>You'll be notified when your report is ready to download</li>
-                </ol>
+            <!-- Input CSV Format -->
+            <div class="format-section">
+              <h3>1. Input CSV Format (Robinhood)</h3>
+              <p class="format-description">
+                The converter expects a CSV file from Robinhood with the following columns in this exact order:
+                <code class="code-inline">Activity Date, Process Date, Settle Date, Instrument, Description, Trans Code, Quantity, Price, Amount</code>
+                <br><br>
+                <strong>Note about cash dividends (CDIV):</strong> The Description field for cash dividends should be in the format:<br>
+                <code class="code-inline">Cash Div: R/D YYYY-MM-DD P/D YYYY-MM-DD - [shares] shares at [amount]</code><br>
+                Example: <code class="code-inline">Cash Div: R/D 2025-04-10 P/D 2025-04-11 - 299.920038 shares at 0.216883</code>
+              </p>
+              
+              <div class="mat-elevation-z2 format-table">
+                <table mat-table [dataSource]="inputData" class="mat-elevation-z0">
+                  <!-- Name Column -->
+                  <ng-container matColumnDef="name">
+                    <th mat-header-cell *matHeaderCellDef> Column Name </th>
+                    <td mat-cell *matCellDef="let element" class="column-name"> {{element.name}} </td>
+                  </ng-container>
+
+                  <!-- Description Column -->
+                  <ng-container matColumnDef="description">
+                    <th mat-header-cell *matHeaderCellDef> Description </th>
+                    <td mat-cell *matCellDef="let element"> {{element.description}} </td>
+                  </ng-container>
+
+                  <tr mat-header-row *matHeaderRowDef="inputColumns"></tr>
+                  <tr mat-row *matRowDef="let row; columns: inputColumns;"></tr>
+                </table>
               </div>
               
-              <div class="instruction-card">
-                <div class="step-number">2</div>
-                <h3>Upload Your File</h3>
-                <p>Once your file is downloaded, upload it or drag and drop into the upload area.</p>
+              <div class="format-note">
+                <mat-icon>info</mat-icon>
+                <span>Note: The column order in your CSV file must match exactly as shown above.</span>
               </div>
+            </div>
+            
+            <!-- Regular Transactions Format -->
+            <div class="format-section">
+              <h3>2. Output CSV Format - Regular Transactions</h3>
+              <p class="format-description">Converted regular transactions will include these columns:</p>
               
-              <div class="instruction-card">
-                <div class="step-number">3</div>
-                <h3>Select Output Format</h3>
-                <p>Choose your preferred output format:</p>
-                <ul>
-                  <li><strong>CSV</strong> - For spreadsheet applications</li>
-                  <li><strong>JSON</strong> - For developers and APIs</li>
-                  <li><strong>Both</strong> - Get files in both formats</li>
-                </ul>
+              <div class="mat-elevation-z2 format-table">
+                <table mat-table [dataSource]="regularData" matSort class="mat-elevation-z0">
+                  <!-- Name Column -->
+                  <ng-container matColumnDef="name">
+                    <th mat-header-cell *matHeaderCellDef mat-sort-header> Column Name </th>
+                    <td mat-cell *matCellDef="let element" class="column-name"> {{element.name}} </td>
+                  </ng-container>
+
+                  <!-- Description Column -->
+                  <ng-container matColumnDef="description">
+                    <th mat-header-cell *matHeaderCellDef> Description </th>
+                    <td mat-cell *matCellDef="let element"> {{element.description}} </td>
+                  </ng-container>
+
+                  <tr mat-header-row *matHeaderRowDef="regularColumns"></tr>
+                  <tr mat-row *matRowDef="let row; columns: regularColumns;"></tr>
+                </table>
               </div>
+            </div>
+            
+            <!-- Dividend Transactions Format -->
+            <div class="format-section">
+              <h3>3. Output CSV Format - Dividend Transactions</h3>
+              <p class="format-description">Converted dividend transactions will include these columns:</p>
               
-              <div class="instruction-card">
-                <div class="step-number">4</div>
-                <h3>Download & Verify</h3>
-                <p>Your converted file will download automatically. Please verify the data for accuracy.</p>
-                <p class="note">We never store or save your transaction data.</p>
+              <div class="mat-elevation-z2 format-table">
+                <table mat-table [dataSource]="dividendData" matSort class="mat-elevation-z0">
+                  <!-- Name Column -->
+                  <ng-container matColumnDef="name">
+                    <th mat-header-cell *matHeaderCellDef mat-sort-header> Column Name </th>
+                    <td mat-cell *matCellDef="let element" class="column-name"> {{element.name}} </td>
+                  </ng-container>
+
+                  <!-- Description Column -->
+                  <ng-container matColumnDef="description">
+                    <th mat-header-cell *matHeaderCellDef> Description </th>
+                    <td mat-cell *matCellDef="let element"> {{element.description}} </td>
+                  </ng-container>
+
+                  <tr mat-header-row *matHeaderRowDef="dividendColumns"></tr>
+                  <tr mat-row *matRowDef="let row; columns: dividendColumns;"></tr>
+                </table>
               </div>
             </div>
-          </div>
-        </div>
-      </mat-tab>
-      
-      <mat-tab label="File Formats">
-        <div class="tab-content file-formats-content">
-          <h2>File Format Specifications</h2>
-          
-          <!-- Input CSV Format -->
-          <div class="format-section">
-            <h3>1. Input CSV Format (Robinhood)</h3>
-            <p class="format-description">
-              The converter expects a CSV file from Robinhood with the following columns in this exact order:
-              <code class="code-inline">Activity Date, Process Date, Settle Date, Instrument, Description, Trans Code, Quantity, Price, Amount</code>
-              <br><br>
-              <strong>Note about cash dividends (CDIV):</strong> The Description field for cash dividends should be in the format:<br>
-              <code class="code-inline">Cash Div: R/D YYYY-MM-DD P/D YYYY-MM-DD - [shares] shares at [amount]</code><br>
-              Example: <code class="code-inline">Cash Div: R/D 2025-04-10 P/D 2025-04-11 - 299.920038 shares at 0.216883</code>
-            </p>
             
-            <div class="mat-elevation-z2 format-table">
-              <table mat-table [dataSource]="inputData" class="mat-elevation-z0">
-                <!-- Name Column -->
-                <ng-container matColumnDef="name">
-                  <th mat-header-cell *matHeaderCellDef> Column Name </th>
-                  <td mat-cell *matCellDef="let element" class="column-name"> {{element.name}} </td>
-                </ng-container>
-
-                <!-- Description Column -->
-                <ng-container matColumnDef="description">
-                  <th mat-header-cell *matHeaderCellDef> Description </th>
-                  <td mat-cell *matCellDef="let element"> {{element.description}} </td>
-                </ng-container>
-
-                <tr mat-header-row *matHeaderRowDef="inputColumns"></tr>
-                <tr mat-row *matRowDef="let row; columns: inputColumns;"></tr>
-              </table>
-            </div>
-            
-            <div class="format-note">
-              <mat-icon>info</mat-icon>
-              <span>Note: The column order in your CSV file must match exactly as shown above.</span>
-            </div>
-          </div>
-          
-          <!-- Regular Transactions Format -->
-          <div class="format-section">
-            <h3>2. Output CSV Format - Regular Transactions</h3>
-            <p class="format-description">Converted regular transactions will include these columns:</p>
-            
-            <div class="mat-elevation-z2 format-table">
-              <table mat-table [dataSource]="regularData" matSort class="mat-elevation-z0">
-                <!-- Name Column -->
-                <ng-container matColumnDef="name">
-                  <th mat-header-cell *matHeaderCellDef mat-sort-header> Column Name </th>
-                  <td mat-cell *matCellDef="let element" class="column-name"> {{element.name}} </td>
-                </ng-container>
-
-                <!-- Description Column -->
-                <ng-container matColumnDef="description">
-                  <th mat-header-cell *matHeaderCellDef> Description </th>
-                  <td mat-cell *matCellDef="let element"> {{element.description}} </td>
-                </ng-container>
-
-                <tr mat-header-row *matHeaderRowDef="regularColumns"></tr>
-                <tr mat-row *matRowDef="let row; columns: regularColumns;"></tr>
-              </table>
-            </div>
-          </div>
-          
-          <!-- Dividend Transactions Format -->
-          <div class="format-section">
-            <h3>3. Output CSV Format - Dividend Transactions</h3>
-            <p class="format-description">Converted dividend transactions will include these columns:</p>
-            
-            <div class="mat-elevation-z2 format-table">
-              <table mat-table [dataSource]="dividendData" matSort class="mat-elevation-z0">
-                <!-- Name Column -->
-                <ng-container matColumnDef="name">
-                  <th mat-header-cell *matHeaderCellDef mat-sort-header> Column Name </th>
-                  <td mat-cell *matCellDef="let element" class="column-name"> {{element.name}} </td>
-                </ng-container>
-
-                <!-- Description Column -->
-                <ng-container matColumnDef="description">
-                  <th mat-header-cell *matHeaderCellDef> Description </th>
-                  <td mat-cell *matCellDef="let element"> {{element.description}} </td>
-                </ng-container>
-
-                <tr mat-header-row *matHeaderRowDef="dividendColumns"></tr>
-                <tr mat-row *matRowDef="let row; columns: dividendColumns;"></tr>
-              </table>
-            </div>
-          </div>
-          
-          <div class="format-section">
-            <h3>4. Output JSON Format</h3>
-            <p class="format-description">The JSON output includes both regular and dividend transactions in this structure:</p>
-            <pre class="code-block">
+            <div class="format-section">
+              <h3>4. Output JSON Format</h3>
+              <p class="format-description">The JSON output includes both regular and dividend transactions in this structure:</p>
+              <pre class="code-block">
 {{ '{' }}
   "regularTransactions": [
     {{ '{' }}
@@ -197,21 +200,22 @@
     {{ '}' }}
   ]
 {{ '}' }}</pre>
+            </div>
           </div>
-        </div>
-      </mat-tab>
-      
-      <mat-tab label="Comments">
-        <div class="tab-content">
-          <rh-comments-section/>
-        </div>
-      </mat-tab>
-    </mat-tab-group>
+        </mat-tab>
+        
+        <mat-tab label="Comments">
+          <div class="tab-content">
+            <rh-comments-section/>
+          </div>
+        </mat-tab>
+      </mat-tab-group>
+    </div>
   </div>
   
   <!-- Footer -->
   <footer class="app-footer">
-    <p>© 2025 RH Converter</p>
+    <p> 2025 RH Converter</p>
     <p class="disclaimer-text">This file converter does not store or save any of your transaction data. The output provided should be verified for accuracy.</p>
   </footer>
 </div>

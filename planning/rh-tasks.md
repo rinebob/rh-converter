@@ -46,6 +46,14 @@ This is a general task list for project management.
     * [x] Add support for ZIP file generation
     * [x] Implement proper field mapping for Regular and Dividend transactions
     * [x] Fix file content handling in ZIP generation
+* [x] Constrain header and tab group content width to 800px (2025-06-18)
+    * [x] Defined global CSS variable `--content-max-width` for consistent width.
+    * [x] Created `.main-content-column` wrapper to center and constrain the main layout.
+    * [x] Fixed "File Formats" tab overflow by making the wide table horizontally scrollable.
+    * [x] Resolved page-level scrollbar by correcting the component's flexbox layout.
+        * [x] Set component `:host` to be a full-height flex container.
+        * [x] Added `min-height: 0` to the main content column to allow it to shrink correctly.
+    * [x] Cleaned up redundant CSS rules after fixing the layout.
 * [ ] Design database schema
 * [ ] Implement user authentication
 * [ ] Develop subscription management features
