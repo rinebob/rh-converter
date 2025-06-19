@@ -5,7 +5,6 @@ import { MatCardModule } from '@angular/material/card';
 import { MatIconModule } from '@angular/material/icon';
 import { MatTabsModule } from '@angular/material/tabs';
 import { MatProgressBarModule } from '@angular/material/progress-bar';
-import { MatSnackBar } from '@angular/material/snack-bar';
 import { FileConverterLegacy } from '../../core/comps/file-converter-legacy/file-converter-legacy';
 import { CommentsSectionComponent } from './components/comments-section/comments-section.component';
 import { BrokersListComponent } from '../../core/comps/brokers-list/brokers-list.component';
