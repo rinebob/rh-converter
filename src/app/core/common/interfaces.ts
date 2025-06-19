@@ -26,6 +26,20 @@ export enum DownloadFormat {
   BOTH = 'both'
 }
 
+import { Timestamp } from 'firebase/firestore';
+
+/**
+ * Represents a comment in Firestore.
+ */
+export interface Comment {
+  id?: string;          // Firestore document ID
+  fileId: string;       // ID of the file/entity the comment belongs to
+  userId: string;       // ID of the user who posted the comment
+  userName?: string;     // Display name of the user (denormalized for convenience)
+  text: string;         // The comment text
+  createdAt: Timestamp; // Firestore Timestamp
+}
+
 /**
  * Represents a file upload response from the server
  */
