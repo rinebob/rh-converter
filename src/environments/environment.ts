@@ -6,16 +6,16 @@ import { Environment } from './environment.interface';
 export const environment: Environment = {
   production: false,
   firebase: {
-    apiKey: 'YOUR_DEV_API_KEY',
-    authDomain: 'your-dev-app.firebaseapp.com',
-    projectId: 'your-dev-project-id',
-    storageBucket: 'your-dev-app.appspot.com',
-    messagingSenderId: '1234567890',
-    appId: '1:1234567890:web:abcdef123456',
+    apiKey: 'AIzaSyDRbwbS5D-RGq1_Gv9rQkywh3p5Bvw3618',
+    authDomain: 'rh-converter.firebaseapp.com',
+    projectId: 'rh-converter',
+    storageBucket: 'rh-converter.firebasestorage.app',
+    messagingSenderId: '9526366257',
+    appId: '1:9526366257:web:3658fba523aed7b1954510',
     measurementId: 'G-XXXXXXXXXX'
   },
   api: {
-    baseUrl: 'http://localhost:5001/your-dev-project-id/us-central1/api',
+    baseUrl: 'http://localhost:5001/rh-converter/us-central1/api',
   },
   features: {
     enableAnalytics: false,
@@ -25,7 +25,7 @@ export const environment: Environment = {
     name: 'Trade Data File Converter (Dev)',
     version: '0.1.0',
     description: 'Convert trade data CSV files to JSON and CSV',
-    supportEmail: 'support@tradedataconverter.com'
+    supportEmail: 'tradedataconverter@gmail.com'
   },
   subscription: {
     freeTier: {
