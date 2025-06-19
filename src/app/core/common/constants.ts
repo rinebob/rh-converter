@@ -9,6 +9,16 @@ const PROD_UPLOAD_CSV_URL = 'https://uploadcsv-65tsqwgeba-uc.a.run.app';
 const DEV_UPLOAD_CSV_URL = 'http://127.0.0.1:5001/rh-converter/us-central1/uploadCsv';
 
 /**
+ * Maximum length for comments.
+ */
+export const MAX_COMMENT_LENGTH = 2500;
+
+/**
+ * Length at which to truncate comments and show a 'Show more' button.
+ */
+export const TRUNCATE_COMMENT_LENGTH = 500;
+
+/**
  * Fallback free plan configuration
  */
 export const FALLBACK_FREE_PLAN: SubscriptionPlan = {

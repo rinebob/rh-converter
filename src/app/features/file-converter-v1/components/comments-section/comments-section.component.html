@@ -20,13 +20,17 @@
             [placeholder]="isLoggedIn() ? 'Type your comment here...' : 'Commenting as ' + anonymousUserName() + '. Type your comment...'"
             required>
           </textarea>
+          <mat-hint align="end">{{newComment().length}} / {{maxCommentLength}}</mat-hint>
+          @if (commentError()) {
+            <mat-error>{{commentError()}}</mat-error>
+          }
         </mat-form-field>
         <div class="form-actions">
           <button 
             mat-raised-button 
             color="primary" 
             type="submit"
-            [disabled]="!newComment().trim()">
+            [disabled]="!newComment().trim() || commentError()">
             <mat-icon>add_comment</mat-icon>
             Add Comment
           </button>
@@ -50,7 +54,17 @@
                   </button>
                 }
               </div>
-              <p matLine class="comment-text">{{ comment.text }}</p>
+              <div matLine class="comment-text">
+                @if (comment.text.length > truncateLength && !isExpanded(comment.id!)) {
+                  <span>{{comment.text.slice(0, truncateLength)}}...</span>
+                  <button mat-button color="accent" (click)="toggleCommentExpansion(comment.id!)">Show more</button>
+                } @else {
+                  <span>{{comment.text}}</span>
+                  @if (comment.text.length > truncateLength) {
+                    <button mat-button color="accent" (click)="toggleCommentExpansion(comment.id!)">Show less</button>
+                  }
+                }
+              </div>
             </mat-list-item>
             <mat-divider></mat-divider>
           }

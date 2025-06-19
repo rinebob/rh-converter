@@ -11,6 +11,7 @@ import { MatSnackBar, MatSnackBarModule } from '@angular/material/snack-bar';
 import { Timestamp } from 'firebase/firestore';
 
 import { Comment } from '../../../../core/common/interfaces';
+import { MAX_COMMENT_LENGTH, TRUNCATE_COMMENT_LENGTH } from '../../../../core/common/constants';
 import { CommentsService } from '../../../../core/services/comments.service';
 import { AuthService } from '../../../../core/services/auth.service';
 import { AnonymousNameService } from '../../../../core/services/anonymous-name.service';
@@ -39,19 +40,59 @@ export class CommentsSectionComponent implements OnInit {
   private anonymousNameService = inject(AnonymousNameService);
 
   newComment: WritableSignal<string> = signal('');
+  commentError = signal<string | null>(null);
   readonly comments = this.commentsService.comments$;
   readonly isLoggedIn = computed(() => !!this.authService.currentUser);
   readonly anonymousUserName = signal(this.anonymousNameService.getName());
+  readonly maxCommentLength = MAX_COMMENT_LENGTH;
+  readonly truncateLength = TRUNCATE_COMMENT_LENGTH;
+
+  // Set to store the IDs of expanded comments
+  expandedComments = signal<Set<string>>(new Set());
 
   constructor() {
+    effect(() => {
+      const text = this.newComment();
+      if (text.length > this.maxCommentLength) {
+        this.commentError.set(`Comment too long: ${text.length} / ${this.maxCommentLength}`);
+      } else {
+        this.commentError.set(null);
+      }
+    });
   }
 
   ngOnInit(): void {
     this.commentsService.loadComments();
   }
 
+  toggleCommentExpansion(commentId: string): void {
+    this.expandedComments.update(currentSet => {
+      const newSet = new Set(currentSet);
+      if (newSet.has(commentId)) {
+        newSet.delete(commentId);
+      } else {
+        newSet.add(commentId);
+      }
+      return newSet;
+    });
+  }
+
+  isExpanded(commentId: string): boolean {
+    return this.expandedComments().has(commentId);
+  }
+
   async addComment(): Promise<void> {
     const text = this.newComment().trim();
+
+    if (text.length > this.maxCommentLength) {
+      const errorMessage = `Comment is too long. Maximum length is ${this.maxCommentLength} characters, but yours is ${text.length}.`;
+      this.snackBar.open(errorMessage, 'Close', {
+        duration: 5000,
+        panelClass: ['error-snackbar']
+      });
+      return;
+    }
+
     if (text) {
       try {
         await this.commentsService.addComment(text);

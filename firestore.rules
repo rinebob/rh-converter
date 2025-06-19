@@ -2,6 +2,17 @@ rules_version = '2';
 
 service cloud.firestore {
   match /databases/{database}/documents {
+
+    function maxCommentLength() {
+      return 2500;
+    }
+
+    function isValidComment(text) {
+      return text is string &&
+             text.size() > 0 &&
+             text.size() < maxCommentLength();
+    }
+
     // Users can read/write their own user document
     match /users/{userId} {
       allow read, update, delete: if request.auth != null && request.auth.uid == userId;
@@ -53,9 +64,7 @@ service cloud.firestore {
       // We'll also check if the user is anonymous or authenticated
       allow create: if 
         // Common conditions
-        request.resource.data.text is string &&
-        request.resource.data.text.size() > 0 &&
-        request.resource.data.text.size() < 1000 &&
+        isValidComment(request.resource.data.text) &&
         // No specific value check for createdAt, but type check will be added
         (
           // Case 1: Anonymous User

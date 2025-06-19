@@ -111,7 +111,7 @@
     // Use ::ng-deep to override styles on the Material-generated span
     // that wraps the secondary line (our comment text).
     ::ng-deep .mdc-list-item__secondary-text {
-      white-space: normal;
+      white-space: pre-wrap;
       overflow: visible;
       text-overflow: clip;
       color: #1c1c1c;
