@@ -29,15 +29,25 @@ dd {
 }
 
 /* Set core body defaults */
+html {
+  height: 100%;
+  margin: 0;
+  padding: 0;
+  width: 100%;
+}
+
 body {
-  min-height: 100vh;
+  min-height: 100vh; /* Use viewport height for body's minimum */
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  margin: 0;
+  padding: 0;
   text-rendering: optimizeSpeed;
   line-height: 1.6;
   font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
   background-color: $background-color;
   color: $text-color;
-  margin: 0 !important;
-  padding: 0 !important;
 }
 
 /* Make images easier to work with */
@@ -53,22 +63,7 @@ ol[role='list'] {
   list-style: none;
 }
 
-// Ensure text is visible and remove all margins
-html, body {
-  margin: 0 !important;
-  padding: 0 !important;
-  width: 100%;
-  height: 100%;
-}
-
-* {
-  margin: 0;
-  padding: 0;
-  box-sizing: border-box;
-}
-
-html, body { height: 100%; }
-body { margin: 0; font-family: Roboto, "Helvetica Neue", sans-serif; }
+body { margin: 0; font-family: Roboto, "Helvetica Neue", sans-serif; } // This is an Angular Material default, our body styles above should take precedence or merge
 
 :root {
   --content-max-width: 800px;

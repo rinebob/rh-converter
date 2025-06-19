@@ -79,6 +79,18 @@ This is a general task list for project management.
   - [x] Style `mat-card-title` in `CommentsSectionComponent` to match heading spec.
   - [x] Apply consistent SCSS for heading centering across components.
 
+* [x] Fix layout consistency for Instructions and Comments tabs (2025-06-19)
+    * [x] Investigated shrinking header and identified root cause as narrow content in the Instructions tab.
+    * [x] Applied flexbox to the instruction cards container, forcing it to fill the available width.
+    * [x] Removed fixed max-width from comments section to allow it to fill the container.
+
+* [x] Implement sticky footer and full-height application layout (2025-06-19)
+    * [x] Ensure `html, body` establish a full-height flex context (`min-height: 100vh` on body)
+    * [x] Configure `app.component` (`:host`) to fill body using flexbox
+    * [x] Centralize base/reset styles in `styles.scss` and clean up `app.component.scss`
+    * [x] Ensure feature components like `FileConverterV1Component` correctly fill available height (e.g., using `min-height: 100vh` or `flex:1` as appropriate)
+    * [x] Test all tabs for proper scrolling and footer positioning
+
 * [x] Implement Firestore persistence for Comments Tab (2025-06-19)
     * [x] Refactor `Comment` and `User` interfaces into `src/app/core/common/interfaces.ts`
     * [x] Verify/install `@angular/fire` and configure Firebase in `app.config.ts`

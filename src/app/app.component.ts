@@ -7,7 +7,7 @@ import { RouterModule, RouterOutlet } from '@angular/router';
   standalone: true,
   imports: [CommonModule, RouterModule, RouterOutlet],
   templateUrl: './app.component.html',
-  styles: []
+  styleUrls: ['./app.component.scss']
 })
 export class AppComponent {
   title = 'trade-data-file-converter';
