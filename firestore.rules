@@ -44,6 +44,44 @@ service cloud.firestore {
                    request.resource.data.recordCount > 0;
     }
     
+    // Comments collection
+    match /comments/{commentId} {
+      // Anyone can read comments
+      allow read: if true;
+      
+      // Anyone can create comments, provided they include the required fields
+      // We'll also check if the user is anonymous or authenticated
+      allow create: if 
+        // Common conditions
+        request.resource.data.fileId is string &&
+        request.resource.data.text is string &&
+        request.resource.data.text.size() > 0 &&
+        request.resource.data.text.size() < 1000 &&
+        // No specific value check for createdAt, but type check will be added
+        (
+          // Case 1: Anonymous User
+          (request.auth == null &&
+           request.resource.data.userId == 'anonymous' &&
+           request.resource.data.userName is string &&
+           request.resource.data.userName.size() > 0 &&
+           request.resource.data.createdAt is timestamp
+          )
+          ||
+          // Case 2: Authenticated User
+          (request.auth != null &&
+           request.resource.data.userId == request.auth.uid &&
+           (
+             (request.auth.token.name == null && !(request.resource.data.userName is string)) ||
+             (request.auth.token.name is string && request.resource.data.userName == request.auth.token.name)
+           ) &&
+           request.resource.data.createdAt is timestamp
+          )
+        );
+      
+      // For now, disallow update and delete by clients directly
+      allow update, delete: if false; 
+    }
+    
     // Deny all other access by default
     match /{document=**} {
       allow read, write: if false;
