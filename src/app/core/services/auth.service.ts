@@ -2,7 +2,7 @@ import { Injectable, inject, signal } from '@angular/core';
 import { Router } from '@angular/router';
 import { Observable } from 'rxjs';
 import { map } from 'rxjs/operators';
-import { Auth, signOut, signInWithEmailAndPassword, createUserWithEmailAndPassword, updateProfile, User as FirebaseUser, onAuthStateChanged } from '@angular/fire/auth';
+import { Auth, signOut, signInWithEmailAndPassword, createUserWithEmailAndPassword, updateProfile, User as FirebaseUser, authState } from '@angular/fire/auth';
 
 import { User } from '../common/interfaces';
 
@@ -17,23 +17,21 @@ export class AuthService {
   redirectUrl: string | null = null;
   
   // Observable of the current user
-  currentUser$: Observable<User | null> = new Observable(subscriber => {
-    const unsubscribe = onAuthStateChanged(this.auth, (user) => {
-      if (user) {
-        subscriber.next({
-          displayName: user.displayName,
-          email: user.email,
-          photoURL: user.photoURL,
-          uid: user.uid
-        });
+  currentUser$: Observable<User | null> = authState(this.auth).pipe(
+    map((firebaseUser: FirebaseUser | null) => {
+      if (firebaseUser) {
+        return {
+          uid: firebaseUser.uid,
+          email: firebaseUser.email,
+          displayName: firebaseUser.displayName,
+          photoURL: firebaseUser.photoURL,
+          // emailVerified: firebaseUser.emailVerified // Add if your User interface needs it
+        } as User;
       } else {
-        subscriber.next(null);
+        return null;
       }
-    });
-    
-    // Cleanup function
-    return () => unsubscribe();
-  });
+    })
+  );
   
   constructor() {
     this.initializeAuthState();
