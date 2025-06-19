@@ -2,10 +2,16 @@
   <mat-card class="comments-card">
     <mat-card-header>
       <mat-card-title>Comments</mat-card-title>
-      <mat-card-subtitle>Add your notes and comments about this conversion</mat-card-subtitle>
+      <!-- <mat-card-subtitle>Add your notes and comments about this conversion</mat-card-subtitle> -->
     </mat-card-header>
 
     <mat-card-content>
+      <div class="comments-info-message">
+        <p>Anonymous comments only for now. Please be nice!</p>
+        <p>Feature ideas and constructive criticism are always welcome!</p>
+        <p>To request a file format to convert, please provide the brokerage name and as much detail regarding the input and output file columns and data types.</p>
+      </div>
+
       <form (submit)="$event.preventDefault(); addComment()" class="comment-form">
         <mat-form-field appearance="outline" class="full-width">
           <mat-label>Add a comment</mat-label>

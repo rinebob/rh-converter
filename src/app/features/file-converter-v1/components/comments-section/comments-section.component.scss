@@ -1,6 +1,29 @@
 @use 'sass:color';
 @use '@angular/material' as mat;
 
+.comments-info-message {
+  background-color: #f0f4f8; // A light blue/gray background
+  border: 1px solid #cfe2f3; // A slightly darker border
+  border-radius: 4px;
+  padding: 0.75rem 1rem;
+  margin-bottom: 1.5rem;
+  font-size: 0.9rem;
+  color: #31708f; // A calm blue text color
+
+  p {
+    margin: 0.3rem 0;
+    line-height: 1.4;
+
+    &:first-child {
+      margin-top: 0;
+    }
+
+    &:last-child {
+      margin-bottom: 0;
+    }
+  }
+}
+
 .comments-container {
   padding: 0 1rem;
 }
@@ -16,7 +39,7 @@
     align-items: center;
     text-align: center;
     padding: 0;
-    margin-bottom: 2rem;
+    margin: .5rem 0;
     background-color: transparent;
     
     .mat-mdc-card-title {
@@ -32,7 +55,7 @@
   }
   
   .mat-mdc-card-content {
-    padding: 1.5rem;
+    padding: 0 1.5rem;
   }
 }
 

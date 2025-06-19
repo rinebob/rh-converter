@@ -111,6 +111,13 @@ This is a general task list for project management.
     * [ ] Write Cypress e2e test for adding and viewing a comment (updated for global comments)
     * [x] Update Firestore security rules for the `comments` collection (and remove `fileId` check)
     * [ ] Test global comment functionality thoroughly
+* [ ] Add a better message for the comments tab (2025-06-19)
+    * [ ] Display message: "Anonymous comments only for now. Be nice and considerate. If you want to request a file format to convert, just give the brokerage name and any info regarding formats you can."
+
+* [ ] Create Jest unit tests for `CommentsSectionComponent` (2025-06-19)
+    * [ ] Test rendering of the informational message
+    * [ ] Test basic component structure and elements (e.g., comment form, comments list)
+    * [ ] Test interaction logic if applicable (e.g., toggling comment expansion - though this might be more e2e)
 
 * [ ] Design database schema
 * [ ] Implement user authentication
