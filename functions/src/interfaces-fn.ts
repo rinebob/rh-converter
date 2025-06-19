@@ -204,8 +204,6 @@ export interface BaseResponse {
   timestamp: string;
 }
 
-
-
 /**
  * Structure of the output data
  */

@@ -174,6 +174,17 @@ export interface SubscriptionState {
 }
 
 /**
+ * Represents the basic user object from Firebase Auth.
+ */
+export interface User {
+  uid: string;
+  email: string | null;
+  displayName: string | null;
+  photoURL?: string | null;
+  emailVerified?: boolean;
+}
+
+/**
  * User profile information including subscription status
  */
 export interface UserProfile {

@@ -1,18 +1,16 @@
-import { Injectable, inject, signal, InjectionToken } from '@angular/core';
+import { Injectable, inject, signal } from '@angular/core';
 import { Router } from '@angular/router';
-import { Observable, from } from 'rxjs';
-import { map, switchMap, tap } from 'rxjs/operators';
-import { Auth, signOut, signInWithEmailAndPassword, createUserWithEmailAndPassword, updateProfile, User as FirebaseUser, onAuthStateChanged } from 'firebase/auth';
+import { Observable } from 'rxjs';
+import { map } from 'rxjs/operators';
+import { Auth, signOut, signInWithEmailAndPassword, createUserWithEmailAndPassword, updateProfile, User as FirebaseUser, onAuthStateChanged } from '@angular/fire/auth';
 
-import { User } from '../models/user.model';
-
-export const FIREBASE_AUTH = new InjectionToken<Auth>('Firebase Auth');
+import { User } from '../common/interfaces';
 
 @Injectable({
   providedIn: 'root'
 })
 export class AuthService {
-  private auth = inject(FIREBASE_AUTH);
+  private auth = inject(Auth);
   private router = inject(Router);
   
   // Store the URL so we can redirect after logging in
