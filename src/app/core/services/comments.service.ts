@@ -4,7 +4,6 @@ import {
   collection,
   addDoc,
   query,
-  where,
   orderBy,
   Timestamp,
   collectionData,
@@ -36,26 +35,19 @@ export class CommentsService implements OnDestroy {
   constructor() {}
 
   /**
-   * Fetches comments for a given fileId in real-time and updates the commentsSignal.
-   * @param fileId The ID of the file to fetch comments for.
+   * Fetches comments in real-time and updates the commentsSignal.
    */
-  loadComments(fileId: string): void {
+  loadComments(): void {
     // Unsubscribe from previous listener if any
     if (this.commentsSubscription) {
       this.commentsSubscription.unsubscribe();
       this.commentsSubscription = null;
     }
 
-    if (!fileId) {
-      this.commentsSignal.set([]);
-      return;
-    }
-
     runInInjectionContext(this.injector, () => {
       const commentsCol = collection(this.firestore, this.commentsCollectionPath);
       const commentsQuery = query(
         commentsCol,
-        where('fileId', '==', fileId),
         orderBy('createdAt', 'asc')
       ) as Query<Omit<Comment, 'id'>>; // Query for data as it exists in Firestore
 
@@ -80,15 +72,14 @@ export class CommentsService implements OnDestroy {
 
   /**
    * Adds a new comment to Firestore.
-   * @param fileId The ID of the file the comment belongs to.
    * @param text The content of the comment.
    * @returns A Promise that resolves when the comment is successfully added.
    */
-  async addComment(fileId: string, text: string): Promise<void> {
+  async addComment(text: string): Promise<void> {
     const user = this.authService.currentUser;
 
-    if (!fileId || !text.trim()) {
-      throw new Error('File ID and comment text cannot be empty.');
+    if (!text.trim()) {
+      throw new Error('Comment text cannot be empty.');
     }
 
     let userId: string;
@@ -103,7 +94,6 @@ export class CommentsService implements OnDestroy {
     }
 
     const newComment: Omit<Comment, 'id'> = {
-      fileId,
       userId,
       userName: userName ?? undefined, // Convert null to undefined
       text: text.trim(),

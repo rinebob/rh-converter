@@ -33,7 +33,6 @@ import { Timestamp } from 'firebase/firestore';
  */
 export interface Comment {
   id?: string;          // Firestore document ID
-  fileId: string;       // ID of the file/entity the comment belongs to
   userId: string;       // ID of the user who posted the comment
   userName?: string;     // Display name of the user (denormalized for convenience)
   text: string;         // The comment text
