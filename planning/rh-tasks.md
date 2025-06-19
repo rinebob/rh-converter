@@ -79,6 +79,27 @@ This is a general task list for project management.
   - [x] Style `mat-card-title` in `CommentsSectionComponent` to match heading spec.
   - [x] Apply consistent SCSS for heading centering across components.
 
+* [x] Implement Firestore persistence for Comments Tab (2025-06-19)
+    * [x] Refactor `Comment` and `User` interfaces into `src/app/core/common/interfaces.ts`
+    * [x] Verify/install `@angular/fire` and configure Firebase in `app.config.ts`
+    * [x] Create `CommentsService` (`src/app/core/services/comments.service.ts`)
+        * [x] Inject `Firestore` and `AuthService`
+        * [x] Implement `addComment` with user authentication (and anonymous)
+        * [x] Implement real-time `loadComments` (formerly `getComments`)
+        * [x] Implement `deleteComment` for comment owners
+        * [x] Use signals for reactive state management
+        * [x] Refactor to remove `fileId` parameter and logic (global comment thread)
+    * [x] Integrate `CommentsService` into `CommentsSectionComponent`
+        * [x] Fetch and display comments using `@for`
+        * [x] Implement form to add new comments (enabled for logged-in and anonymous users)
+        * [x] Implement delete functionality for comment owners
+        * [x] Refactor to remove `fileId` input and related logic
+    * [x] Add Firestore configuration to `environment.ts` and `environment.prod.ts` (Covered by emulator/prod setup)
+    * [ ] Write Jest unit tests for `CommentsService` (updated for global comments)
+    * [ ] Write Cypress e2e test for adding and viewing a comment (updated for global comments)
+    * [x] Update Firestore security rules for the `comments` collection (and remove `fileId` check)
+    * [ ] Test global comment functionality thoroughly
+
 * [ ] Design database schema
 * [ ] Implement user authentication
 * [ ] Develop subscription management features
