@@ -147,6 +147,11 @@ This is a general task list for project management.
 * [ ] Develop subscription management features
 * [ ] Implement free tier limit enforcement
 * [ ] Integrate payment gateway (Stripe)
+* [x] Generate sitemap.xml (2025-06-20)
+    * [x] Identify key public URLs for the application.
+    * [x] Create `public/sitemap.xml` with the identified URLs.
+    * [x] Ensure `robots.txt` points to `sitemap.xml`.
+* [x] Deploy sitemap.xml and robots.txt to hosting (2025-06-20)
 
 ---
 
@@ -201,6 +206,7 @@ This is a general task list for project management.
 
 ## Phase 5: Testing & Deployment
 
+* [x] Deploy sitemap.xml and robots.txt to hosting (2025-06-20)
 * [ ] Conduct manual testing of core features
 * [ ] Fix identified bugs
 * [ ] Prepare deployment scripts

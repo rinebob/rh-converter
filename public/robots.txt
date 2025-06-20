@@ -1,0 +1,17 @@
+User-agent: *
+Allow: /
+
+# Disallow common administrative or private areas
+Disallow: /private/
+Disallow: /admin/
+Disallow: /test/
+
+# Disallow specific file types that might not be relevant for search engines
+Disallow: /*.zip$
+Disallow: /*.rar$
+Disallow: /*.tar.gz$
+Disallow: /*.bak$
+Disallow: /*.tmp$
+
+# Path to your sitemap (if you have one)
+Sitemap: https://tradedataconverter.com/sitemap.xml
