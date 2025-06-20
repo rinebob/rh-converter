@@ -37,6 +37,7 @@ export interface Comment {
   userName?: string;     // Display name of the user (denormalized for convenience)
   text: string;         // The comment text
   createdAt: Timestamp; // Firestore Timestamp
+  parentId?: string;    // ID of the parent comment, if this is a reply
 }
 
 /**

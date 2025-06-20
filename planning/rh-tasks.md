@@ -111,10 +111,33 @@ This is a general task list for project management.
     * [ ] Write Cypress e2e test for adding and viewing a comment (updated for global comments)
     * [x] Update Firestore security rules for the `comments` collection (and remove `fileId` check)
     * [ ] Test global comment functionality thoroughly
+    * [x] **Implement Comment Reply Feature (2025-06-19)**
+        * [x] Update `Comment` interface in `src/app/core/common/interfaces.ts` to include `parentId?: string`
+        * [x] Modify `CommentsService`:
+            * [x] Update `addComment` method to accept and store an optional `parentId`.
+            * [x] Ensure `loadComments` fetches all comments (top-level and replies) - *No change needed, existing logic fetches all.*
+        * [x] Update `CommentsSectionComponent` (`.ts`):
+            * [x] Modify logic to handle `parentId` when adding a reply.
+            * [x] Implement logic to transform the flat list of comments into a nested structure for display (e.g., using a computed signal or a pipe).
+            * [x] Manage UI state for showing/hiding inline reply forms (e.g., a signal to track which comment's reply form is active).
+        * [x] Update `CommentsSectionComponent` (`.html`):
+            * [x] Add "Reply" button to each comment.
+            * [x] Use a recursive `ng-template` to render nested replies.
+            * [x] Show/hide inline reply form based on UI state.
+            * [x] Add `.reply-button` class to reply buttons for specific styling.
+        * [x] Update `CommentsSectionComponent` (`.scss`):
+            * [x] Add indentation for nested replies.
+            * [x] Implement compact styling to reduce vertical space.
+            * [x] Neutralize various Material Component pseudo-elements (`::before`, `::after`) causing extra height.
+            * [x] Override default heights and margins on list items and buttons.
+            * [x] Use `::ng-deep` to force-hide stubborn pseudo-elements.
+            * [x] Scope compact button styles to `.reply-button` class.
+        * [ ] Write Jest unit tests for reply functionality (`CommentsService`, `CommentsSectionComponent`).
+        * [ ] Write Cypress e2e test for adding and viewing a nested reply.
+        * [ ] Manually test and verify the compact styling and reply functionality.
 * [ ] Add a better message for the comments tab (2025-06-19)
     * [ ] Display message: "Anonymous comments only for now. Be nice and considerate. If you want to request a file format to convert, just give the brokerage name and any info regarding formats you can."
-
-* [ ] Create Jest unit tests for `CommentsSectionComponent` (2025-06-19)
+* [ ] Create Jest unit tests for `CommentsSectionComponent` (2025-06-19) - *Deferred*
     * [ ] Test rendering of the informational message
     * [ ] Test basic component structure and elements (e.g., comment form, comments list)
     * [ ] Test interaction logic if applicable (e.g., toggling comment expansion - though this might be more e2e)

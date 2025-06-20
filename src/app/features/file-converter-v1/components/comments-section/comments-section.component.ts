@@ -47,8 +47,39 @@ export class CommentsSectionComponent implements OnInit {
   readonly maxCommentLength = MAX_COMMENT_LENGTH;
   readonly truncateLength = TRUNCATE_COMMENT_LENGTH;
 
+  // State for active reply form
+  replyingToCommentId = signal<string | null>(null);
+  newReplyText: WritableSignal<string> = signal('');
+  replyError = signal<string | null>(null);
+
   // Set to store the IDs of expanded comments
   expandedComments = signal<Set<string>>(new Set());
+
+  // Processed comments with hierarchical structure
+  processedComments$ = computed(() => {
+    const allComments = this.comments();
+    const commentsMap = new Map<string, Comment & { replies: Comment[] }>();
+    const rootComments: (Comment & { replies: Comment[] })[] = [];
+
+    // Initialize map and replies array for each comment
+    allComments.forEach(comment => {
+      commentsMap.set(comment.id!, { ...comment, replies: [] });
+    });
+
+    // Populate replies and identify root comments
+    allComments.forEach(comment => {
+      const commentWithReplies = commentsMap.get(comment.id!)!;
+      if (comment.parentId && commentsMap.has(comment.parentId)) {
+        commentsMap.get(comment.parentId)!.replies.push(commentWithReplies);
+      } else {
+        rootComments.push(commentWithReplies);
+      }
+    });
+
+    // Sort root comments by createdAt (already done by service, but good for safety)
+    // Replies will be in the order they were pushed (which is createdAt due to initial sort)
+    return rootComments.sort((a, b) => a.createdAt.toMillis() - b.createdAt.toMillis());
+  });
 
   constructor() {
     effect(() => {
@@ -57,6 +88,15 @@ export class CommentsSectionComponent implements OnInit {
         this.commentError.set(`Comment too long: ${text.length} / ${this.maxCommentLength}`);
       } else {
         this.commentError.set(null);
+      }
+    });
+
+    effect(() => {
+      const replyText = this.newReplyText();
+      if (replyText.length > this.maxCommentLength) {
+        this.replyError.set(`Reply too long: ${replyText.length} / ${this.maxCommentLength}`);
+      } else {
+        this.replyError.set(null);
       }
     });
   }
@@ -81,6 +121,24 @@ export class CommentsSectionComponent implements OnInit {
     return this.expandedComments().has(commentId);
   }
 
+  // Method to toggle the visibility of the reply form for a specific comment
+  toggleReplyForm(commentId: string): void {
+    if (this.replyingToCommentId() === commentId) {
+      this.replyingToCommentId.set(null); // Close if already replying to this one
+    } else {
+      this.replyingToCommentId.set(commentId);
+      this.newReplyText.set(''); // Clear previous reply text
+      this.replyError.set(null);
+    }
+  }
+
+  // Method to cancel replying
+  cancelReply(): void {
+    this.replyingToCommentId.set(null);
+    this.newReplyText.set('');
+    this.replyError.set(null);
+  }
+
   async addComment(): Promise<void> {
     const text = this.newComment().trim();
 
@@ -101,6 +159,44 @@ export class CommentsSectionComponent implements OnInit {
       } catch (error) {
         console.error('Error adding comment:', error);
         this.snackBar.open('Failed to add comment. Please try again.', 'Close', {
+          duration: 3000,
+          panelClass: ['error-snackbar']
+        });
+      }
+    }
+  }
+
+  // Method to add a reply to a comment
+  async addReply(parentCommentId: string): Promise<void> {
+    if (!parentCommentId) {
+      console.error('Parent comment ID is required to add a reply.');
+      this.snackBar.open('Cannot add reply: Parent comment missing.', 'Close', {
+        duration: 3000,
+        panelClass: ['error-snackbar']
+      });
+      return;
+    }
+
+    const replyText = this.newReplyText().trim();
+
+    if (replyText.length > this.maxCommentLength) {
+      const errorMessage = `Reply is too long. Maximum length is ${this.maxCommentLength} characters, but yours is ${replyText.length}.`;
+      this.snackBar.open(errorMessage, 'Close', {
+        duration: 5000,
+        panelClass: ['error-snackbar']
+      });
+      return;
+    }
+    
+    if (replyText) {
+      try {
+        await this.commentsService.addComment(replyText, parentCommentId);
+        this.newReplyText.set('');
+        this.replyingToCommentId.set(null); // Close the reply form
+        this.snackBar.open('Reply added!', 'Close', { duration: 3000 });
+      } catch (error) {
+        console.error('Error adding reply:', error);
+        this.snackBar.open('Failed to add reply. Please try again.', 'Close', {
           duration: 3000,
           panelClass: ['error-snackbar']
         });

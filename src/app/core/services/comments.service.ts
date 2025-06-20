@@ -73,9 +73,10 @@ export class CommentsService implements OnDestroy {
   /**
    * Adds a new comment to Firestore.
    * @param text The content of the comment.
+   * @param parentId Optional ID of the parent comment if this is a reply.
    * @returns A Promise that resolves when the comment is successfully added.
    */
-  async addComment(text: string): Promise<void> {
+  async addComment(text: string, parentId?: string): Promise<void> {
     const user = this.authService.currentUser;
 
     if (!text.trim()) {
@@ -99,6 +100,11 @@ export class CommentsService implements OnDestroy {
       text: text.trim(),
       createdAt: Timestamp.now()
     };
+
+    // Add parentId if it exists
+    if (parentId) {
+      newComment.parentId = parentId;
+    }
 
     console.log('Firestore ADD_COMMENT Attempt:');
     console.log('User (from authService.currentUser$):', user ? { uid: user.uid, displayName: user.displayName, email: user.email } : 'Anonymous');

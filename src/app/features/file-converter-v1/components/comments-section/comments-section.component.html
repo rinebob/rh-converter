@@ -43,36 +43,13 @@
         </div>
       </form>
 
-      @if (comments().length > 0) {
+      <!-- Recursive Comment Display -->
+      @if (processedComments$().length > 0) {
         <mat-list class="comments-list">
-          @for (comment of comments(); track comment.id) {
-            <mat-list-item class="comment-item">
-              <div matListItemTitle class="comment-header">
-                <span class="comment-user">{{ comment.userName || 'User' }}</span>
-                <span class="comment-date">{{ formatDate(comment.createdAt) }}</span>
-                @if (isLoggedIn() && authService.currentUser?.uid === comment.userId) { <!-- Show delete button only if user owns comment -->
-                  <button 
-                    mat-icon-button 
-                    color="warn" 
-                    (click)="removeComment(comment.id!)"
-                    aria-label="Remove comment">
-                    <mat-icon>delete</mat-icon>
-                  </button>
-                }
-              </div>
-              <div matLine class="comment-text">
-                @if (comment.text.length > truncateLength && !isExpanded(comment.id!)) {
-                  <span>{{comment.text.slice(0, truncateLength)}}...</span>
-                  <button mat-button color="accent" (click)="toggleCommentExpansion(comment.id!)">Show more</button>
-                } @else {
-                  <span>{{comment.text}}</span>
-                  @if (comment.text.length > truncateLength) {
-                    <button mat-button color="accent" (click)="toggleCommentExpansion(comment.id!)">Show less</button>
-                  }
-                }
-              </div>
-            </mat-list-item>
-            <mat-divider></mat-divider>
+          @for (comment of processedComments$(); track comment.id) {
+            <ng-container 
+              [ngTemplateOutlet]="commentView"
+              [ngTemplateOutletContext]="{$implicit: comment, isReply: false, level: 0}"></ng-container>
           }
         </mat-list>
       } @else {
@@ -84,3 +61,95 @@
     </mat-card-content>
   </mat-card>
 </div>
+
+<!-- Recursive Template for Displaying a Comment and its Replies -->
+<ng-template #commentView let-commentItem let-isReply="isReply" let-level="level">
+  <div class="comment-thread" [class.reply-thread]="isReply" [style.margin-left.rem]="isReply ? level * 1.5 : 0">
+    <mat-list-item class="comment-item" [class.reply-item]="isReply">
+      <div matListItemTitle class="comment-header">
+        <span class="comment-user">{{ commentItem.userName || 'User' }}</span>
+        <span class="comment-date">{{ formatDate(commentItem.createdAt) }}</span>
+        @if (isLoggedIn() && authService.currentUser?.uid === commentItem.userId) {
+          <button 
+            mat-icon-button 
+            color="warn" 
+            (click)="removeComment(commentItem.id!)"
+            [attr.aria-label]="'Remove comment by ' + (commentItem.userName || 'User')">
+            <mat-icon>delete</mat-icon>
+          </button>
+        }
+      </div>
+      <div matLine class="comment-text">
+        @if (commentItem.text.length > truncateLength && !isExpanded(commentItem.id!)) {
+          <span>{{commentItem.text.slice(0, truncateLength)}}...</span>
+          <button mat-button color="accent" (click)="toggleCommentExpansion(commentItem.id!)">Show more</button>
+        } @else {
+          <span>{{commentItem.text}}</span>
+          @if (commentItem.text.length > truncateLength) {
+            <button mat-button color="accent" (click)="toggleCommentExpansion(commentItem.id!)">Show less</button>
+          }
+        }
+      </div>
+      <div class="comment-actions">
+        <button mat-button color="primary" class="reply-button" (click)="toggleReplyForm(commentItem.id!)">
+          <mat-icon>reply</mat-icon> Reply
+        </button>
+      </div>
+    </mat-list-item>
+
+    <!-- Reply form for this commentItem -->
+    @if (replyingToCommentId() === commentItem.id) {
+      <div class="reply-form-container" [style.margin-left.rem]="isReply ? 0 : 1.5">
+        <form (submit)="$event.preventDefault(); addReply(commentItem.id!)" class="comment-form reply-form">
+          <mat-form-field appearance="outline" class="full-width">
+            <mat-label>Your reply</mat-label>
+            <textarea 
+              matInput 
+              [ngModel]="newReplyText()" 
+              (ngModelChange)="newReplyText.set($event)"
+              name="newReplyTextRecursive" 
+              cdkTextareaAutosize
+              cdkAutosizeMinRows="1"
+              cdkAutosizeMaxRows="4"
+              [placeholder]="isLoggedIn() ? 'Type your reply...' : 'Replying as ' + anonymousUserName() + '. Type your reply...'"
+              required>
+            </textarea>
+            <mat-hint align="end">{{newReplyText().length}} / {{maxCommentLength}}</mat-hint>
+            @if (replyError()) {
+              <mat-error>{{replyError()}}</mat-error>
+            }
+          </mat-form-field>
+          <div class="form-actions reply-actions">
+            <button 
+              mat-stroked-button 
+              color="warn" 
+              type="button"
+              (click)="cancelReply()">
+              Cancel
+            </button>
+            <button 
+              mat-raised-button 
+              color="primary" 
+              type="submit"
+              [disabled]="!newReplyText().trim() || replyError()">
+              <mat-icon>send</mat-icon>
+              Submit Reply
+            </button>
+          </div>
+        </form>
+      </div>
+    }
+
+    <!-- Recursively render replies for this commentItem -->
+    @if (commentItem.replies && commentItem.replies.length > 0) {
+      <div class="replies-container" [class.nested-replies-container]="isReply">
+        @for (replyItem of commentItem.replies; track replyItem.id) {
+          <ng-container 
+            [ngTemplateOutlet]="commentView"
+            [ngTemplateOutletContext]="{$implicit: replyItem, isReply: true, level: level + 1}"></ng-container>
+        }
+      </div>
+    }
+  </div>
+  <mat-divider></mat-divider> <!-- Divider after each full comment thread (comment + its replies) -->
+</ng-template>
