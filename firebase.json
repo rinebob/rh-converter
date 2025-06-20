@@ -21,6 +21,20 @@
       ]
     }
   ],
+  "hosting": {
+    "public": "public",
+    "ignore": [
+      "firebase.json",
+      "**/.*",
+      "**/node_modules/**"
+    ],
+    "rewrites": [
+      {
+        "source": "/ads.txt",
+        "destination": "/ads.txt"
+      }
+    ]
+  },
   "apphosting": {
     "backendId": "rh-converter",
     "rootDir": "/",
