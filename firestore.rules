@@ -60,62 +60,19 @@ service cloud.firestore {
       // Anyone can read comments
       allow read: if true;
       
-      // Helper function to validate the structure and basic types of new comment data
-      function isValidNewCommentData(data) {
-        // 1. Validate core fields' presence and type
-        let coreFieldsValid = isValidComment(data.text) && (data.createdAt is timestamp);
+      // All writes to comments are performed by Cloud Functions using Admin SDK
+      // Disallow direct client create/update/delete
+      allow create, update, delete: if false;
+    }
 
-        // 2. Validate 'parentId' if present
-        // It's valid if 'parentId' is not in data OR if it is in data and meets criteria.
-        let parentIdValid = !('parentId' in data) || 
-                            (('parentId' in data) && (data.parentId is string) && (data.parentId.size() > 0));
+    // Private: comment metadata (never readable/writable from client)
+    match /commentMeta/{commentId} {
+      allow read, write: if false;
+    }
 
-        // 3. Validate the set of keys to prevent extraneous fields
-        let actualKeys = data.keys();
-        let allowedKeysList = ['userId', 'text', 'createdAt', 'userName', 'parentId'];
-        // Ensure all keys present in 'data' are within the 'allowedKeysList'.
-        let allActualKeysAllowed = actualKeys.hasOnly(allowedKeysList);
-
-        // 4. Calculate expected number of keys based on optional fields' presence
-        let expectedSize = 3 + // userId, text, createdAt are mandatory for the purpose of this check
-                           (('userName' in data) ? 1 : 0) +
-                           (('parentId' in data) ? 1 : 0);
-        
-        let keyCountCorrect = actualKeys.size() == expectedSize;
-
-        // All conditions must be true
-        return coreFieldsValid && 
-               parentIdValid && 
-               allActualKeysAllowed &&
-               keyCountCorrect;
-      }
-
-      // Anyone can create comments, provided they include the required fields
-      // and adhere to user-specific (anonymous/authenticated) conditions.
-      allow create: if 
-        isValidNewCommentData(request.resource.data) &&
-        (
-          // Case 1: Anonymous User
-          (request.auth == null &&
-           request.resource.data.userId == 'anonymous' &&
-           request.resource.data.userName is string && // userName is required for anonymous
-           request.resource.data.userName.size() > 0
-          )
-          ||
-          // Case 2: Authenticated User
-          (request.auth != null &&
-           request.resource.data.userId == request.auth.uid &&
-           // userName is optional for authenticated; if present, must match token.name
-           // if not present, auth.token.name must also be null.
-           (
-             (!('userName' in request.resource.data) && request.auth.token.name == null) ||
-             (('userName' in request.resource.data) && request.resource.data.userName is string && request.resource.data.userName == request.auth.token.name)
-           )
-          )
-        );
-      
-      // For now, disallow update and delete by clients directly
-      allow update, delete: if false; 
+    // Private: comment reports (details not public)
+    match /commentReports/{reportId} {
+      allow read, write: if false;
     }
     
     // Deny all other access by default

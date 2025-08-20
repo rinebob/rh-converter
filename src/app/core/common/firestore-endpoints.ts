@@ -31,6 +31,13 @@ export const FirestoreEndpoints = {
   SETTINGS: 'settings',
   APP_SETTINGS: 'settings/app',
   SUBSCRIPTION_SETTINGS: 'settings/subscription',
+
+  // Comments (public) and private metadata
+  COMMENTS: 'comments',
+  comment: (commentId: string) => `comments/${commentId}`,
+  COMMENT_META: 'commentMeta',
+  commentMeta: (commentId: string) => `commentMeta/${commentId}`,
+  COMMENT_REPORTS: 'commentReports',
 } as const;
 
 export type FirestoreEndpoint = keyof typeof FirestoreEndpoints;
