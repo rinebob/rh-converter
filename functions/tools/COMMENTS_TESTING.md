@@ -79,12 +79,87 @@ TOKEN_USER=eyJ... TOKEN_USER_2=eyJ... TOKEN_ADMIN=eyJ... \
 node functions/tools/test-comments.js
 ```
 
-### Getting tokens (summary)
+### Getting tokens (detailed)
 
-- TOKEN_USER / TOKEN_USER_2: sign into your web app and call `auth.currentUser.getIdToken(true)`; or use the Auth REST API (`accounts:signInWithPassword`).
-- TOKEN_ADMIN: set `admin: true` custom claim for a user via Admin SDK, then sign in and refresh to get an ID token with the claim.
+There are two common ways to obtain tokens for production tests.
 
-See the earlier section for details or create a small local admin script as needed.
+- Anonymous/author flows: sign in with Email/Password using Firebase Auth REST API and copy the `idToken`.
+- Admin flows: assign `admin: true` custom claims to a user with the Admin SDK, then sign in and use the refreshed `idToken`.
+
+#### A) Email/Password sign-in via REST (Production)
+
+1) Find your Web API key in Firebase Console > Project Settings > General.
+
+2) PowerShell example (Windows):
+```powershell
+# Set API key (replace with your real key)
+$API_KEY = "YOUR_WEB_API_KEY"
+
+# Choose credentials for a test user (must exist in Firebase Auth)
+$body = @{ email = "test@user.com"; password = "aaabbb"; returnSecureToken = $true } | ConvertTo-Json
+
+# Call REST endpoint
+$resp = Invoke-RestMethod -Method Post -Uri "https://identitytoolkit.googleapis.com/v1/accounts:signInWithPassword?key=$API_KEY" -ContentType "application/json" -Body $body
+
+# Extract the ID token
+$resp.idToken
+
+# Optional: set for the test script
+$env:TOKEN_USER = $resp.idToken
+```
+
+3) Bash example (macOS/Linux):
+```bash
+API_KEY="YOUR_WEB_API_KEY"
+EMAIL="test@user.com"
+PASSWORD="aaabbb"
+
+ID_TOKEN=$(curl -s -X POST \
+  -H "Content-Type: application/json" \
+  -d "{\"email\":\"$EMAIL\",\"password\":\"$PASSWORD\",\"returnSecureToken\":true}" \
+  "https://identitytoolkit.googleapis.com/v1/accounts:signInWithPassword?key=$API_KEY" | jq -r .idToken)
+
+echo "$ID_TOKEN"
+# Optional: export for the test script
+export TOKEN_USER="$ID_TOKEN"
+```
+
+4) Run tests with the token(s):
+```powershell
+# PowerShell
+$env:TOKEN_USER = "$ID_TOKEN"; node functions\tools\test-comments.js
+```
+```bash
+# Bash
+TOKEN_USER="$ID_TOKEN" node functions/tools/test-comments.js
+```
+
+#### B) Grant admin claim and obtain TOKEN_ADMIN (Production)
+
+You need to set a custom claim on a known user UID, then sign in to obtain an ID token that carries `{ admin: true }`.
+
+1) Set the admin claim using the Admin SDK in a one-liner:
+```powershell
+# From project root or functions directory
+node -e "const {initializeApp,applicationDefault}=require('firebase-admin/app');const {getAuth}=require('firebase-admin/auth');initializeApp({credential:applicationDefault(),projectId:'rh-converter'});getAuth().setCustomUserClaims('UID_HERE',{admin:true}).then(()=>console.log('Done')).catch(e=>console.error(e))"
+```
+- Replace `UID_HERE` with the target user’s UID.
+- If you see an error about project ID, include `projectId:'rh-converter'` or set `$env:GOOGLE_CLOUD_PROJECT="rh-converter"` first.
+
+2) Sign in that same user and copy the fresh `idToken` (use the REST steps from A). Set it as `TOKEN_ADMIN`:
+```powershell
+$env:TOKEN_ADMIN = "$ID_TOKEN"  # must be the token from the user that has admin:true claim
+```
+
+3) Run the full test:
+```powershell
+$env:TOKEN_USER = "$ID_TOKEN"; $env:TOKEN_ADMIN = "$ID_TOKEN"; node functions\tools\test-comments.js
+```
+
+- You can also use a second non-admin user for reply tests:
+```powershell
+$env:TOKEN_USER_2 = "<idToken-of-userB>"
+```
 
 ---
 
@@ -98,12 +173,14 @@ See the earlier section for details or create a small local admin script as need
   ```
 - Windows PowerShell:
   ```powershell
-  $env:TOKEN_USER="eyJ..."; $env:TOKEN_USER_2="eyJ..."; $env:TOKEN_ADMIN="eyJ..."; node functions/tools/test-comments.js
+  $env:TOKEN_USER="eyJ..."; $env:TOKEN_USER_2="eyJ..."; $env:TOKEN_ADMIN="eyJ..."; node functions\tools\test-comments.js
   ```
 - Windows CMD:
   ```cmd
   set TOKEN_USER=eyJ... && set TOKEN_USER_2=eyJ... && set TOKEN_ADMIN=eyJ... && node functions\tools\test-comments.js
   ```
+- Common REST error 400: ensure the email/password exist in Firebase Auth and that `$API_KEY` is the Web API key from Project Settings.
+- Admin claim not recognized: ensure you signed in after setting the claim, so the new token includes `{ admin: true }`.
 
 ---
 
