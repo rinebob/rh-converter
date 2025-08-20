@@ -95,6 +95,11 @@
     color: #2c3e50;
     opacity: 0.8;
     width: 100%;
+    height: 6rem;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
 
     .disclaimer-text {
         font-size: 0.75rem;
@@ -106,7 +111,6 @@
 
 // Tabs container
 .tabs-container {
-    margin-top: 1rem;
     padding: 0;
     flex: 1;
     display: flex;
@@ -127,12 +131,12 @@
         flex: 1;
     }
 
-    .mat-tab-header {
+    .mat-mdc-tab-header {
         max-width: 100%; 
         box-sizing: border-box;
     }
 
-    .mat-tab-group {
+    .mat-mdc-tab-group {
         background: #f5f7fa; 
         border-radius: 8px;
         overflow: hidden; 
@@ -140,13 +144,13 @@
         width: 100%; 
     }
 
-    .mat-tab-body-wrapper {
+    .mat-mdc-tab-body-wrapper {
         background-color: white;
         flex: 1;
         overflow-y: auto;
     }
 
-    .mat-tab-label {
+    .mat-mdc-tab-label {
         font-size: 1rem;
         font-weight: 500;
         opacity: 0.8;
@@ -156,14 +160,14 @@
             opacity: 1;
         }
 
-        &.mat-tab-label-active {
+        &.mat-mdc-tab-label-active {
             opacity: 1;
             color: #0078d4;
         }
     }
 
     .tab-content {
-        padding: 1rem 0 2rem;
+        padding: 1rem 0 0;
         min-height: auto;
 
         p {
@@ -223,6 +227,134 @@
             }
         }
     }
+}
+
+// Ad rails layout
+$ad-rail-width: 12.5rem; // 200px
+$ad-rail-border: 1px solid #000;
+$footer-height: 6rem; // must match .app-footer height
+
+.page-with-ads {
+  display: flex;
+  flex-direction: row;
+  align-items: stretch;
+  justify-content: center; // center the whole rails + content group
+  height: calc(100vh - #{$footer-height}); // from top of viewport to top of footer
+  min-height: calc(100vh - #{$footer-height});
+  width: 100%;
+  box-sizing: border-box;
+  gap: 0; // eliminate any spacing between rails and center column
+}
+
+.ad-rail {
+  flex: 0 0 $ad-rail-width;
+  width: $ad-rail-width;
+  border: $ad-rail-border;
+  height: 100%; // fill the page-with-ads block, which ends at the footer
+  position: sticky; // stick to the top of the viewport while respecting container height
+  top: 0;
+  align-self: flex-start; // ensure sticky anchors to viewport top
+  display: flex;
+  justify-content: center;
+  align-items: flex-start;
+  background: transparent;
+
+  .ad-slot {
+    width: 100%;
+    height: 100%; // fill rail
+  }
+}
+
+// Ensure main area grows between rails
+.page-with-ads > .converter-page {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  align-items: stretch;
+  width: var(--content-max-width); 
+  min-height: 0 !important; 
+}
+
+// Ensure no side margins inside the centered column when flanked by rails
+.page-with-ads .main-content-column {
+  margin: 0; // override global centering
+  width: 100%; // fill converter-page width fully
+  min-height: 0; // allow internal scrollers to size
+  display: flex; // ensure proportional vertical growth
+  flex-direction: column;
+  flex: 1 1 auto; // grow to consume vertical space
+  height: 100%;
+}
+
+// Make the tab section consume the remaining height below the header inside the center column
+.page-with-ads .tabs-container {
+  flex: 0 0 auto; // don't force-fill height
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  height: auto;
+ }
+
+ // Ensure Angular Material tab components stretch to fill
+.page-with-ads .tabs-container .mat-mdc-tab-group {
+  flex: 0 0 auto; // natural height
+  min-height: 0;
+  height: auto;
+  display: flex;
+  flex-direction: column;
+}
+
+.page-with-ads .tabs-container .mat-mdc-tab-header {
+  flex: 0 0 auto;
+}
+
+.page-with-ads .tabs-container .mat-mdc-tab-body-wrapper {
+  flex: 1 1 auto;
+  min-height: 0;
+  height: 100%;
+  overflow-y: auto; // tab content scrolls, column stays full-height
+}
+
+.page-with-ads .tabs-container .mat-mdc-tab-body,
+.page-with-ads .tabs-container .mat-mdc-tab-body-content {
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+}
+
+// Bottom ad container within center column
+.bottom-ad-container {
+  flex: 1 0 auto; // do not grow; stays at bottom of column
+  width: 100%;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  
+  .ad-slot {
+    height: 100%;
+    width: 100%;
+    border: $ad-rail-border;
+    background: transparent;
+  }
+}
+
+// Hide bottom ad container on small screens to prioritize content
+@media (max-width: 768px) {
+  .bottom-ad-container {
+    display: none;
+  }
+}
+
+// Responsive: hide rails on smaller screens
+@media (max-width: 1200px) {
+  .ad-rail {
+    display: none;
+  }
+
+  .page-with-ads {
+    padding-left: 0;
+    padding-right: 0;
+  }
 }
 
 // Responsive adjustments for the entire page

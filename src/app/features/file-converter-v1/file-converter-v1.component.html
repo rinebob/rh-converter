@@ -1,60 +1,78 @@
-<div class="converter-page">
-  <div class="main-content-column">
-    <!-- Header -->
-    <div class="app-header">
-      <div class="header-content-wrapper">
-        <h1 class="app-title">Trade Data File Converter</h1>
-        <p class="app-subtitle">Convert brokerage transaction CSV files to JSON and CSV</p>
-        
-        <!-- SIGNIN BUTTON DO NOT DELETE -->
-        <!-- <div class="header-actions">
-          <button mat-raised-button color="primary" routerLink="/login" class="signin-button">
-            <mat-icon>login</mat-icon>
-            Sign In
-          </button>
-        </div> -->
+<div class="page-with-ads">
+  <aside class="ad-rail left-rail" aria-label="Advertisement Left">
+    <!-- Google AdSense Left Rail Placeholder -->
+    <div class="ad-slot"></div>
+  </aside>
+
+  <div class="converter-page">
+    <div class="main-content-column">
+      <!-- Header -->
+      <div class="app-header">
+        <div class="header-content-wrapper">
+          <h1 class="app-title">Trade Data File Converter</h1>
+          <p class="app-subtitle">Convert brokerage transaction CSV files to JSON and CSV</p>
+
+          <!-- SIGNIN BUTTON DO NOT DELETE -->
+          <!-- <div class="header-actions">
+              <button mat-raised-button color="primary" routerLink="/login" class="signin-button">
+                  <mat-icon>login</mat-icon>
+                  Sign In
+              </button>
+          </div> -->
+        </div>
+      </div>
+
+      <!-- Tabs Interface -->
+      <div class="tabs-container">
+        <mat-tab-group (selectedTabChange)="onTabChange($event.index)" [selectedIndex]="activeTabIndex">
+          <mat-tab label="Converter">
+            <div class="tab-content">
+              <rh-file-converter-legacy />
+            </div>
+          </mat-tab>
+
+          <mat-tab label="Brokers">
+            <div class="tab-content">
+              <app-brokers-list />
+            </div>
+          </mat-tab>
+
+          <mat-tab label="Instructions">
+            <div class="tab-content">
+              <app-instructions-content />
+            </div>
+          </mat-tab>
+
+          <mat-tab label="File Formats">
+            <div class="tab-content">
+              <app-file-formats-content />
+            </div>
+          </mat-tab>
+
+          <mat-tab label="Comments">
+            <div class="tab-content">
+              <rh-comments-section />
+            </div>
+          </mat-tab>
+        </mat-tab-group>
+      </div>
+
+      <!-- Bottom Ad Container within center column -->
+      <div class="bottom-ad-container" aria-label="Advertisement Bottom">
+        <div class="ad-slot"></div>
       </div>
     </div>
-    
-    <!-- Tabs Interface -->
-    <div class="tabs-container">
-      <mat-tab-group (selectedTabChange)="onTabChange($event.index)" [selectedIndex]="activeTabIndex">
-        <mat-tab label="Converter">
-          <div class="tab-content">
-            <rh-file-converter-legacy/>
-          </div>
-        </mat-tab>
-        
-        <mat-tab label="Brokers">
-          <div class="tab-content">
-            <app-brokers-list/>
-          </div>
-        </mat-tab>
-        
-        <mat-tab label="Instructions">
-          <div class="tab-content">
-            <app-instructions-content/>
-          </div>
-        </mat-tab>
-        
-        <mat-tab label="File Formats">
-          <div class="tab-content">
-            <app-file-formats-content/>
-          </div>
-        </mat-tab>
-        
-        <mat-tab label="Comments">
-          <div class="tab-content">
-            <rh-comments-section/>
-          </div>
-        </mat-tab>
-      </mat-tab-group>
-    </div>
   </div>
-  
-  <!-- Footer -->
-  <footer class="app-footer">
-    <p> 2025 Trade Data File Converter</p>
-    <p class="disclaimer-text">This file converter does not store or save any of your transaction data. The output provided should be verified for accuracy.</p>
-  </footer>
+
+  <aside class="ad-rail right-rail" aria-label="Advertisement Right">
+    <!-- Google AdSense Right Rail Placeholder -->
+    <div class="ad-slot"></div>
+  </aside>
 </div>
+
+<!-- Footer -->
+<footer class="app-footer">
+  <p> 2025 Trade Data File Converter</p>
+  <p class="disclaimer-text">This file converter does not store or save any of your transaction data. The output
+    provided should be verified for accuracy.</p>
+</footer>
