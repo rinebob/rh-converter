@@ -222,3 +222,18 @@ This is a general task list for project management.
 * [ ] Gather user feedback
 * [ ] Plan for future enhancements
 * [ ] Conduct post-mortem analysis
+
+---
+
+## Roadmap: Moderation & Safety
+
+- [ ] Shadow-ban moderation (Deferred) — 2025-08-20
+  - Description: Implement optional shadow-ban capability for abusive users.
+  - Scope:
+    - Admin tool: add/remove shadow ban on a user (with reason, createdAt, by, optional expiresAt).
+    - Enforcement policy (to be decided when needed):
+      - Option A: status='shadow' + read filtering.
+      - Option B: quarantine collection.
+      - Option C: hard-block with 403.
+    - Client UX: author sees own shadowed posts; others do not; admins see all.
+  - Notes: Not currently needed; defer until there is actual abuse volume.
