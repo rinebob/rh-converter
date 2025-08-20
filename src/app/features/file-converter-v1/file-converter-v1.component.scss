@@ -231,7 +231,6 @@
 
 // Ad rails layout
 $ad-rail-width: 12.5rem; // 200px
-$ad-rail-border: 1px solid #000;
 $footer-height: 6rem; // must match .app-footer height
 
 .page-with-ads {
@@ -249,14 +248,13 @@ $footer-height: 6rem; // must match .app-footer height
 .ad-rail {
   flex: 0 0 $ad-rail-width;
   width: $ad-rail-width;
-  border: $ad-rail-border;
   height: 100%; // fill the page-with-ads block, which ends at the footer
   position: sticky; // stick to the top of the viewport while respecting container height
   top: 0;
   align-self: flex-start; // ensure sticky anchors to viewport top
   display: flex;
   justify-content: center;
-  align-items: flex-start;
+  align-items: stretch; // stretch child to full rail height
   background: transparent;
 
   .ad-slot {
@@ -370,16 +368,16 @@ $footer-height: 6rem; // must match .app-footer height
 
 // Bottom ad container within center column
 .bottom-ad-container {
-  flex: 1 0 auto; // do not grow; stays at bottom of column
+  flex: 1 1 auto; // fill remaining space in the column
+  min-height: 0; // allow shrinking within available height
   width: 100%;
   display: flex;
   justify-content: center;
-  align-items: center;
+  align-items: flex-end; // anchor ad to the bottom of the available space
   
   .ad-slot {
-    height: 100%;
+    height: auto; // let AdSense determine its own natural height
     width: 100%;
-    border: $ad-rail-border;
     background: transparent;
   }
 }
@@ -412,4 +410,34 @@ $footer-height: 6rem; // must match .app-footer height
             }
         }
     }
+}
+
+// <=640px small-screen layout
+@media (max-width: 640px) {
+  // Hide side rails
+  .ad-rail {
+    display: none !important;
+  }
+
+  // Full-width layout, fill viewport minus footer
+  .page-with-ads {
+    flex-direction: column;
+    align-items: stretch;
+    justify-content: flex-start;
+    height: calc(100vh - #{$footer-height});
+    min-height: calc(100vh - #{$footer-height});
+    width: 100%;
+    padding-left: 0;
+    padding-right: 0;
+  }
+
+  .page-with-ads > .converter-page {
+    width: 100% !important;
+    height: 100%;
+  }
+
+  .page-with-ads .main-content-column {
+    margin: 0;
+    width: 100%;
+  }
 }
