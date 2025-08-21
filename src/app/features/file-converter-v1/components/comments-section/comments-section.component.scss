@@ -215,22 +215,17 @@ $base-spacing-unit: 0.25rem; // Significantly reduced base unit for tighter spac
       padding-top: $base-spacing-unit; // Reduced padding
       width: 100%; // Ensure it takes full width for alignment
 
-      button.mat-mdc-button.reply-button { // Made selector more specific with .reply-button
-        height: 24px !important; // Force height override from 40px
-        min-height: 24px !important; // Match min-height
-        line-height: 24px !important; // Vertically center text/icon
-        padding: 0 ($base-spacing-unit * 2) !important; // e.g. 0 0.5rem
-        font-size: 0.7rem; // Reduced font size
+      button.mat-mdc-button.reply-button { // Use Material defaults to match Edit/Delete
+        // Remove compact overrides so size matches Edit/Delete
+        padding: 0 ($base-spacing-unit * 3);
 
         .mdc-button__label {
-          line-height: 1; // Ensure label doesn't add extra height
+          line-height: inherit;
         }
 
         mat-icon {
-          font-size: 1rem; // 16px icon
-          height: 1rem;
-          width: 1rem;
-          margin-right: math.div($base-spacing-unit, 2);
+          // Slight spacing to mirror other action buttons
+          margin-right: $base-spacing-unit;
         }
       }
     }

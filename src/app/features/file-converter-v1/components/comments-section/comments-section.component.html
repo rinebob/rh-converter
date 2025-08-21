@@ -80,13 +80,40 @@
         }
       </div>
       <div matLine class="comment-text">
-        @if (commentItem.text.length > truncateLength && !isExpanded(commentItem.id!)) {
-          <span>{{commentItem.text.slice(0, truncateLength)}}...</span>
-          <button mat-button color="accent" (click)="toggleCommentExpansion(commentItem.id!)">Show more</button>
+        @if (editingCommentId() === commentItem.id) {
+          <form (submit)="$event.preventDefault(); submitEdit(commentItem.id!)" class="comment-form edit-form">
+            <mat-form-field appearance="outline" class="full-width">
+              <mat-label>Edit your comment</mat-label>
+              <textarea
+                matInput
+                [ngModel]="editText()"
+                (ngModelChange)="editText.set($event)"
+                name="editText"
+                cdkTextareaAutosize
+                cdkAutosizeMinRows="2"
+                cdkAutosizeMaxRows="6"
+                required>
+              </textarea>
+              <mat-hint align="end">{{editText().length}} / {{maxCommentLength}}</mat-hint>
+              @if (editError()) { <mat-error>{{editError()}}</mat-error> }
+            </mat-form-field>
+            <div class="form-actions edit-actions">
+              <button mat-stroked-button color="warn" type="button" (click)="cancelEdit()">Cancel</button>
+              <button mat-raised-button color="primary" type="submit" [disabled]="!editText().trim() || editError()">
+                <mat-icon>save</mat-icon>
+                Save
+              </button>
+            </div>
+          </form>
         } @else {
-          <span>{{commentItem.text}}</span>
-          @if (commentItem.text.length > truncateLength) {
-            <button mat-button color="accent" (click)="toggleCommentExpansion(commentItem.id!)">Show less</button>
+          @if (commentItem.text.length > truncateLength && !isExpanded(commentItem.id!)) {
+            <span>{{commentItem.text.slice(0, truncateLength)}}...</span>
+            <button mat-button color="accent" (click)="toggleCommentExpansion(commentItem.id!)">Show more</button>
+          } @else {
+            <span>{{commentItem.text}}</span>
+            @if (commentItem.text.length > truncateLength) {
+              <button mat-button color="accent" (click)="toggleCommentExpansion(commentItem.id!)">Show less</button>
+            }
           }
         }
       </div>
@@ -94,6 +121,25 @@
         <button mat-button color="primary" class="reply-button" (click)="toggleReplyForm(commentItem.id!)">
           <mat-icon>reply</mat-icon> Reply
         </button>
+        @if (
+          editingCommentId() !== commentItem.id &&
+          (
+            (isLoggedIn() && authService.currentUser?.uid === commentItem.userId) ||
+            (!!commentItem.authorDeviceId && commentItem.authorDeviceId === deviceId())
+          )
+        ) {
+          <button mat-button color="accent" class="edit-button" (click)="startEdit(commentItem.id!, commentItem.text)">
+            <mat-icon>edit</mat-icon> Edit
+          </button>
+          <button mat-button color="warn" class="delete-button" (click)="removeComment(commentItem.id!)">
+            <mat-icon>delete</mat-icon> Delete
+          </button>
+        }
+        @if (!((isLoggedIn() && authService.currentUser?.uid === commentItem.userId) || (!!commentItem.authorDeviceId && commentItem.authorDeviceId === deviceId()))) {
+          <button mat-button color="warn" class="report-button" (click)="reportComment(commentItem.id!)">
+            <mat-icon>flag</mat-icon> Report
+          </button>
+        }
       </div>
     </mat-list-item>
 

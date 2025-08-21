@@ -11,6 +11,7 @@ import { MatSnackBar, MatSnackBarModule } from '@angular/material/snack-bar';
 import { Timestamp } from 'firebase/firestore';
 
 import { Comment } from '../../../../core/common/interfaces';
+import { DeviceIdService } from '../../../../core/services/device-id.service';
 import { MAX_COMMENT_LENGTH, TRUNCATE_COMMENT_LENGTH } from '../../../../core/common/constants';
 import { CommentsService } from '../../../../core/services/comments.service';
 import { AuthService } from '../../../../core/services/auth.service';
@@ -38,6 +39,7 @@ export class CommentsSectionComponent implements OnInit {
   public authService = inject(AuthService);
   private snackBar = inject(MatSnackBar);
   private anonymousNameService = inject(AnonymousNameService);
+  private deviceIdService = inject(DeviceIdService);
 
   newComment: WritableSignal<string> = signal('');
   commentError = signal<string | null>(null);
@@ -46,11 +48,17 @@ export class CommentsSectionComponent implements OnInit {
   readonly anonymousUserName = signal(this.anonymousNameService.getName());
   readonly maxCommentLength = MAX_COMMENT_LENGTH;
   readonly truncateLength = TRUNCATE_COMMENT_LENGTH;
+  readonly deviceId = this.deviceIdService.deviceId;
 
   // State for active reply form
   replyingToCommentId = signal<string | null>(null);
   newReplyText: WritableSignal<string> = signal('');
   replyError = signal<string | null>(null);
+
+  // State for editing an existing comment
+  editingCommentId = signal<string | null>(null);
+  editText: WritableSignal<string> = signal('');
+  editError = signal<string | null>(null);
 
   // Set to store the IDs of expanded comments
   expandedComments = signal<Set<string>>(new Set());
@@ -97,6 +105,15 @@ export class CommentsSectionComponent implements OnInit {
         this.replyError.set(`Reply too long: ${replyText.length} / ${this.maxCommentLength}`);
       } else {
         this.replyError.set(null);
+      }
+    });
+
+    effect(() => {
+      const text = this.editText();
+      if (text.length > this.maxCommentLength) {
+        this.editError.set(`Edit too long: ${text.length} / ${this.maxCommentLength}`);
+      } else {
+        this.editError.set(null);
       }
     });
   }
@@ -215,6 +232,48 @@ export class CommentsSectionComponent implements OnInit {
         duration: 3000,
         panelClass: ['error-snackbar']
       });
+    }
+  }
+
+  // Begin: Edit comment flow
+  startEdit(commentId: string, currentText: string): void {
+    this.editingCommentId.set(commentId);
+    this.editText.set(currentText);
+    this.editError.set(null);
+  }
+
+  cancelEdit(): void {
+    this.editingCommentId.set(null);
+    this.editText.set('');
+    this.editError.set(null);
+  }
+
+  async submitEdit(commentId: string): Promise<void> {
+    const text = this.editText().trim();
+    if (!text) {
+      this.snackBar.open('Edited comment cannot be empty.', 'Close', { duration: 3000, panelClass: ['error-snackbar'] });
+      return;
+    }
+    if (this.editError()) return;
+    try {
+      await this.commentsService.editComment(commentId, text);
+      this.snackBar.open('Comment updated!', 'Close', { duration: 3000 });
+      this.cancelEdit();
+    } catch (error) {
+      console.error('Error editing comment:', error);
+      this.snackBar.open('Failed to update comment. Please try again.', 'Close', { duration: 3000, panelClass: ['error-snackbar'] });
+    }
+  }
+  // End: Edit comment flow
+
+  // Report comment (minimal: no reason)
+  async reportComment(commentId: string): Promise<void> {
+    try {
+      await this.commentsService.reportComment(commentId);
+      this.snackBar.open('Comment reported. Thank you.', 'Close', { duration: 3000 });
+    } catch (error) {
+      console.error('Error reporting comment:', error);
+      this.snackBar.open('Failed to report comment. Please try again.', 'Close', { duration: 3000, panelClass: ['error-snackbar'] });
     }
   }
 
