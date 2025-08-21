@@ -15,6 +15,7 @@ export interface Environment {
   };
   api: {
     baseUrl: string;
+    functionsBaseUrl: string; // Base URL for callable HTTP Cloud Functions (no trailing slash)
   };
   features: {
     enableAnalytics: boolean;

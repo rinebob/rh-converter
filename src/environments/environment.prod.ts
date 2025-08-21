@@ -16,6 +16,7 @@ export const environment: Environment = {
   },
   api: {
     baseUrl: 'https://us-central1-rh-converter.cloudfunctions.net/api',
+    functionsBaseUrl: 'https://us-central1-rh-converter.cloudfunctions.net',
   },
   features: {
     enableAnalytics: true,

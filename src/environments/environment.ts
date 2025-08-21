@@ -16,6 +16,7 @@ export const environment: Environment = {
   },
   api: {
     baseUrl: 'http://localhost:5001/rh-converter/us-central1/api',
+    functionsBaseUrl: 'http://127.0.0.1:5001/rh-converter/us-central1',
   },
   features: {
     enableAnalytics: false,
