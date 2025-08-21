@@ -16,6 +16,7 @@ import { AnonymousNameService } from './anonymous-name.service';
 import { HttpClient, HttpHeaders } from '@angular/common/http';
 import { Auth, getIdToken } from '@angular/fire/auth';
 import { environment } from 'src/environments/environment';
+import { DeviceIdService } from './device-id.service';
 
 // Firestore public comment document as written by Cloud Functions (backend schema)
 interface PublicCommentDoc {
@@ -24,6 +25,7 @@ interface PublicCommentDoc {
   createdAt: Timestamp;
   editedAt: Timestamp | null;
   authorUid: string | null;
+  authorDeviceId?: string | null;
   displayName: string | null;
   type: 'feedback' | 'brokerage-request';
   parentId: string | null;
@@ -41,6 +43,7 @@ export class CommentsService implements OnDestroy {
   private injector = inject(Injector);
   private http = inject(HttpClient);
   private auth = inject(Auth);
+  private deviceIdService = inject(DeviceIdService);
 
   private readonly functionsBaseUrl = environment.api.functionsBaseUrl; // e.g., https://us-central1-<project>.cloudfunctions.net
 
@@ -86,6 +89,7 @@ export class CommentsService implements OnDestroy {
                   text: (typeof d.content === 'string' ? d.content : ''),
                   createdAt,
                   parentId: d.parentId || undefined,
+                  authorDeviceId: d.authorDeviceId || undefined,
                 } as Comment;
               });
             this.commentsSignal.set(mapped);
@@ -125,11 +129,13 @@ export class CommentsService implements OnDestroy {
     const body: any = {
       content: text.trim().slice(0, 2500),
       type: 'feedback',
+      deviceId: this.deviceIdService.deviceId(),
     } as {
       content: string;
       type: 'feedback';
       parentId?: string;
       displayName?: string;
+      deviceId?: string;
     };
 
     if (parentId) body.parentId = parentId;
@@ -170,7 +176,7 @@ export class CommentsService implements OnDestroy {
       this.authHeaders$()
         .pipe(
           switchMap((headers) =>
-            this.http.request<{ success: boolean }>('DELETE', url, { body: { id: commentId }, headers })
+            this.http.request<{ success: boolean }>('DELETE', url, { body: { id: commentId, deviceId: this.deviceIdService.deviceId() }, headers })
           )
         )
         .subscribe({

@@ -54,6 +54,7 @@ interface SubmitCommentBody {
   parentId?: string | null;
   displayName?: string | null; // optional pseudonymous handle
   contactEmail?: string | null; // private; only when type=brokerage-request
+  deviceId?: string | null; // pseudonymous device id for anonymous ownership
 }
 
 /**
@@ -85,8 +86,9 @@ export const submitComment = onRequest({ cors: corsEnabled }, async (request: Re
     const parentId = typeof body.parentId === 'string' && body.parentId.trim() ? body.parentId.trim() : null;
     const displayName = typeof body.displayName === 'string' && body.displayName.trim() ? body.displayName.trim().slice(0, 50) : null;
     const contactEmail = typeof body.contactEmail === 'string' && body.contactEmail.trim() ? body.contactEmail.trim().slice(0, 254) : null;
+    const deviceId = typeof body.deviceId === 'string' && body.deviceId.trim() ? body.deviceId.trim().slice(0, 64) : null;
 
-    console.log('[submitComment] payload', { uid: !!uid ? 'authed' : 'anon', type, parentId, displayName, contentLength: content.length, content });
+    console.log('[submitComment] payload', { uid: !!uid ? 'authed' : 'anon', type, parentId, displayName, deviceId: !!deviceId, contentLength: content.length, content });
     // Basic rate limiting placeholder: can be expanded using Firestore counters/IP hashes.
     // If needed, respond with captcha_required to trigger client flow.
 
@@ -99,6 +101,7 @@ export const submitComment = onRequest({ cors: corsEnabled }, async (request: Re
       createdAt: now,
       editedAt: null as Timestamp | null,
       authorUid: uid, // may be null
+      authorDeviceId: deviceId || null,
       displayName: displayName || null,
       type,
       parentId: parentId || null,
@@ -143,10 +146,11 @@ export const editComment = onRequest({ cors: corsEnabled }, async (request: Requ
   try {
     console.log('[editComment] start');
     const uid = await getRequestUserUid(request);
-    const { id, content } = request.body || {};
+    const { id, content, deviceId: rawDeviceId } = request.body || {};
     if (!id || typeof id !== 'string') { response.status(400).json({ error: 'id required' }); return; }
     const newContent = sanitizeContent(content);
     if (!newContent) { response.status(400).json({ error: 'content required' }); return; }
+    const deviceId = typeof rawDeviceId === 'string' && rawDeviceId.trim() ? rawDeviceId.trim().slice(0, 64) : null;
 
     console.log('[editComment] payload', { id, contentLength: newContent.length, content: newContent });
 
@@ -165,8 +169,9 @@ export const editComment = onRequest({ cors: corsEnabled }, async (request: Requ
     const withinWindow = Timestamp.now().toMillis() - createdAt.toMillis() <= EDIT_WINDOW_MINUTES * 60 * 1000;
 
     const isAuthor = uid && data.authorUid && uid === data.authorUid;
-    console.log('[editComment] decision', { id, isAdmin, isAuthor: !!isAuthor, withinWindow });
-    if (!(isAdmin || (isAuthor && withinWindow))) {
+    const isDeviceAuthor = !!(deviceId && data.authorDeviceId && deviceId === data.authorDeviceId);
+    console.log('[editComment] decision', { id, isAdmin, isAuthor: !!isAuthor, isDeviceAuthor, withinWindow });
+    if (!(isAdmin || (isAuthor && withinWindow) || (isDeviceAuthor && withinWindow))) {
       response.status(403).json({ error: 'Forbidden' });
       return;
     }
@@ -193,7 +198,9 @@ export const deleteComment = onRequest({ cors: corsEnabled }, async (request: Re
     const uid = await getRequestUserUid(request);
     const { id } = request.query as any;
     const commentId = typeof id === 'string' ? id : (request.body && request.body.id);
+    const rawDeviceId = request.body && (request.body.deviceId as unknown);
     if (!commentId || typeof commentId !== 'string') { response.status(400).json({ error: 'id required' }); return; }
+    const deviceId = (typeof rawDeviceId === 'string' && rawDeviceId.trim()) ? rawDeviceId.trim().slice(0, 64) : null;
 
     const ref = db.collection('comments').doc(commentId);
     const snap = await ref.get();
@@ -206,8 +213,9 @@ export const deleteComment = onRequest({ cors: corsEnabled }, async (request: Re
     }
 
     const isAuthor = uid && data.authorUid && uid === data.authorUid;
-    console.log('[deleteComment] decision', { id: commentId, isAdmin, isAuthor: !!isAuthor });
-    if (!(isAdmin || isAuthor)) { response.status(403).json({ error: 'Forbidden' }); return; }
+    const isDeviceAuthor = !!(deviceId && data.authorDeviceId && deviceId === data.authorDeviceId);
+    console.log('[deleteComment] decision', { id: commentId, isAdmin, isAuthor: !!isAuthor, isDeviceAuthor });
+    if (!(isAdmin || isAuthor || isDeviceAuthor)) { response.status(403).json({ error: 'Forbidden' }); return; }
 
     await ref.update({ status: 'removed', editedAt: Timestamp.now() });
     console.log('[deleteComment] success', { id: commentId });
