@@ -2,19 +2,34 @@ import { Injectable, inject, signal, WritableSignal, OnDestroy, Injector, runInI
 import {
   Firestore,
   collection,
-  addDoc,
   query,
   orderBy,
   Timestamp,
   collectionData,
   doc,
   Query,
-  deleteDoc
 } from '@angular/fire/firestore';
-import { Observable, Subscription } from 'rxjs';
+import { Observable, Subscription, from, of, switchMap, map, catchError, throwError } from 'rxjs';
 import { Comment } from '../common/interfaces';
 import { AuthService } from './auth.service';
 import { AnonymousNameService } from './anonymous-name.service';
+import { HttpClient, HttpHeaders } from '@angular/common/http';
+import { Auth, getIdToken } from '@angular/fire/auth';
+import { environment } from 'src/environments/environment';
+
+// Firestore public comment document as written by Cloud Functions (backend schema)
+interface PublicCommentDoc {
+  id?: string;
+  content: string;
+  createdAt: Timestamp;
+  editedAt: Timestamp | null;
+  authorUid: string | null;
+  displayName: string | null;
+  type: 'feedback' | 'brokerage-request';
+  parentId: string | null;
+  status: 'active' | 'removed' | 'flagged';
+  reportCount: number;
+}
 
 @Injectable({
   providedIn: 'root'
@@ -24,6 +39,10 @@ export class CommentsService implements OnDestroy {
   private authService: AuthService = inject(AuthService);
   private anonymousNameService: AnonymousNameService = inject(AnonymousNameService);
   private injector = inject(Injector);
+  private http = inject(HttpClient);
+  private auth = inject(Auth);
+
+  private readonly functionsBaseUrl = environment.api.functionsBaseUrl; // e.g., https://us-central1-<project>.cloudfunctions.net
 
   private commentsCollectionPath = 'comments';
   private commentsSignal: WritableSignal<Comment[]> = signal<Comment[]>([]);
@@ -49,96 +68,125 @@ export class CommentsService implements OnDestroy {
       const commentsQuery = query(
         commentsCol,
         orderBy('createdAt', 'asc')
-      ) as Query<Omit<Comment, 'id'>>; // Query for data as it exists in Firestore
+      ) as Query<PublicCommentDoc>; // Query typed to backend schema
 
-      // collectionData will add the 'id' field to produce objects of type 'Comment'
-      this.commentsSubscription = collectionData<Comment>(commentsQuery, { idField: 'id' })
+      // collectionData will add the 'id' field to produce typed docs
+      this.commentsSubscription = collectionData<PublicCommentDoc>(commentsQuery, { idField: 'id' })
         .subscribe({
-          next: (comments) => {
-            // Ensure that the data conforms to the Comment interface, especially Timestamps
-            const typedComments = comments.map(comment => ({
-              ...comment,
-              createdAt: comment.createdAt instanceof Timestamp ? comment.createdAt : Timestamp.fromDate(new Date()) // Example handling, adjust if createdAt is already a Timestamp
-            })) as Comment[];
-            this.commentsSignal.set(typedComments);
+          next: (docs) => {
+            // Map backend schema -> UI Comment interface expected by templates
+            const mapped: Comment[] = (docs || [])
+              .filter(d => (d?.status ?? 'active') !== 'removed')
+              .map(d => {
+                const createdAt = d.createdAt instanceof Timestamp ? d.createdAt : Timestamp.fromDate(new Date());
+                return {
+                  id: d.id,
+                  userId: d.authorUid || 'anonymous',
+                  userName: (d.displayName || undefined),
+                  text: (typeof d.content === 'string' ? d.content : ''),
+                  createdAt,
+                  parentId: d.parentId || undefined,
+                } as Comment;
+              });
+            this.commentsSignal.set(mapped);
           },
           error: (error) => {
             console.error('Error fetching comments: ', error);
-            this.commentsSignal.set([]); // Clear comments on error or set an error state
+            this.commentsSignal.set([]);
           }
         });
     });
   }
 
+  // Internal helper: get Authorization header if authenticated
+  private authHeaders$(): Observable<HttpHeaders | undefined> {
+    const user = this.auth.currentUser;
+    if (!user) return of(undefined);
+    return from(getIdToken(user, true)).pipe(
+      map((token) => new HttpHeaders({ Authorization: `Bearer ${token}` })),
+      catchError(() => of(undefined))
+    );
+  }
+
   /**
-   * Adds a new comment to Firestore.
-   * @param text The content of the comment.
-   * @param parentId Optional ID of the parent comment if this is a reply.
-   * @returns A Promise that resolves when the comment is successfully added.
+   * Adds a new comment via Cloud Function submitComment.
+   * Keeps method signature; returns Promise<void> for compatibility with existing callers.
    */
   async addComment(text: string, parentId?: string): Promise<void> {
-    const user = this.authService.currentUser;
-
-    if (!text.trim()) {
+    if (!text || !text.trim()) {
       throw new Error('Comment text cannot be empty.');
     }
 
-    let userId: string;
-    let userName: string | null | undefined;
+    const isAuthed = !!this.authService.currentUser;
+    const displayName = isAuthed
+      ? this.authService.currentUser?.displayName || undefined
+      : this.anonymousNameService.getName() || undefined;
 
-    if (user) {
-      userId = user.uid;
-      userName = user.displayName;
-    } else {
-      userId = 'anonymous'; // Or a more unique anonymous ID if needed
-      userName = this.anonymousNameService.getName();
-    }
-
-    const newComment: Omit<Comment, 'id'> = {
-      userId,
-      userName: userName ?? undefined, // Convert null to undefined
-      text: text.trim(),
-      createdAt: Timestamp.now()
+    const body: any = {
+      content: text.trim().slice(0, 2500),
+      type: 'feedback',
+    } as {
+      content: string;
+      type: 'feedback';
+      parentId?: string;
+      displayName?: string;
     };
 
-    // Add parentId if it exists
-    if (parentId) {
-      newComment.parentId = parentId;
-    }
+    if (parentId) body.parentId = parentId;
+    if (displayName) body.displayName = displayName;
 
-    console.log('Firestore ADD_COMMENT Attempt:');
-    console.log('User (from authService.currentUser$):', user ? { uid: user.uid, displayName: user.displayName, email: user.email } : 'Anonymous');
-    console.log('Data being sent (newComment):', JSON.stringify(newComment, null, 2));
+    const url = `${this.functionsBaseUrl}/submitComment`;
 
-    await runInInjectionContext(this.injector, async () => {
-      const commentsCol = collection(this.firestore, this.commentsCollectionPath);
-      try {
-        await addDoc(commentsCol, newComment);
-      } catch (error) {
-        console.error('Error adding comment: ', error);
-        throw error; // Re-throw the error to be handled by the caller
-      }
+    // Use RxJS for HTTP, then convert to Promise for backward compatibility.
+    return await new Promise<void>((resolve, reject) => {
+      this.authHeaders$()
+        .pipe(
+          switchMap((headers) =>
+            this.http.post<{ success: boolean; id: string }>(url, body, { headers })
+          )
+        )
+        .subscribe({
+          next: () => resolve(),
+          error: (err) => {
+            console.error('submitComment failed', err);
+            reject(err);
+          },
+        });
     });
   }
 
   /**
-   * Deletes a comment from Firestore.
-   * @param commentId The ID of the comment to delete.
+   * Deletes a comment via Cloud Function deleteComment.
+   * Keeps method signature; returns Promise<void> for compatibility.
    */
   async deleteComment(commentId: string): Promise<void> {
     if (!commentId) {
       throw new Error('Comment ID cannot be empty.');
     }
-    await runInInjectionContext(this.injector, async () => {
-      const commentDocRef = doc(this.firestore, this.commentsCollectionPath, commentId);
-      try {
-        await deleteDoc(commentDocRef);
-      } catch (error) {
-        console.error('Error deleting comment: ', error);
-        throw error;
-      }
+
+    const url = `${this.functionsBaseUrl}/deleteComment`;
+
+    return await new Promise<void>((resolve, reject) => {
+      this.authHeaders$()
+        .pipe(
+          switchMap((headers) =>
+            this.http.request<{ success: boolean }>('DELETE', url, { body: { id: commentId }, headers })
+          )
+        )
+        .subscribe({
+          next: () => resolve(),
+          error: (err) => {
+            console.error('deleteComment failed', err);
+            reject(err);
+          },
+        });
     });
   }
+
+  // Optional future methods (for UI usage when needed):
+  // editComment(id: string, content: string)
+  // reportComment(id: string, reason?: string)
+  // adminModeration(action: 'remove' | 'restore', id: string)
 
   ngOnDestroy(): void {
     if (this.commentsSubscription) {
