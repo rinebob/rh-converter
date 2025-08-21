@@ -178,20 +178,19 @@ export const adminReplyToBrokerageRequest = onRequest({ cors: corsEnabled }, asy
   }
 });
 
-// Admin view via deviceId challenge: list latest requests
+// Admin view via Firebase Auth admin claim: list latest requests
 export const listBrokerageRequests = onRequest({ cors: corsEnabled }, async (request: Request, response: Response) => {
   setCorsHeaders(response);
   if (request.method === 'OPTIONS') { response.status(204).send(''); return; }
   if (request.method !== 'GET') { response.status(405).send('Method Not Allowed'); return; }
 
   try {
-    // Validate admin device id
-    const provided = (request.headers['x-admin-device'] || request.query['deviceId'] || '').toString().trim();
-    if (!provided) { response.status(401).json({ error: 'Unauthorized' }); return; }
-
-    const adminDoc = await db.collection('device-ids').doc('admin-id').get();
-    const expected = (adminDoc.data() as any)?.deviceId as string | undefined;
-    if (!expected || provided !== expected) { response.status(403).json({ error: 'Forbidden' }); return; }
+    // Require Firebase Auth and admin claim
+    const uid = await getRequestUserUid(request);
+    if (!uid) { response.status(401).json({ error: 'Unauthorized' }); return; }
+    const user = await auth.getUser(uid);
+    const isAdmin = !!(user.customClaims && (user.customClaims as any).admin);
+    if (!isAdmin) { response.status(403).json({ error: 'Forbidden' }); return; }
 
     const snap = await db.collection('brokerageRequests')
       .orderBy('createdAt', 'desc')
