@@ -1,7 +1,7 @@
 import { inject } from '@angular/core';
 import { Router, type CanActivateFn } from '@angular/router';
 import { map, take } from 'rxjs/operators';
-import { AuthService } from '@core/services/auth.service';
+import { AuthService } from '../services/auth.service';
 
 /**
  * Non-auth guard that prevents authenticated users from accessing public routes
