@@ -183,10 +183,87 @@ export class CommentsService implements OnDestroy {
     });
   }
 
-  // Optional future methods (for UI usage when needed):
-  // editComment(id: string, content: string)
-  // reportComment(id: string, reason?: string)
-  // adminModeration(action: 'remove' | 'restore', id: string)
+  /**
+   * Edits an existing comment via Cloud Function editComment.
+   */
+  async editComment(id: string, content: string): Promise<void> {
+    if (!id || !content || !content.trim()) {
+      throw new Error('Comment id and content are required.');
+    }
+
+    const url = `${this.functionsBaseUrl}/editComment`;
+    const body = { id, content: content.trim().slice(0, 2500), deviceId: this.deviceIdService.deviceId() } as { id: string; content: string; deviceId: string };
+
+    return await new Promise<void>((resolve, reject) => {
+      this.authHeaders$()
+        .pipe(
+          switchMap((headers) => this.http.patch<{ success: boolean }>(url, body, { headers }))
+        )
+        .subscribe({
+          next: () => resolve(),
+          error: (err) => {
+            console.error('editComment failed', err);
+            reject(err);
+          },
+        });
+    });
+  }
+
+  /**
+   * Reports a comment via Cloud Function reportComment.
+   */
+  async reportComment(id: string, reason?: string): Promise<void> {
+    if (!id) {
+      throw new Error('Comment id is required.');
+    }
+
+    const url = `${this.functionsBaseUrl}/reportComment`;
+    const body: { id: string; reason?: string } = { id };
+    if (reason && reason.trim()) body.reason = reason.trim().slice(0, 200);
+
+    return await new Promise<void>((resolve, reject) => {
+      this.authHeaders$()
+        .pipe(
+          switchMap((headers) => this.http.post<{ success: boolean }>(url, body, { headers }))
+        )
+        .subscribe({
+          next: () => resolve(),
+          error: (err) => {
+            console.error('reportComment failed', err);
+            reject(err);
+          },
+        });
+    });
+  }
+
+  /**
+   * Admin moderation actions via Cloud Function adminModeration.
+   */
+  async adminModeration(action: 'remove' | 'restore', id: string): Promise<void> {
+    if (!action) {
+      throw new Error('Action is required.');
+    }
+    if ((action === 'remove' || action === 'restore') && !id) {
+      throw new Error('Comment id is required for this action.');
+    }
+
+    const url = `${this.functionsBaseUrl}/adminModeration`;
+    const body = { action, id } as { action: 'remove' | 'restore'; id: string };
+
+    return await new Promise<void>((resolve, reject) => {
+      this.authHeaders$()
+        .pipe(
+          switchMap((headers) => this.http.post<{ success: boolean }>(url, body, { headers }))
+        )
+        .subscribe({
+          next: () => resolve(),
+          error: (err) => {
+            console.error('adminModeration failed', err);
+            reject(err);
+          },
+        });
+    });
+  }
 
   ngOnDestroy(): void {
     if (this.commentsSubscription) {
