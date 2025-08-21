@@ -71,6 +71,7 @@ export const submitComment = onRequest({ cors: corsEnabled }, async (request: Re
     return;
   }
   try {
+    console.log('[submitComment] start', { method: request.method, hasAuth: !!(request.headers['authorization'] || request.headers['Authorization']) });
     const uid = await getRequestUserUid(request); // null for anonymous
     const body = (request.body || {}) as Partial<SubmitCommentBody>;
 
@@ -85,6 +86,7 @@ export const submitComment = onRequest({ cors: corsEnabled }, async (request: Re
     const displayName = typeof body.displayName === 'string' && body.displayName.trim() ? body.displayName.trim().slice(0, 50) : null;
     const contactEmail = typeof body.contactEmail === 'string' && body.contactEmail.trim() ? body.contactEmail.trim().slice(0, 254) : null;
 
+    console.log('[submitComment] payload', { uid: !!uid ? 'authed' : 'anon', type, parentId, displayName, contentLength: content.length, content });
     // Basic rate limiting placeholder: can be expanded using Firestore counters/IP hashes.
     // If needed, respond with captcha_required to trigger client flow.
 
@@ -122,6 +124,7 @@ export const submitComment = onRequest({ cors: corsEnabled }, async (request: Re
       createdAt: now,
     });
 
+    console.log('[submitComment] success', { id: commentDoc.id });
     response.status(200).json({ success: true, id: commentDoc.id });
   } catch (err: any) {
     console.error('submitComment error', err);
@@ -138,11 +141,14 @@ export const editComment = onRequest({ cors: corsEnabled }, async (request: Requ
   if (request.method !== 'PATCH') { response.status(405).send('Method Not Allowed'); return; }
 
   try {
+    console.log('[editComment] start');
     const uid = await getRequestUserUid(request);
     const { id, content } = request.body || {};
     if (!id || typeof id !== 'string') { response.status(400).json({ error: 'id required' }); return; }
     const newContent = sanitizeContent(content);
     if (!newContent) { response.status(400).json({ error: 'content required' }); return; }
+
+    console.log('[editComment] payload', { id, contentLength: newContent.length, content: newContent });
 
     const ref = db.collection('comments').doc(id);
     const snap = await ref.get();
@@ -159,12 +165,14 @@ export const editComment = onRequest({ cors: corsEnabled }, async (request: Requ
     const withinWindow = Timestamp.now().toMillis() - createdAt.toMillis() <= EDIT_WINDOW_MINUTES * 60 * 1000;
 
     const isAuthor = uid && data.authorUid && uid === data.authorUid;
+    console.log('[editComment] decision', { id, isAdmin, isAuthor: !!isAuthor, withinWindow });
     if (!(isAdmin || (isAuthor && withinWindow))) {
       response.status(403).json({ error: 'Forbidden' });
       return;
     }
 
     await ref.update({ content: newContent, editedAt: Timestamp.now() });
+    console.log('[editComment] success', { id });
     response.status(200).json({ success: true });
   } catch (err) {
     console.error('editComment error', err);
@@ -181,6 +189,7 @@ export const deleteComment = onRequest({ cors: corsEnabled }, async (request: Re
   if (request.method !== 'DELETE') { response.status(405).send('Method Not Allowed'); return; }
 
   try {
+    console.log('[deleteComment] start');
     const uid = await getRequestUserUid(request);
     const { id } = request.query as any;
     const commentId = typeof id === 'string' ? id : (request.body && request.body.id);
@@ -197,9 +206,11 @@ export const deleteComment = onRequest({ cors: corsEnabled }, async (request: Re
     }
 
     const isAuthor = uid && data.authorUid && uid === data.authorUid;
+    console.log('[deleteComment] decision', { id: commentId, isAdmin, isAuthor: !!isAuthor });
     if (!(isAdmin || isAuthor)) { response.status(403).json({ error: 'Forbidden' }); return; }
 
     await ref.update({ status: 'removed', editedAt: Timestamp.now() });
+    console.log('[deleteComment] success', { id: commentId });
     response.status(200).json({ success: true });
   } catch (err) {
     console.error('deleteComment error', err);
@@ -216,6 +227,7 @@ export const reportComment = onRequest({ cors: corsEnabled }, async (request: Re
   if (request.method !== 'POST') { response.status(405).send('Method Not Allowed'); return; }
 
   try {
+    console.log('[reportComment] start');
     const { id, reason } = request.body || {};
     if (!id || typeof id !== 'string') { response.status(400).json({ error: 'id required' }); return; }
 
@@ -228,6 +240,7 @@ export const reportComment = onRequest({ cors: corsEnabled }, async (request: Re
     // Optional: store report details
     await db.collection('commentReports').add({ commentId: id, reason: (reason || '').toString().slice(0, 200), createdAt: Timestamp.now() });
 
+    console.log('[reportComment] success', { id, reasonLength: (reason || '').toString().length, reason: (reason || '').toString() });
     response.status(200).json({ success: true });
   } catch (err) {
     console.error('reportComment error', err);
@@ -245,6 +258,7 @@ export const adminModeration = onRequest({ cors: corsEnabled }, async (request: 
   if (request.method !== 'POST') { response.status(405).send('Method Not Allowed'); return; }
 
   try {
+    console.log('[adminModeration] start');
     const uid = await getRequestUserUid(request);
     if (!uid) { response.status(401).json({ error: 'Unauthorized' }); return; }
     const user = await auth.getUser(uid);
@@ -259,6 +273,7 @@ export const adminModeration = onRequest({ cors: corsEnabled }, async (request: 
       return;
     }
 
+    console.log('[adminModeration] action', { action, id });
     switch (action) {
       case 'remove': {
         const ref = db.collection('comments').doc(id);
@@ -275,6 +290,7 @@ export const adminModeration = onRequest({ cors: corsEnabled }, async (request: 
         return;
     }
 
+    console.log('[adminModeration] success', { action, id });
     response.status(200).json({ success: true });
   } catch (err) {
     console.error('adminModeration error', err);
