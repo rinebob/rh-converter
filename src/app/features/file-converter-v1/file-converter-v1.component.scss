@@ -85,29 +85,7 @@
     }
 }
 
-// Footer styles
-.app-footer {
-    text-align: center;
-    padding: 1.5rem 1rem;
-    background-color: white;
-    border-top: 1px solid #e1e4e8;
-    font-size: 0.9rem;
-    color: #2c3e50;
-    opacity: 0.8;
-    width: 100%;
-    height: 6rem;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-
-    .disclaimer-text {
-        font-size: 0.75rem;
-        margin-top: 0.5rem;
-        color: #666;
-        line-height: 1.4;
-    }
-}
+// (Removed page-level .app-footer; main layout footer is used)
 
 // Tabs container
 .tabs-container {
@@ -238,8 +216,8 @@ $footer-height: 6rem; // must match .app-footer height
   flex-direction: row;
   align-items: stretch;
   justify-content: center; // center the whole rails + content group
-  height: calc(100vh - #{$footer-height}); // from top of viewport to top of footer
-  min-height: calc(100vh - #{$footer-height});
+  height: calc(100vh - 6rem); // from top of viewport to top of footer
+  min-height: calc(100vh - 6rem);
   width: 100%;
   box-sizing: border-box;
   gap: 0; // eliminate any spacing between rails and center column
@@ -269,7 +247,7 @@ $footer-height: 6rem; // must match .app-footer height
   flex-direction: column;
   height: 100%;
   align-items: stretch;
-  width: clamp(30rem, calc(100vw - (2 * #{$ad-rail-width})), var(--content-max-width));
+  width: clamp(30rem, calc(100vw - (2 * $ad-rail-width)), var(--content-max-width));
   min-height: 0 !important; 
 }
 
@@ -332,39 +310,39 @@ $footer-height: 6rem; // must match .app-footer height
 
 // Make the tab section consume the remaining height below the header inside the center column
 .page-with-ads .tabs-container {
-  flex: 0 0 auto; // don't force-fill height
+  flex: 1 1 auto; // fill remaining column height
   min-height: 0;
   display: flex;
   flex-direction: column;
-  height: auto;
+  height: 100%;
  }
 
  // Ensure Angular Material tab components stretch to fill
-.page-with-ads .tabs-container .mat-mdc-tab-group {
-  flex: 0 0 auto; // natural height
+ .page-with-ads .tabs-container .mat-mdc-tab-group {
+  flex: 1 1 auto; // fill so body-wrapper can compute height
   min-height: 0;
-  height: auto;
+  height: 100%;
   display: flex;
   flex-direction: column;
-}
-
-.page-with-ads .tabs-container .mat-mdc-tab-header {
-  flex: 0 0 auto;
-}
-
-.page-with-ads .tabs-container .mat-mdc-tab-body-wrapper {
+ }
+ 
+ .page-with-ads .tabs-container .mat-mdc-tab-header {
+   flex: 0 0 auto;
+ }
+ 
+ .page-with-ads .tabs-container .mat-mdc-tab-body-wrapper {
   flex: 1 1 auto;
-  min-height: 0;
+  min-height: 0; // allow internal scroll sizing
   height: 100%;
   overflow-y: auto; // tab content scrolls, column stays full-height
-}
-
-.page-with-ads .tabs-container .mat-mdc-tab-body,
-.page-with-ads .tabs-container .mat-mdc-tab-body-content {
-  height: 100%;
-  display: flex;
-  flex-direction: column;
-}
+ }
+ 
+ .page-with-ads .tabs-container .mat-mdc-tab-body,
+ .page-with-ads .tabs-container .mat-mdc-tab-body-content {
+   height: 100%;
+   display: flex;
+   flex-direction: column;
+ }
 
 // Bottom ad container within center column
 .bottom-ad-container {
@@ -424,8 +402,8 @@ $footer-height: 6rem; // must match .app-footer height
     flex-direction: column;
     align-items: stretch;
     justify-content: flex-start;
-    height: calc(100vh - #{$footer-height});
-    min-height: calc(100vh - #{$footer-height});
+    height: calc(100vh - 6rem);
+    min-height: calc(100vh - 6rem);
     width: 100%;
     padding-left: 0;
     padding-right: 0;
@@ -441,3 +419,26 @@ $footer-height: 6rem; // must match .app-footer height
     width: 100%;
   }
 }
+
+.app-footer {
+   text-align: center;
+   padding: 1.5rem 1rem;
+   background-color: white;
+   border-top: 1px solid #e1e4e8;
+   font-size: 0.9rem;
+   color: #2c3e50;
+   opacity: 0.85;
+   width: 100%;
+   height: 6rem; // keep in sync with $footer-height declared below
+   display: flex;
+   flex-direction: column;
+   align-items: center;
+   justify-content: center;
+ 
+   .disclaimer-text {
+     font-size: 0.75rem;
+     margin-top: 0.5rem;
+     color: #666;
+     line-height: 1.4;
+   }
+ }
