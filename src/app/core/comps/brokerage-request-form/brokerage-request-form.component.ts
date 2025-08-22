@@ -47,6 +47,8 @@ export class BrokerageRequestFormComponent {
 
   // Reference to the native file input to clear its value
   @ViewChild('fileInput') private fileInput?: ElementRef<HTMLInputElement>;
+  // Reference to shared file picker to clear displayed filename programmatically
+  @ViewChild(TdcFilePickerComponent) private filePicker?: TdcFilePickerComponent;
 
   // Auto-dismiss success message after a delay
   private readonly successClearMs = 10000; // 10s
@@ -56,6 +58,8 @@ export class BrokerageRequestFormComponent {
     if (id) {
       if (this.successTimer) clearTimeout(this.successTimer);
       this.successTimer = setTimeout(() => {
+        // Clear UI/file state when the success message auto-dismisses
+        this.removeSelectedFile();
         this.successId.set(null);
         this.successTimer = null;
       }, this.successClearMs);
@@ -94,6 +98,8 @@ export class BrokerageRequestFormComponent {
     // Clear the native input value so the filename disappears and the same file can be re-selected
     const el = this.fileInput?.nativeElement;
     if (el) el.value = '';
+    // Clear the shared file picker displayed filename
+    this.filePicker?.clear();
   }
 
   private handleNewFile(file: File): void {
@@ -261,5 +267,11 @@ export class BrokerageRequestFormComponent {
         },
         error: () => this.errorMsg.set('Network error. Please try again.'),
       });
+  }
+
+  // Allow manual dismissal to also clear file preview/metadata
+  dismissSuccess(): void {
+    this.removeSelectedFile();
+    this.successId.set(null);
   }
 }
