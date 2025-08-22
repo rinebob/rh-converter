@@ -92,11 +92,6 @@ $base-spacing-unit: 0.25rem; // Significantly reduced base unit for tighter spac
   // Ensure the border doesn't add to the width if box-sizing is content-box
   // box-sizing: border-box; // Usually default with Angular CLI projects
 
-  .comment-thread.reply-thread {
-    // If we need specific styles for reply threads vs top-level comment threads
-    // For now, it inherits from .comment-thread
-  }
-
   .comment-item.reply-item {
     // Specific styles for a reply item if different from a top-level comment item
     // For example, slightly smaller font or different padding if desired
