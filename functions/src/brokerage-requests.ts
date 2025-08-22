@@ -69,6 +69,7 @@ interface SubmitBrokerageRequestBody {
   displayName?: string | null; // optional pseudonymous handle
   contactEmail?: string | null; // optional private email for follow-up
   deviceId?: string | null; // optional device id for anon ownership
+  exampleFilePath?: string | null; // optional storage path to an uploaded CSV
 }
 
 type RequestStatus = 'open' | 'triaged' | 'in_progress' | 'done' | 'rejected';
@@ -119,6 +120,7 @@ export const submitBrokerageRequest = onRequest({ cors: corsEnabled }, async (re
     const displayName = sanitizeString(body.displayName, 50);
     const contactEmail = sanitizeString(body.contactEmail, 254);
     const deviceId = sanitizeString(body.deviceId, 64);
+    const exampleFilePath = sanitizeString(body.exampleFilePath, 512); // store as-is (private), path length limited
 
     const now = Timestamp.now();
 
@@ -151,6 +153,7 @@ export const submitBrokerageRequest = onRequest({ cors: corsEnabled }, async (re
       ipHash,
       userAgent,
       contactEmail: contactEmail || null,
+      exampleFilePath: exampleFilePath || null,
       createdAt: now,
     });
 
