@@ -3,6 +3,7 @@ import { getFirestore, Timestamp } from 'firebase-admin/firestore';
 import { getAuth } from 'firebase-admin/auth';
 import { initializeApp, getApps } from 'firebase-admin/app';
 import type { Request, Response } from './interfaces-fn';
+import { randomUUID } from 'crypto';
 
 // Initialize Admin once
 if (!getApps().length) {
@@ -22,6 +23,43 @@ const setCorsHeaders = (response: Response) => {
   response.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization, X-Admin-Device');
   response.setHeader('Access-Control-Expose-Headers', 'Content-Type');
 };
+
+// ---------------------------------------------------------------------------
+// Structured logging helpers (PII-safe)
+// ---------------------------------------------------------------------------
+interface LogContext {
+  fn: string;
+  rid: string; // request id
+  method: string;
+  path: string;
+  uid?: string | null;
+  ipHash?: string | null;
+}
+
+function getIpHash(request: Request): string | null {
+  const ip = (request.headers['x-forwarded-for'] || (request as any).ip || '').toString();
+  return ip ? `hash:${Buffer.from(ip).toString('base64').slice(0, 16)}` : null;
+}
+
+function makeContext(fn: string, request: Request, uid?: string | null): LogContext {
+  return {
+    fn,
+    rid: (randomUUID && typeof randomUUID === 'function') ? randomUUID() : `${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 8)}`,
+    method: request.method,
+    path: (request as any).path || (request as any).originalUrl || '/',
+    uid: uid ?? null,
+    ipHash: getIpHash(request),
+  };
+}
+
+function logInfo(ctx: LogContext, message: string, extra?: Record<string, unknown>) {
+  console.log(JSON.stringify({ severity: 'INFO', ...ctx, message, ...(extra || {}) }));
+}
+
+function logError(ctx: LogContext, message: string, err?: unknown, extra?: Record<string, unknown>) {
+  const error = err instanceof Error ? { name: err.name, message: err.message, stack: err.stack } : { err };
+  console.error(JSON.stringify({ severity: 'ERROR', ...ctx, message, ...error, ...(extra || {}) }));
+}
 
 // Types used by this file only
 interface SubmitBrokerageRequestBody {
@@ -63,11 +101,15 @@ export const submitBrokerageRequest = onRequest({ cors: corsEnabled }, async (re
   if (request.method !== 'POST') { response.status(405).send('Method Not Allowed'); return; }
 
   try {
+    const start = Date.now();
     const uid = await getRequestUserUid(request); // may be null for anonymous
+    const ctx = makeContext('submitBrokerageRequest', request, uid);
+    logInfo(ctx, 'start');
     const body = (request.body || {}) as Partial<SubmitBrokerageRequestBody>;
 
     const brokerageName = sanitizeString(body.brokerageName, 120);
     if (!brokerageName) {
+      logInfo(ctx, 'validation_failed', { field: 'brokerageName' });
       response.status(400).json({ error: 'brokerageName required' });
       return;
     }
@@ -101,8 +143,7 @@ export const submitBrokerageRequest = onRequest({ cors: corsEnabled }, async (re
     // Private meta doc (PII, network info)
     const metaDoc = db.collection('brokerageRequestMeta').doc(reqDoc.id);
     const userAgent = (request.headers['user-agent'] || '').toString().slice(0, 256);
-    const ip = (request.headers['x-forwarded-for'] || (request as any).ip || '').toString();
-    const ipHash = ip ? `hash:${Buffer.from(ip).toString('base64').slice(0, 16)}` : null;
+    const ipHash = getIpHash(request);
 
     await metaDoc.set({
       requestId: reqDoc.id,
@@ -113,9 +154,11 @@ export const submitBrokerageRequest = onRequest({ cors: corsEnabled }, async (re
       createdAt: now,
     });
 
+    logInfo(ctx, 'success', { requestId: reqDoc.id, durationMs: Date.now() - start });
     response.status(200).json({ success: true, id: reqDoc.id });
   } catch (err) {
-    console.error('submitBrokerageRequest error', err);
+    const ctx = makeContext('submitBrokerageRequest', request);
+    logError(ctx, 'error', err);
     response.status(500).json({ error: 'Internal Server Error' });
   }
 });
@@ -133,7 +176,9 @@ export const adminReplyToBrokerageRequest = onRequest({ cors: corsEnabled }, asy
   if (request.method !== 'POST') { response.status(405).send('Method Not Allowed'); return; }
 
   try {
+    const start = Date.now();
     const uid = await getRequestUserUid(request);
+    const ctx = makeContext('adminReplyToBrokerageRequest', request, uid);
     if (!uid) { response.status(401).json({ error: 'Unauthorized' }); return; }
 
     // Verify admin via custom claims
@@ -171,9 +216,11 @@ export const adminReplyToBrokerageRequest = onRequest({ cors: corsEnabled }, asy
       await reqRef.update({ status: newStatus });
     }
 
+    logInfo(ctx, 'success', { requestId, replyId: replyRef.id, newStatus: newStatus || null, durationMs: Date.now() - start });
     response.status(200).json({ success: true, replyId: replyRef.id });
   } catch (err) {
-    console.error('adminReplyToBrokerageRequest error', err);
+    const ctx = makeContext('adminReplyToBrokerageRequest', request);
+    logError(ctx, 'error', err);
     response.status(500).json({ error: 'Internal Server Error' });
   }
 });
@@ -185,8 +232,10 @@ export const listBrokerageRequests = onRequest({ cors: corsEnabled }, async (req
   if (request.method !== 'GET') { response.status(405).send('Method Not Allowed'); return; }
 
   try {
+    const start = Date.now();
     // Require Firebase Auth and admin claim
     const uid = await getRequestUserUid(request);
+    const ctx = makeContext('listBrokerageRequests', request, uid);
     if (!uid) { response.status(401).json({ error: 'Unauthorized' }); return; }
     const user = await auth.getUser(uid);
     const isAdmin = !!(user.customClaims && (user.customClaims as any).admin);
@@ -214,9 +263,11 @@ export const listBrokerageRequests = onRequest({ cors: corsEnabled }, async (req
       };
     });
 
+    logInfo(ctx, 'success', { count: items.length, durationMs: Date.now() - start });
     response.status(200).json({ success: true, items });
   } catch (err) {
-    console.error('listBrokerageRequests error', err);
+    const ctx = makeContext('listBrokerageRequests', request);
+    logError(ctx, 'error', err);
     response.status(500).json({ error: 'Internal Server Error' });
   }
 });
@@ -234,7 +285,9 @@ export const voteBrokerageRequest = onRequest({ cors: corsEnabled }, async (requ
   if (request.method !== 'POST') { response.status(405).send('Method Not Allowed'); return; }
 
   try {
+    const start = Date.now();
     const body = (request.body || {}) as Partial<VoteBody>;
+    const ctx = makeContext('voteBrokerageRequest', request);
     const requestId = sanitizeString(body.requestId, 128);
     const direction = body.direction === 'down' ? 'down' : 'up';
     if (!requestId) { response.status(400).json({ error: 'requestId required' }); return; }
@@ -252,13 +305,17 @@ export const voteBrokerageRequest = onRequest({ cors: corsEnabled }, async (requ
 
     const latest = await ref.get();
     const count = (latest.data() as any)?.upvoteCount ?? 0;
+    logInfo(ctx, 'success', { requestId, direction, newCount: count, durationMs: Date.now() - start });
     response.status(200).json({ success: true, newCount: count });
   } catch (err: any) {
     if (err?.message === 'not_found') {
+      const ctx = makeContext('voteBrokerageRequest', request);
+      logInfo(ctx, 'not_found');
       response.status(404).json({ error: 'Not found' });
       return;
     }
-    console.error('voteBrokerageRequest error', err);
+    const ctx = makeContext('voteBrokerageRequest', request);
+    logError(ctx, 'error', err);
     response.status(500).json({ error: 'Internal Server Error' });
   }
 });
