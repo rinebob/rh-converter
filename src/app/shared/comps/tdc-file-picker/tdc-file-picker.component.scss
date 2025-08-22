@@ -1,0 +1,34 @@
+// Shared styles for the file picker container
+.file-input-container {
+  display: flex;
+  align-items: center;
+  justify-content: center; // center the button horizontally
+  gap: 0.75rem;
+  padding: 1rem;
+  width: 100%;
+  border: 2px dashed rgba(0, 0, 0, 0.2);
+  border-radius: 0.5rem;
+  background: rgba(0, 0, 0, 0.02);
+  transition: background-color 120ms ease, border-color 120ms ease;
+
+  &:hover {
+    border-color: rgba(0, 0, 0, 0.35);
+    background: rgba(0, 0, 0, 0.03);
+  }
+
+  &.drag-active {
+    border-color: #3f51b5; // primary tone
+    background: rgba(63, 81, 181, 0.06);
+  }
+}
+
+.visually-hidden {
+  position: absolute !important;
+  width: 1px !important;
+  height: 1px !important;
+  padding: 0 !important;
+  margin: -1px !important;
+  overflow: hidden !important;
+  clip: rect(0, 0, 0, 0) !important;
+  border: 0 !important;
+}
