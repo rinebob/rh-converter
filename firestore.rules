@@ -13,6 +13,11 @@ service cloud.firestore {
              text.size() < maxCommentLength();
     }
 
+    // Helper: check admin from custom claims
+    function isAdmin() {
+      return request.auth != null && request.auth.token.admin == true;
+    }
+
     // Users can read/write their own user document
     match /users/{userId} {
       allow read, update, delete: if request.auth != null && request.auth.uid == userId;
@@ -73,6 +78,28 @@ service cloud.firestore {
     // Private: comment reports (details not public)
     match /commentReports/{reportId} {
       allow read, write: if false;
+    }
+
+    // Brokerage support requests (admin-only visibility)
+    match /brokerageRequests/{requestId} {
+      // Only admins can read
+      allow read: if isAdmin();
+      // Client writes disabled; done via Admin SDK
+      allow create, update, delete: if false;
+
+      // Replies subcollection (admin-only visibility)
+      match /replies/{replyId} {
+        allow read: if isAdmin();
+        allow create, update, delete: if false;
+      }
+    }
+
+    // Private: brokerage request metadata (PII, network info)
+    match /brokerageRequestMeta/{requestId} {
+      // Only admins can read
+      allow read: if isAdmin();
+      // No client writes
+      allow write: if false;
     }
     
     // Deny all other access by default
