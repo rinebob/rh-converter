@@ -3,46 +3,183 @@
   justify-content: center;
   align-items: center;
   min-height: 100vh;
-  padding: 1rem;
+  padding: 2rem;
   background-color: #f5f5f5;
 }
 
 .login-card {
   width: 100%;
-  max-width: 400px;
+  max-width: 520px;
   padding: 2rem;
-  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
-  border-radius: 8px;
+  border-radius: 12px;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.12);
+  background: #fff;
+
+  .mat-mdc-card-title {
+    margin-bottom: 0.25rem;
+    font-weight: 600;
+  }
+  .mat-mdc-card-subtitle {
+    margin-top: 0;
+    color: rgba(0, 0, 0, 0.72);
+  }
 }
 
 .login-form {
   display: flex;
   flex-direction: column;
-  gap: 1.5rem;
-  margin-top: 1.5rem;
+  gap: 1rem;
+  margin-top: 0.75rem;
 }
 
 .full-width {
   width: 100%;
 }
 
+// Make Material outlined fields slightly rounded
+:host ::ng-deep .mat-mdc-form-field {
+  width: 100%;
+  --mdc-outlined-text-field-container-shape: 12px;
+}
+
+// Slightly scale down the suffix icon button to feel lighter
+:host ::ng-deep .mat-mdc-form-field .mat-mdc-form-field-icon-suffix .mat-mdc-icon-button {
+  width: 36px;
+  height: 36px;
+}
+
 .error-message {
-  color: #f44336;
-  margin: 0.5rem 0;
+  color: #d32f2f;
+  margin: 0.25rem 0 0.5rem 0;
   text-align: center;
 }
 
 .form-actions {
   display: flex;
   justify-content: center;
-  margin-top: 1rem;
+  margin-top: 0.25rem;
 }
 
 .login-button {
   width: 100%;
   height: 48px;
-  font-size: 1rem;
-  font-weight: 500;
+  font-weight: 600;
+  border-radius: 9999px; // pill
+  letter-spacing: 0.2px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+
+  // Ensure spinner sits centered like text
+  :host ::ng-deep .mat-mdc-progress-spinner {
+    margin: 0;
+  }
+}
+
+// Force enabled state styling for the Sign In button
+// Keeps disabled look intact
+.login-button.mat-mdc-raised-button:not(.mdc-button--disabled),
+.login-button.mat-mdc-raised-button:not([disabled]) {
+  background-color: var(--color-primary, #1976d2) !important;
+  color: #fff !important;
+}
+
+.login-button.mat-mdc-raised-button:not(.mdc-button--disabled):hover,
+.login-button.mat-mdc-raised-button:not([disabled]):hover {
+  background-color: var(--color-primary-hover, #1565c0) !important;
+}
+
+.signup-link {
+  display: flex;
+  justify-content: center;
+  margin: 0.75rem 0 0.25rem 0;
+
+  a {
+    color: #3f51b5;
+    text-decoration: none;
+    font-weight: 500;
+
+    &:hover {
+      text-decoration: underline;
+    }
+  }
+}
+
+.divider {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  color: rgba(0, 0, 0, 0.54);
+  margin: 0.5rem 0 0.75rem 0;
+
+  hr {
+    flex: 1 1 auto;
+    height: 1px;
+    border: none;
+    background: rgba(0, 0, 0, 0.1);
+  }
+
+  span {
+    font-size: 0.875rem;
+  }
+}
+
+.oauth-section {
+  display: flex;
+  justify-content: center;
+  margin-top: 0.25rem;
+}
+
+.google-button-container {
+  width: 100%;
+  margin-bottom: 16px;
+
+  .google-login-button {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 100%;
+    height: 44px;
+    padding: 0;
+    margin: 0 0 16px;
+    border: 1px solid #e0e0e0;
+    background-color: #fff;
+    color: rgba(0, 0, 0, 0.87);
+    font-size: 14px;
+    font-weight: 500;
+    text-transform: none;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    transition: all 0.2s ease;
+    border-radius: 4px;
+
+    .button-content {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      height: 100%;
+      width: 100%;
+      padding: 0 16px;
+    }
+
+    &:hover {
+      background-color: #f8f9fa;
+      box-shadow: 0 3px 6px rgba(0, 0, 0, 0.15);
+      transform: translateY(-1px);
+    }
+
+    &:active {
+      transform: translateY(0);
+      box-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
+    }
+
+    .google-logo {
+      width: 18px;
+      height: 18px;
+      margin-right: 12px;
+      object-fit: contain;
+    }
+  }
 }
 
 .card-footer {
@@ -50,21 +187,9 @@
   justify-content: center;
   margin-top: 1rem;
   padding-top: 1rem;
-  border-top: 1px solid rgba(0, 0, 0, 0.12);
-  
-  a {
-    color: #3f51b5;
-    text-decoration: none;
-    font-weight: 500;
-    margin-left: 0.25rem;
-    
-    &:hover {
-      text-decoration: underline;
-    }
-  }
+  border-top: 1px solid rgba(0, 0, 0, 0.08);
 }
 
-// Responsive adjustments
 @media (max-width: 600px) {
   .login-card {
     padding: 1.5rem;

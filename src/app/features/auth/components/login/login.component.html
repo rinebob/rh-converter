@@ -2,14 +2,14 @@
   <mat-card class="login-card">
     <mat-card-header>
       <mat-card-title>Sign In</mat-card-title>
-      <mat-card-subtitle>Access your Trade Data File Converter account</mat-card-subtitle>
+      <mat-card-subtitle>Admin Access - Trade Data File Converter</mat-card-subtitle>
     </mat-card-header>
 
     <mat-card-content>
       <form [formGroup]="loginForm" (ngSubmit)="onSubmit()" class="login-form">
         <mat-form-field appearance="outline" class="full-width">
           <mat-label>Email</mat-label>
-          <input matInput type="email" formControlName="email" required>
+          <input matInput type="email" formControlName="email" required />
           <mat-error *ngIf="loginForm.get('email')?.hasError('required')">
             Email is required
           </mat-error>
@@ -20,7 +20,21 @@
 
         <mat-form-field appearance="outline" class="full-width">
           <mat-label>Password</mat-label>
-          <input matInput [type]="'password'" formControlName="password" required>
+          <input
+            matInput
+            [type]="hidePassword ? 'password' : 'text'"
+            formControlName="password"
+            required
+          />
+          <button
+            mat-icon-button
+            matSuffix
+            type="button"
+            aria-label="Toggle password visibility"
+            (click)="hidePassword = !hidePassword"
+          >
+            <mat-icon>{{ hidePassword ? 'visibility_off' : 'visibility' }}</mat-icon>
+          </button>
           <mat-error *ngIf="loginForm.get('password')?.hasError('required')">
             Password is required
           </mat-error>
@@ -34,21 +48,38 @@
         </div>
 
         <div class="form-actions">
-          <button 
-            mat-raised-button 
-            color="primary" 
-            type="submit" 
+          <button
+            mat-raised-button
+            color="primary"
+            type="submit"
             [disabled]="loginForm.invalid || loading"
-            class="login-button">
+            class="login-button"
+          >
             <span *ngIf="!loading">Sign In</span>
             <mat-spinner *ngIf="loading" diameter="20"></mat-spinner>
           </button>
         </div>
       </form>
-    </mat-card-content>
 
-    <mat-card-actions class="card-footer">
-      <span>Don't have an account? <a routerLink="/signup">Sign up</a></span>
-    </mat-card-actions>
+      <div class="divider">
+        <hr />
+        <span>or</span>
+        <hr />
+      </div>
+
+      <div class="oauth-section">
+        <div class="google-button-container">
+          <button mat-raised-button class="google-login-button" (click)="onGoogleSignIn()" [disabled]="loading" type="button">
+            <div class="button-content">
+              <img *ngIf="!loading" [src]="googleLogoUrl" alt="Google" class="google-logo" width="18" height="18" />
+              <span class="button-text">
+                <mat-spinner *ngIf="loading" diameter="20"></mat-spinner>
+                <span *ngIf="!loading">Continue with Google</span>
+              </span>
+            </div>
+          </button>
+        </div>
+      </div>
+    </mat-card-content>
   </mat-card>
 </div>
