@@ -15,22 +15,6 @@
       <textarea id="notes" rows="4" [value]="notes()" (input)="notes.set($any($event.target).value)" placeholder="Share any format details or links"></textarea>
     </div>
 
-    <div class="row two-col">
-      <div class="col">
-        <label for="displayName">Display name</label>
-        <input id="displayName" type="text" [value]="displayName()" (input)="displayName.set($any($event.target).value)" placeholder="Optional" />
-      </div>
-      <div class="col">
-        <label for="contactEmail">Contact email</label>
-        <input id="contactEmail" type="email" [value]="contactEmail()" (input)="contactEmail.set($any($event.target).value)" placeholder="Optional (private)" />
-      </div>
-    </div>
-
-    <div class="row">
-      <label for="deviceId">Device ID</label>
-      <input id="deviceId" type="text" [value]="deviceId()" (input)="deviceId.set($any($event.target).value)" placeholder="Optional (helps track anon requests)" />
-    </div>
-
     <div class="actions">
       <button type="submit" [disabled]="!canSubmit()">Submit request</button>
       @if (submitting()) {
