@@ -1,14 +1,15 @@
-import { ChangeDetectionStrategy, Component, computed, inject, signal } from '@angular/core';
+import { ChangeDetectionStrategy, Component, computed, effect, inject, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { MatIconModule } from '@angular/material/icon';
+import { MatButtonModule } from '@angular/material/button';
 import { BrokerageRequestsService, SubmitBrokerageRequestPayload } from '../../services/brokerage-requests.service';
 import { finalize } from 'rxjs/operators';
 
 @Component({
   selector: 'app-brokerage-request-form',
   standalone: true,
-  imports: [CommonModule, FormsModule, MatIconModule],
+  imports: [CommonModule, FormsModule, MatIconModule, MatButtonModule],
   templateUrl: './brokerage-request-form.component.html',
   styleUrls: ['./brokerage-request-form.component.scss'],
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -27,6 +28,26 @@ export class BrokerageRequestFormComponent {
   submitting = signal<boolean>(false);
   successId = signal<string | null>(null);
   errorMsg = signal<string | null>(null);
+
+  // Auto-dismiss success message after a delay
+  private readonly successClearMs = 10000; // 10s
+  private successTimer: ReturnType<typeof setTimeout> | null = null;
+  private readonly autoDismissEffect = effect((onCleanup) => {
+    const id = this.successId();
+    if (id) {
+      if (this.successTimer) clearTimeout(this.successTimer);
+      this.successTimer = setTimeout(() => {
+        this.successId.set(null);
+        this.successTimer = null;
+      }, this.successClearMs);
+    }
+    onCleanup(() => {
+      if (this.successTimer) {
+        clearTimeout(this.successTimer);
+        this.successTimer = null;
+      }
+    });
+  });
 
   canSubmit = computed(() => !this.submitting() && this.brokerageName().trim().length > 0);
 
