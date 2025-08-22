@@ -122,6 +122,13 @@ export const submitBrokerageRequest = onRequest({ cors: corsEnabled }, async (re
     const deviceId = sanitizeString(body.deviceId, 64);
     const exampleFilePath = sanitizeString(body.exampleFilePath, 512); // store as-is (private), path length limited
 
+    // Log provided example file path (if any)
+    if (exampleFilePath) {
+      logInfo(ctx, 'received_example_file_path', { exampleFilePath });
+    } else {
+      logInfo(ctx, 'no_example_file_path');
+    }
+
     const now = Timestamp.now();
 
     // Public request doc (minimal, safe fields)
@@ -157,7 +164,7 @@ export const submitBrokerageRequest = onRequest({ cors: corsEnabled }, async (re
       createdAt: now,
     });
 
-    logInfo(ctx, 'success', { requestId: reqDoc.id, durationMs: Date.now() - start });
+    logInfo(ctx, 'success', { requestId: reqDoc.id, durationMs: Date.now() - start, exampleFilePath: exampleFilePath || null });
     response.status(200).json({ success: true, id: reqDoc.id });
   } catch (err) {
     const ctx = makeContext('submitBrokerageRequest', request);
