@@ -80,10 +80,10 @@ service cloud.firestore {
       allow read, write: if false;
     }
 
-    // Brokerage support requests (admin-only visibility)
+    // Brokerage support requests (public read of request docs; replies remain admin-only)
     match /brokerageRequests/{requestId} {
-      // Only admins can read
-      allow read: if isAdmin();
+      // Public can read request docs (contains non-PII fields only)
+      allow read: if true;
       // Client writes disabled; done via Admin SDK
       allow create, update, delete: if false;
 
