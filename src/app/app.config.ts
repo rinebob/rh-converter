@@ -8,6 +8,7 @@ import { ApiInterceptor } from './core/interceptors/api.interceptor';
 import { initializeApp, provideFirebaseApp } from '@angular/fire/app'; 
 import { getAuth, provideAuth, connectAuthEmulator } from '@angular/fire/auth'; 
 import { getFirestore, provideFirestore, connectFirestoreEmulator } from '@angular/fire/firestore'; 
+import { getStorage, provideStorage, connectStorageEmulator } from '@angular/fire/storage';
 import { environment } from '../environments/environment';
 import { AuthService } from './core/services/auth.service';
 
@@ -32,6 +33,13 @@ export const appConfig: ApplicationConfig = {
       }
       return firestore;
     }), 
+    provideStorage(() => {
+      const storage = getStorage();
+      if (!environment.production) {
+        connectStorageEmulator(storage, 'localhost', 9199);
+      }
+      return storage;
+    }),
     MatSnackBar,
     AuthService,
     {

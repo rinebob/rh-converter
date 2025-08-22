@@ -6,7 +6,7 @@
     "start": "ng serve",
     "build": "ng build",
     "watch": "ng build --watch --configuration development",
-    "emulators": "firebase emulators:start --only auth,functions,firestore --import=.firebase/emulator-data --export-on-exit",
+    "emulators": "firebase emulators:start --only auth,functions,firestore,storage --import=.firebase/emulator-data --export-on-exit",
     "test": "ng test"
   },
   "private": true,

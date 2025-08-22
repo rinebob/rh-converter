@@ -1,0 +1,22 @@
+rules_version = '2';
+service firebase.storage {
+  match /b/{bucket}/o {
+    // Allow client uploads to example CSV path during development (emulator)
+    match /uploads/examples/{month}/{file} {
+      allow read: if false; // no public reads in dev
+      allow write: if isValidCsvWithDeviceId();
+    }
+
+    function isValidCsvWithDeviceId() {
+      return request.resource != null
+        && request.resource.contentType.matches('text/csv(:?;.*)?')
+        && request.resource.metadata.deviceId != null
+        && request.resource.metadata.deviceId.size() > 0;
+    }
+
+    // Deny everything else by default
+    match /{allPaths=**} {
+      allow read, write: if false;
+    }
+  }
+}
