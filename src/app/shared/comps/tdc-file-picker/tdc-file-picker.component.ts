@@ -31,6 +31,13 @@ export class TdcFilePickerComponent {
 
   @ViewChild('fileInput') private fileInput?: ElementRef<HTMLInputElement>;
 
+  // Expose a public method to clear the filename and native input
+  public clear(): void {
+    this.selectedFileName.set(null);
+    const el = this.fileInput?.nativeElement;
+    if (el) el.value = '';
+  }
+
   // Local event handlers
   onButtonClick(): void {
     this.fileInput?.nativeElement?.click();
