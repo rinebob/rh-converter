@@ -2,7 +2,7 @@ import { Injectable, inject, signal } from '@angular/core';
 import { Router } from '@angular/router';
 import { Observable } from 'rxjs';
 import { map } from 'rxjs/operators';
-import { Auth, signOut, signInWithEmailAndPassword, createUserWithEmailAndPassword, updateProfile, User as FirebaseUser, authState } from '@angular/fire/auth';
+import { Auth, signOut, signInWithEmailAndPassword, createUserWithEmailAndPassword, updateProfile, User as FirebaseUser, authState, signInWithPopup, GoogleAuthProvider } from '@angular/fire/auth';
 
 import { User } from '../common/interfaces';
 
@@ -54,22 +54,30 @@ export class AuthService {
 
   // Check if user is authenticated
   get isAuthenticated$(): Observable<boolean> {
-    return this.currentUser$.pipe(
-      map(user => !!user)
-    );
+    return this.currentUser$.pipe(map(user => !!user));
   }
 
   // Sign in with email/password
-  signIn(email: string, password: string): Promise<void> {
-    return signInWithEmailAndPassword(this.auth, email, password)
-      .then(() => {
-        this.router.navigate([this.redirectUrl || '/']);
-        this.redirectUrl = null;
-      })
-      .catch(error => {
-        console.error('Sign in error:', error);
-        throw error;
-      });
+  async signIn(email: string, password: string): Promise<void> {
+    try {
+      await signInWithEmailAndPassword(this.auth, email, password);
+      await this.navigatePostLogin();
+    } catch (error) {
+      console.error('Sign in error:', error);
+      throw error as Error;
+    }
+  }
+
+  // Sign in with Google (popup)
+  async signInWithGoogle(): Promise<void> {
+    try {
+      const provider = new GoogleAuthProvider();
+      await signInWithPopup(this.auth, provider);
+      await this.navigatePostLogin();
+    } catch (error) {
+      console.error('Google sign-in error:', error);
+      throw error as Error;
+    }
   }
 
   // Sign up with email/password
@@ -92,11 +100,17 @@ export class AuthService {
   signOut(): Promise<void> {
     return signOut(this.auth)
       .then(() => {
-        this.router.navigate(['/login']);
+        this.router.navigate(['/']);
       })
       .catch(error => {
         console.error('Sign out error:', error);
         throw error;
       });
+  }
+
+  private navigatePostLogin(): Promise<boolean> {
+    const target = this.redirectUrl || '/';
+    this.redirectUrl = null;
+    return this.router.navigate([target]);
   }
 }
