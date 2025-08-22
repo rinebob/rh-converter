@@ -220,3 +220,45 @@ export const listBrokerageRequests = onRequest({ cors: corsEnabled }, async (req
     response.status(500).json({ error: 'Internal Server Error' });
   }
 });
+
+// Public: vote up/down on a brokerage request (adjust upvoteCount)
+interface VoteBody {
+  requestId: string;
+  direction: 'up' | 'down';
+  deviceId?: string | null;
+}
+
+export const voteBrokerageRequest = onRequest({ cors: corsEnabled }, async (request: Request, response: Response) => {
+  setCorsHeaders(response);
+  if (request.method === 'OPTIONS') { response.status(204).send(''); return; }
+  if (request.method !== 'POST') { response.status(405).send('Method Not Allowed'); return; }
+
+  try {
+    const body = (request.body || {}) as Partial<VoteBody>;
+    const requestId = sanitizeString(body.requestId, 128);
+    const direction = body.direction === 'down' ? 'down' : 'up';
+    if (!requestId) { response.status(400).json({ error: 'requestId required' }); return; }
+
+    const ref = db.collection('brokerageRequests').doc(requestId);
+    await db.runTransaction(async (tx) => {
+      const snap = await tx.get(ref);
+      if (!snap.exists) throw new Error('not_found');
+      const data = snap.data() as any;
+      const current = typeof data.upvoteCount === 'number' ? data.upvoteCount : 0;
+      const delta = direction === 'up' ? 1 : -1;
+      const next = Math.max(0, current + delta);
+      tx.update(ref, { upvoteCount: next });
+    });
+
+    const latest = await ref.get();
+    const count = (latest.data() as any)?.upvoteCount ?? 0;
+    response.status(200).json({ success: true, newCount: count });
+  } catch (err: any) {
+    if (err?.message === 'not_found') {
+      response.status(404).json({ error: 'Not found' });
+      return;
+    }
+    console.error('voteBrokerageRequest error', err);
+    response.status(500).json({ error: 'Internal Server Error' });
+  }
+});

@@ -5,7 +5,7 @@
 
 import { uploadCsv } from './upload-csv';
 import { submitComment, editComment, deleteComment, reportComment, adminModeration } from './comments';
-import { submitBrokerageRequest, adminReplyToBrokerageRequest, listBrokerageRequests } from './brokerage-requests';
+import { submitBrokerageRequest, adminReplyToBrokerageRequest, listBrokerageRequests, voteBrokerageRequest } from './brokerage-requests';
 
 // Export all functions for Firebase to discover and deploy.
 export {
@@ -18,4 +18,5 @@ export {
   submitBrokerageRequest,
   adminReplyToBrokerageRequest,
   listBrokerageRequests,
+  voteBrokerageRequest,
 };
