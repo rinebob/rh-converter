@@ -12,6 +12,7 @@ export interface SubmitBrokerageRequestPayload {
   displayName?: string | null;
   contactEmail?: string | null;
   deviceId?: string | null;
+  exampleFilePath?: string | null; // optional path in Firebase Storage
 }
 
 export interface SubmitResponse {
