@@ -1,0 +1,58 @@
+<div class="request-form">
+  <h4 class="title">Request New Brokerage Support</h4>
+  <p class="subtitle">Tell us which brokerage to add. Optional fields help us triage faster.</p>
+
+  <form (submit)="$event.preventDefault(); submit()">
+    <div class="row">
+      <label for="brokerageName">Brokerage name*</label>
+      <input id="brokerageName" type="text" [value]="brokerageName()" (input)="brokerageName.set($any($event.target).value)" placeholder="e.g. Fidelity, E*TRADE" />
+    </div>
+
+    <div class="row">
+      <label for="country">Country/Region</label>
+      <input id="country" type="text" [value]="country()" (input)="country.set($any($event.target).value)" placeholder="e.g. US, CA, EU" />
+    </div>
+
+    <div class="row">
+      <label for="notes">Notes</label>
+      <textarea id="notes" rows="4" [value]="notes()" (input)="notes.set($any($event.target).value)" placeholder="Share any format details or links"></textarea>
+    </div>
+
+    <div class="row two-col">
+      <div class="col">
+        <label for="displayName">Display name</label>
+        <input id="displayName" type="text" [value]="displayName()" (input)="displayName.set($any($event.target).value)" placeholder="Optional" />
+      </div>
+      <div class="col">
+        <label for="contactEmail">Contact email</label>
+        <input id="contactEmail" type="email" [value]="contactEmail()" (input)="contactEmail.set($any($event.target).value)" placeholder="Optional (private)" />
+      </div>
+    </div>
+
+    <div class="row">
+      <label for="deviceId">Device ID</label>
+      <input id="deviceId" type="text" [value]="deviceId()" (input)="deviceId.set($any($event.target).value)" placeholder="Optional (helps track anon requests)" />
+    </div>
+
+    <div class="actions">
+      <button type="submit" [disabled]="!canSubmit()">Submit request</button>
+      @if (submitting()) {
+        <span class="spinner" aria-hidden="true">Submitting...</span>
+      }
+    </div>
+
+    @if (successId()) {
+      <div class="success">
+        <mat-icon>check_circle</mat-icon>
+        <span>Thanks! Request submitted. ID: {{ successId() }}</span>
+      </div>
+    }
+
+    @if (errorMsg()) {
+      <div class="error">
+        <mat-icon>error</mat-icon>
+        <span>{{ errorMsg() }}</span>
+      </div>
+    }
+  </form>
+</div>

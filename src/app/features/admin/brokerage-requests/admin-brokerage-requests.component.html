@@ -1,0 +1,66 @@
+<div class="admin-requests">
+  <h2>Brokerage Requests (Admin)</h2>
+
+  <div class="layout">
+    <div class="list">
+      <h3>Latest Requests</h3>
+      <ul>
+        @for (req of requests$ | async; track req.id) {
+          <li (click)="selectRequest(req)" [class.active]="selectedId() === req.id">
+            <div class="primary">{{ req.brokerageName }} <span class="status">{{ req.status }}</span></div>
+            <div class="meta">{{ req.displayName || 'anon' }} • {{ req.country || 'N/A' }}</div>
+          </li>
+        }
+      </ul>
+    </div>
+
+    <div class="details">
+      @if (selectedRequest(); as sel) {
+        <h3>Details</h3>
+        <div class="card">
+          <div><strong>Brokerage:</strong> {{ sel.brokerageName }}</div>
+          <div><strong>Status:</strong> {{ sel.status }}</div>
+          <div><strong>Country:</strong> {{ sel.country || '—' }}</div>
+          <div><strong>Display name:</strong> {{ sel.displayName || '—' }}</div>
+          <div><strong>Notes:</strong> {{ sel.notes || '—' }}</div>
+          <div><strong>Device:</strong> {{ sel.authorDeviceId || '—' }}</div>
+          <div><strong>Created:</strong> {{ sel.createdAt | date:'medium' }}</div>
+        </div>
+
+        <h3>Replies</h3>
+        <ul class="replies">
+          @for (r of (replies$ | async) ?? []; track r.id) {
+            <li>
+              <div class="msg">{{ r.message }}</div>
+              <div class="meta">by {{ r.authorUid }} • {{ r.createdAt | date:'short' }}</div>
+            </li>
+          }
+        </ul>
+
+        <h3>Post Reply</h3>
+        <div class="reply-form">
+          <textarea rows="3" [value]="replyMessage()" (input)="replyMessage.set($any($event.target).value)" placeholder="Write an internal reply"></textarea>
+          <div class="row">
+            <label for="status">Set status</label>
+            <select id="status" [value]="newStatus()" (change)="newStatus.set($any($event.target).value)">
+              <option value="">(no change)</option>
+              <option value="open">open</option>
+              <option value="triaged">triaged</option>
+              <option value="in_progress">in_progress</option>
+              <option value="done">done</option>
+              <option value="rejected">rejected</option>
+            </select>
+          </div>
+          <div class="actions">
+            <button (click)="sendReply()" [disabled]="!canReply()">Send reply</button>
+            @if (submitting()) { <span class="spinner">Submitting...</span> }
+          </div>
+          @if (successMsg()) { <div class="success">{{ successMsg() }}</div> }
+          @if (errorMsg()) { <div class="error">{{ errorMsg() }}</div> }
+        </div>
+      } @else {
+        <div class="placeholder">Select a request to view details.</div>
+      }
+    </div>
+  </div>
+</div>

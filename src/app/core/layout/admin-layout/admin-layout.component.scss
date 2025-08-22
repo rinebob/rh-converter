@@ -1,0 +1,29 @@
+.admin-layout {
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
+}
+
+.admin-toolbar {
+  display: flex;
+  align-items: center;
+  position: sticky;
+  top: 0;
+  z-index: 10;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.12);
+  .title {
+    font-weight: 500;
+  }
+  .spacer {
+    flex: 1 1 auto;
+  }
+}
+
+.content {
+  flex: 1 1 auto;
+  padding: 1.25rem;
+  display: flex;
+  flex-direction: column;
+  background-color: #fafafa;
+  border-top: 1px solid rgba(0, 0, 0, 0.06);
+}
