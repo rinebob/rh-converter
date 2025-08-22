@@ -15,8 +15,42 @@
       <textarea id="notes" rows="4" [value]="notes()" (input)="notes.set($any($event.target).value)" placeholder="Share any format details or links"></textarea>
     </div>
 
+    <div class="row">
+      <label for="exampleCsv">Example CSV (optional)</label>
+      <tdc-file-picker
+        [accept]="'.csv,text/csv'"
+        [disabled]="uploading()"
+        (fileSelected)="onPicked($event)"
+      />
+
+      @if (selectedFile()) {
+        <div class="file-meta">
+          <mat-icon aria-hidden="true">attach_file</mat-icon>
+          <span>{{ selectedFile()!.name }} ({{ (selectedFile()!.size / 1024).toFixed(0) }} KB)</span>
+          <button type="button" mat-icon-button aria-label="Remove file" (click)="removeSelectedFile()">
+            <mat-icon aria-hidden="true">delete</mat-icon>
+          </button>
+        </div>
+      }
+      @if (uploading()) {
+        <mat-progress-bar mode="determinate" [value]="uploadPct()"></mat-progress-bar>
+      }
+      @if (uploadError()) {
+        <div class="error">
+          <mat-icon>error</mat-icon>
+          <span>{{ uploadError() }}</span>
+        </div>
+      }
+      @if (previewText()) {
+        <div class="preview">
+          <label>Preview:</label>
+          <pre>{{ previewText() }}</pre>
+        </div>
+      }
+    </div>
+
     <div class="actions">
-      <button type="submit" [disabled]="!canSubmit()">Submit request</button>
+      <button type="submit" [disabled]="!canSubmit() || (uploading() && !exampleFilePath())">Submit request</button>
       @if (submitting()) {
         <span class="spinner" aria-hidden="true">Submitting...</span>
       }

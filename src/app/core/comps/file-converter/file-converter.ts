@@ -1,4 +1,4 @@
-import { Component, OnInit, inject, signal, Input } from '@angular/core';
+import { Component, OnInit, inject, signal, Input, HostListener } from '@angular/core';
 import { ActivatedRoute, Router } from '@angular/router';
 import { CommonModule } from '@angular/common';
 import { FormControl, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
@@ -61,6 +61,8 @@ export class FileConverter implements OnInit {
   selectedFile: File | null = null;
   isProcessing = signal(false);
   readonly cloudFunctionUrl = CLOUD_FUNCTION_URLS.UPLOAD_CSV;
+  // Drag-and-drop visual state
+  dragActive = signal(false);
   
   // Available download formats
   readonly formats = [
@@ -276,5 +278,39 @@ export class FileConverter implements OnInit {
         }
       }
     });
+  }
+
+  onDragOver(event: DragEvent): void {
+    event.preventDefault(); // prevent browser from opening the file
+    event.stopPropagation();
+    if (event.dataTransfer) event.dataTransfer.dropEffect = 'copy';
+    this.dragActive.set(true);
+  }
+
+  onDrop(event: DragEvent): void {
+    event.preventDefault();
+    event.stopPropagation();
+    this.dragActive.set(false);
+
+    const files = event.dataTransfer?.files;
+    if (!files || files.length === 0) return;
+    const file = files[0];
+    const isCsv = file.name.toLowerCase().endsWith('.csv') || file.type === 'text/csv';
+    if (!isCsv) return;
+    this.selectedFile = file;
+    this.fileInput.setValue(file, { emitEvent: true });
+    this.updateButtonState();
+  }
+
+  // Window-level guards so dropping outside the target doesn't trigger a download/navigation
+  @HostListener('window:dragover', ['$event'])
+  onWindowDragOver(ev: DragEvent): void {
+    ev.preventDefault();
+    if (ev.dataTransfer) ev.dataTransfer.dropEffect = 'none';
+  }
+
+  @HostListener('window:drop', ['$event'])
+  onWindowDrop(ev: DragEvent): void {
+    ev.preventDefault();
   }
 }

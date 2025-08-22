@@ -77,6 +77,11 @@
       background-color: #f0f7ff;
     }
 
+    &.drag-active {
+      border-color: #007bff;
+      background-color: #f0f7ff;
+    }
+
     input[type="file"] {
       display: none;
     }

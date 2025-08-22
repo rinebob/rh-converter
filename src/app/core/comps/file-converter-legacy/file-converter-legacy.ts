@@ -9,6 +9,7 @@ import { MatRadioModule } from '@angular/material/radio';
 import { HttpClient } from '@angular/common/http';
 import { CLOUD_FUNCTION_URLS } from '../../common/constants';
 import { DownloadFormat } from '../../common/interfaces';
+import { TdcFilePickerComponent } from "src/app/shared/comps/tdc-file-picker/tdc-file-picker.component";
 
 /**
  * JSDoc for legacy FileConverter component
@@ -25,8 +26,9 @@ import { DownloadFormat } from '../../common/interfaces';
     MatCardModule,
     MatIconModule,
     MatProgressSpinnerModule,
-    MatRadioModule
-  ],
+    MatRadioModule,
+    TdcFilePickerComponent
+],
   templateUrl: './file-converter-legacy.html',
   styleUrls: ['./file-converter-legacy.scss'],
   changeDetection: ChangeDetectionStrategy.OnPush
@@ -122,7 +124,14 @@ export class FileConverterLegacy implements OnInit {
     // Update button state
     this.updateButtonState();
   }
-  
+
+  // Handler for shared tdc-file-picker output
+  onFilePicked(file: File): void {
+    this.selectedFile = file;
+    this.fileInput.setValue(file, { emitEvent: true });
+    this.updateButtonState();
+  }
+
   /**
    * Handles the 'Convert' button click and initiates file processing
    */
