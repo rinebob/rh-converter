@@ -12,12 +12,86 @@
     </div>
   </div>
 
-  <div class="format-section">
-    <h3>Request New Brokerage Support</h3>
-    <p class="format-description">
-      Is your brokerage not listed? We're always looking to expand our support! Please tell us which brokerage you'd like us to add.
-    </p>
+  <mat-accordion multi class="format-accordion">
+    <!-- Panel: Current New Broker Requests -->
+    <mat-expansion-panel>
+      <mat-expansion-panel-header>
+        <mat-panel-title>Current New Broker Requests</mat-panel-title>
+        <!-- <mat-panel-description>Help us prioritize what to add next</mat-panel-description> -->
+      </mat-expansion-panel-header>
 
-    <app-brokerage-request-form />
-  </div>
+      <p class="format-description">
+        Recently requested brokerages from our users. This helps us prioritize what to add next.
+      </p>
+
+      <ng-container *ngIf="(requests()?.length ?? 0) === 0; else requestsTable">
+        <div class="format-note">
+          <mat-icon>info</mat-icon>
+          <span>No requests yet. Be the first to request support below.</span>
+        </div>
+      </ng-container>
+
+      <ng-template #requestsTable>
+        <div class="table-wrapper">
+          <table mat-table [dataSource]="requests() ?? []" class="requests-table mat-elevation-z1">
+            <!-- Broker Column -->
+            <ng-container matColumnDef="brokerageName">
+              <th mat-header-cell *matHeaderCellDef> Broker </th>
+              <td mat-cell *matCellDef="let item"> {{ item.brokerageName }} </td>
+            </ng-container>
+
+            <!-- Region Column -->
+            <ng-container matColumnDef="country">
+              <th mat-header-cell *matHeaderCellDef> Region </th>
+              <td mat-cell *matCellDef="let item"> {{ item.country || '—' }} </td>
+            </ng-container>
+
+            <!-- Date Created Column -->
+            <ng-container matColumnDef="createdAt">
+              <th mat-header-cell *matHeaderCellDef> Date Created </th>
+              <td mat-cell *matCellDef="let item"> {{ item.createdAtMs ? (item.createdAtMs | date:'yyyy-MM-dd') : '—' }} </td>
+            </ng-container>
+
+            <!-- Votes Column -->
+            <ng-container matColumnDef="votes">
+              <th mat-header-cell *matHeaderCellDef class="votes-col"> Votes </th>
+              <td mat-cell *matCellDef="let item" class="votes">
+                <span class="count" title="Score (upvotes - downvotes)">{{ item.upvoteCount }}</span>
+              </td>
+            </ng-container>
+
+            <!-- Actions Column -->
+            <ng-container matColumnDef="actions">
+              <th mat-header-cell *matHeaderCellDef class="actions-col"> Up/Down Vote </th>
+              <td mat-cell *matCellDef="let item" class="actions">
+                <button mat-icon-button color="primary" type="button" (click)="upvote(item)" aria-label="Upvote">
+                  <mat-icon fontIcon="arrow_upward"></mat-icon>
+                </button>
+                <button mat-icon-button color="warn" type="button" (click)="downvote(item)" aria-label="Downvote">
+                  <mat-icon fontIcon="arrow_downward"></mat-icon>
+                </button>
+              </td>
+            </ng-container>
+
+            <tr mat-header-row *matHeaderRowDef="['brokerageName', 'country', 'createdAt', 'votes', 'actions']"></tr>
+            <tr mat-row *matRowDef="let row; columns: ['brokerageName', 'country', 'createdAt', 'votes', 'actions'];"></tr>
+          </table>
+        </div>
+      </ng-template>
+    </mat-expansion-panel>
+
+    <!-- Panel: Request New Brokerage Support -->
+    <mat-expansion-panel>
+      <mat-expansion-panel-header>
+        <mat-panel-title>Request New Brokerage Support</mat-panel-title>
+        <!-- <mat-panel-description>Tell us which brokerage to add</mat-panel-description> -->
+      </mat-expansion-panel-header>
+
+      <p class="format-description">
+        Is your brokerage not listed? We're always looking to expand our support! Please tell us which brokerage you'd like us to add.
+      </p>
+
+      <app-brokerage-request-form />
+    </mat-expansion-panel>
+  </mat-accordion>
 </div>

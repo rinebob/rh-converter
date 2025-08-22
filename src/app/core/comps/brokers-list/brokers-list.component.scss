@@ -1,6 +1,11 @@
 // Styles for the brokers list component
 // As per project rules, use Sass variables and mixins when adding actual styles.
 
+@use 'sass:math';
+@function rem($px, $base: 16) {
+  @return math.div($px, $base) * 1rem;
+}
+
 // Placeholder for future styles
 .brokers-list-container {
   padding: 0 2rem; // Example, use rem() function and variables
@@ -75,5 +80,139 @@
       flex: 1;
       line-height: 1.5; // Improved readability for note text
     }
+  }
+
+  // Requests table
+  .table-wrapper {
+    width: 100%;
+    overflow-x: auto;
+  }
+
+  .requests-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 0.95rem;
+    table-layout: fixed;
+
+    th, td { vertical-align: middle; }
+
+    thead th {
+      text-align: left;
+      padding: 0.75rem 1rem;
+      background: #f6f8fa;
+      border-bottom: 1px solid #e1e4e8;
+      color: #2c3e50;
+      font-weight: 600;
+    }
+
+    tbody td {
+      padding: 0.75rem 1rem;
+      border-bottom: 1px solid #f0f2f4;
+      color: #2c3e50;
+    }
+
+    tbody tr:hover {
+      background: #fafbfc;
+    }
+
+    // Angular Material column sizing (mat adds .mat-column-<name>)
+    .mat-column-votes { width: rem(72); text-align: center; }
+    .mat-column-actions { width: rem(140); text-align: center; }
+
+    // Align inner content wrappers that mat-table injects
+    .mat-mdc-cell.mat-column-votes .mat-mdc-cell-content,
+    .mat-mdc-header-cell.mat-column-votes .mat-mdc-header-cell-content {
+      justify-content: center;
+    }
+
+    .mat-mdc-cell.mat-column-actions .mat-mdc-cell-content,
+    .mat-mdc-header-cell.mat-column-actions .mat-mdc-header-cell-content {
+      justify-content: center;
+    }
+
+    // Actions layout and spacing
+    .mat-mdc-cell.mat-column-actions .mat-mdc-cell-content {
+      display: flex;
+      align-items: center;
+      gap: rem(8);
+      white-space: nowrap;
+    }
+
+    // Vote cell: plain centered content, no flex grouping with actions
+    .mat-mdc-cell.mat-column-votes .mat-mdc-cell-content { display: block; text-align: center; }
+
+    // Circular icon buttons (up/down)
+    .mat-column-actions button.mat-mdc-icon-button {
+      width: rem(36);
+      height: rem(36);
+      padding: 0;
+      border-radius: 50%;
+    }
+
+    .mat-column-actions button.mat-mdc-icon-button mat-icon { font-size: rem(18); line-height: 1; }
+
+    // Count
+    .count { min-width: 2ch; text-align: center; font-variant-numeric: tabular-nums; }
+  }
+}
+
+// Material accordion styling to align with .format-section visuals
+.format-accordion {
+  .mat-expansion-panel {
+    border-radius: 8px;
+    border: 1px solid #e1e4e8;
+    margin: 0 0 1.5rem 0;
+    overflow: hidden;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+  }
+
+  .mat-expansion-panel-header,
+  .mat-expansion-panel-header.mat-expanded {
+    padding: rem(20) rem(16); // 20px top/bottom, 16px sides
+    height: auto;
+    min-height: auto;
+  }
+
+  .mat-expansion-panel-header {
+    background: #f6f8fa;
+    border-bottom: 1px solid #e1e4e8;
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    gap: rem(16);
+
+    // Stack the title/description vertically (inside the mat-content span)
+    ::ng-deep .mat-content {
+      display: flex;
+      flex-direction: column;
+      align-items: flex-start;
+      gap: rem(2);
+    }
+  }
+
+  .mat-expansion-panel-body {
+    padding: 1rem 1.5rem 1.5rem 1.5rem;
+  }
+
+  // Ensure smaller description text inside panel content
+  ::ng-deep .mat-expansion-panel-content p.format-description {
+    font-size: rem(12) !important;
+    line-height: 1.45;
+    color: #495057;
+    margin: rem(12) 0 rem(12) 0;
+  }
+
+  .mat-expansion-panel-header .mat-expansion-panel-header-title {
+    color: #0078d4;
+    font-size: 1.1rem;
+    font-weight: 600;
+    margin-right: rem(8);
+  }
+
+  .mat-expansion-panel-header .mat-expansion-panel-header-description {
+    margin: 0 0 0 rem(4);
+    color: #495057;
+    font-size: 0.9rem;
+    opacity: 0.9;
   }
 }
