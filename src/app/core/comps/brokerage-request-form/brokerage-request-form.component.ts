@@ -10,6 +10,27 @@ import { StorageUploadService, type UploadProgress } from '../../services/storag
 import { DeviceIdService } from '../../services/device-id.service';
 import { TdcFilePickerComponent } from '../../../shared/comps/tdc-file-picker/tdc-file-picker.component';
 
+// Helpers for filename construction
+const sanitizeForFilename = (s: string): string =>
+  (s || '')
+    .toLowerCase()
+    .trim()
+    .replace(/[^a-z0-9]+/g, '-')
+    .replace(/^-+|-+$/g, '')
+    .slice(0, 60) || 'unknown';
+
+const formatDate = (d: Date): string => {
+  const y = d.getFullYear();
+  const m = String(d.getMonth() + 1).padStart(2, '0');
+  const day = String(d.getDate()).padStart(2, '0');
+  return `${y}-${m}-${day}`;
+};
+
+const makeHashId = (): string =>
+  (crypto && 'randomUUID' in crypto)
+    ? (crypto as any).randomUUID().slice(0, 8)
+    : `${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 6)}`;
+
 @Component({
   selector: 'app-brokerage-request-form',
   standalone: true,
@@ -124,9 +145,9 @@ export class BrokerageRequestFormComponent {
       return;
     }
 
+    // Defer upload until user clicks Submit; just store and preview
     this.selectedFile.set(file);
     this.previewCsv(file);
-    this.uploadCsv(file);
   }
 
   private previewCsv(file: File): void {
@@ -145,13 +166,14 @@ export class BrokerageRequestFormComponent {
     }
   }
 
-  private uploadCsv(file: File): void {
-    // Build a path: uploads/examples/{yyyy-mm}/{uuid}.csv
+  private uploadCsv(file: File, afterSuccess?: () => void): void {
+    // Build a path: csv-example-uploads/{brokerageName}_{yyyy-mm-dd}_{hash}.csv
     const now = new Date();
-    const y = now.getFullYear();
-    const m = (now.getMonth() + 1).toString().padStart(2, '0');
-    const uuid = (crypto && 'randomUUID' in crypto) ? (crypto as any).randomUUID() : `${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 10)}`;
-    const path = `uploads/examples/${y}-${m}/${uuid}.csv`;
+    const dateStr = formatDate(now);
+    const nameSlug = sanitizeForFilename(this.brokerageName());
+    const hash = makeHashId();
+    const filename = `${nameSlug}_${dateStr}_${hash}.csv`;
+    const path = `csv-example-uploads/${filename}`;
 
     this.uploading.set(true);
     this.uploadPct.set(0);
@@ -167,6 +189,7 @@ export class BrokerageRequestFormComponent {
           this.uploadPct.set(100);
           this.exampleFilePath.set(p.path ?? path);
           this.uploading.set(false);
+          if (afterSuccess) afterSuccess();
         } else if (p.state === 'error') {
           this.uploading.set(false);
           this.uploadError.set(p.error || 'Upload failed');
@@ -232,6 +255,19 @@ export class BrokerageRequestFormComponent {
   submit(): void {
     if (!this.canSubmit()) return;
 
+    // If a file is selected and not yet uploaded, upload first then submit
+    const file = this.selectedFile();
+    if (file && !this.exampleFilePath()) {
+      // Ensure brokerage name present (required by canSubmit)
+      this.uploadCsv(file, () => this.submitRequestNow());
+      return;
+    }
+
+    // No file or already uploaded
+    this.submitRequestNow();
+  }
+
+  private submitRequestNow(): void {
     const payload: SubmitBrokerageRequestPayload = {
       brokerageName: this.brokerageName().trim(),
       country: this.country().trim() || null,
@@ -259,8 +295,8 @@ export class BrokerageRequestFormComponent {
             this.notes.set('');
             this.displayName.set('');
             this.contactEmail.set('');
-            // Keep uploaded file path to avoid forcing re-upload if they submit again
-            this.removeSelectedFile();
+            // Do not clear the file picker immediately; allow success message to show
+            // The auto-dismiss effect will clear the picker after delay
           } else {
             this.errorMsg.set(res?.error || 'Request failed.');
           }
