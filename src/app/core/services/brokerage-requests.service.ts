@@ -51,6 +51,18 @@ export interface AdminListResponse {
   error?: string;
 }
 
+export interface VotePayload {
+  requestId: string;
+  direction: 'up' | 'down';
+  deviceId?: string | null;
+}
+
+export interface VoteResponse {
+  success: boolean;
+  newCount?: number;
+  error?: string;
+}
+
 @Injectable({ providedIn: 'root' })
 export class BrokerageRequestsService {
   private readonly http = inject(HttpClient);
@@ -77,5 +89,11 @@ export class BrokerageRequestsService {
         return this.http.get<AdminListResponse>(url, { headers });
       })
     );
+  }
+
+  vote(payload: VotePayload): Observable<VoteResponse> {
+    const url = `${this.baseUrl}/voteBrokerageRequest`;
+    const headers = new HttpHeaders({ 'Content-Type': 'application/json' });
+    return this.http.post<VoteResponse>(url, JSON.stringify(payload), { headers });
   }
 }
