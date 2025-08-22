@@ -256,7 +256,7 @@ export const listBrokerageRequests = onRequest({ cors: corsEnabled }, async (req
       .limit(50)
       .get();
 
-    const items = snap.docs.map(d => {
+    const baseItems = snap.docs.map(d => {
       const data = d.data() as any;
       const createdAtTs: Timestamp | undefined = data.createdAt;
       return {
@@ -270,6 +270,25 @@ export const listBrokerageRequests = onRequest({ cors: corsEnabled }, async (req
         displayName: data.displayName || null,
         status: data.status || 'open',
         upvoteCount: data.upvoteCount || 0,
+      } as any;
+    });
+
+    // Join with private meta to surface exampleFilePath for admins
+    const metaRefs = baseItems.map(it => db.collection('brokerageRequestMeta').doc(it.id));
+    const metaSnaps = metaRefs.length ? await db.getAll(...metaRefs) : [];
+    const metaById = new Map<string, any>();
+    for (const ms of metaSnaps) {
+      if (ms.exists) metaById.set(ms.id, ms.data());
+    }
+
+    const items = baseItems.map(it => {
+      const meta = metaById.get(it.id) || {};
+      const exampleFilePath: string | null = meta.exampleFilePath || null;
+      const exampleFileName: string | null = exampleFilePath ? exampleFilePath.split('/').pop() || null : null;
+      return {
+        ...it,
+        exampleFilePath,
+        exampleFileName,
       };
     });
 

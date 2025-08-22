@@ -44,6 +44,8 @@ export interface AdminListItemDto {
   displayName: string | null;
   status: 'open' | 'triaged' | 'in_progress' | 'done' | 'rejected';
   upvoteCount: number;
+  exampleFilePath?: string | null;
+  exampleFileName?: string | null;
 }
 
 export interface AdminListResponse {

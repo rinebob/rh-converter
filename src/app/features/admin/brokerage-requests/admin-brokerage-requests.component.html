@@ -25,6 +25,19 @@
           <div><strong>Notes:</strong> {{ sel.notes || '—' }}</div>
           <div><strong>Device:</strong> {{ sel.authorDeviceId || '—' }}</div>
           <div><strong>Created:</strong> {{ sel.createdAt | date:'medium' }}</div>
+          <div><strong>Example file:</strong> {{ sel.exampleFileName || '—' }}</div>
+          <div><strong>File path:</strong> {{ sel.exampleFilePath || '—' }}</div>
+          @if (sel.exampleFilePath) {
+            <div class="download">
+              @if (downloading()) {
+                <span>Preparing download…</span>
+              } @else if (downloadUrl()) {
+                <a [href]="downloadUrl()!" target="_blank" rel="noopener">Download CSV</a>
+              } @else {
+                <button type="button" (click)="fetchDownload(sel.exampleFilePath!)">Get download link</button>
+              }
+            </div>
+          }
         </div>
 
         <h3>Replies</h3>

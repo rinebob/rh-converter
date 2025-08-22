@@ -1,9 +1,20 @@
 rules_version = '2';
 service firebase.storage {
   match /b/{bucket}/o {
+    // Admin check via custom claims
+    function isAdmin() {
+      return request.auth != null && request.auth.token.admin == true;
+    }
+
     // Allow client uploads to example CSV path during development (emulator)
     match /uploads/examples/{month}/{file} {
-      allow read: if false; // no public reads in dev
+      allow read: if isAdmin(); // admin-only reads
+      allow write: if isValidCsvWithDeviceId();
+    }
+
+    // New simple root directory for example CSV uploads
+    match /csv-example-uploads/{file} {
+      allow read: if isAdmin(); // admin-only reads
       allow write: if isValidCsvWithDeviceId();
     }
 

@@ -3,9 +3,10 @@ import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { MatIconModule } from '@angular/material/icon';
 import { collection, collectionData, Firestore, orderBy, limit, query, Timestamp } from '@angular/fire/firestore';
-import { Observable, of } from 'rxjs';
+import { Observable, of, from } from 'rxjs';
 import { catchError, map } from 'rxjs/operators';
 import { BrokerageRequestsService, AdminReplyPayload } from '../../../core/services/brokerage-requests.service';
+import { Storage, ref, getDownloadURL } from '@angular/fire/storage';
 
 interface RequestDoc {
   id: string;
@@ -18,6 +19,9 @@ interface RequestDoc {
   displayName: string | null;
   status: 'open' | 'triaged' | 'in_progress' | 'done' | 'rejected';
   upvoteCount: number;
+  // example file metadata (admin only)
+  exampleFilePath?: string | null;
+  exampleFileName?: string | null;
 }
 
 interface ReplyDoc {
@@ -39,11 +43,14 @@ interface ReplyDoc {
 export class AdminBrokerageRequestsComponent {
   private readonly firestore = inject(Firestore);
   private readonly svc = inject(BrokerageRequestsService);
+  private readonly storage = inject(Storage);
 
   // UI state
   selectedId = signal<string | null>(null);
   selectedRequest = signal<RequestDoc | null>(null);
   replies$: Observable<ReplyDoc[]> | null = null;
+  downloadUrl = signal<string | null>(null);
+  downloading = signal<boolean>(false);
 
   // feedback
   submitting = signal<boolean>(false);
@@ -67,6 +74,8 @@ export class AdminBrokerageRequestsComponent {
       displayName: row.displayName,
       status: row.status,
       upvoteCount: row.upvoteCount,
+      exampleFilePath: (row as any).exampleFilePath ?? null,
+      exampleFileName: (row as any).exampleFileName ?? null,
     }) as RequestDoc)),
     catchError(() => {
       this.errorMsg.set('Failed to load requests. Ensure you are signed in as an admin.');
@@ -81,6 +90,11 @@ export class AdminBrokerageRequestsComponent {
     this.successMsg.set(null);
     this.replyMessage.set('');
     this.newStatus.set('');
+    this.downloadUrl.set(null);
+    // Auto-fetch download URL for admins if a path is present
+    if (req.exampleFilePath) {
+      this.fetchDownload(req.exampleFilePath);
+    }
 
     // Load replies subcollection for this request (will be empty if rules block direct reads)
     this.replies$ = (collectionData(
@@ -93,6 +107,40 @@ export class AdminBrokerageRequestsComponent {
       }) as ReplyDoc)),
       catchError(() => of<ReplyDoc[]>([]))
     );
+  }
+
+  private log(message: string, data?: unknown): void {
+    if (data !== undefined) {
+      console.log('[AdminBrokerageRequests]', message, data);
+    } else {
+      console.log('[AdminBrokerageRequests]', message);
+    }
+  }
+
+  fetchDownload(path: string): void {
+    if (!path) {
+      this.log('fetchDownload: no path provided');
+      return;
+    }
+    if (this.downloading()) {
+      this.log('fetchDownload: already downloading, skip', { path });
+      return;
+    }
+    this.downloading.set(true);
+    this.log('fetchDownload: start', { path });
+    from(getDownloadURL(ref(this.storage, path)))
+      .pipe(
+        catchError((err) => {
+          this.log('fetchDownload: error', { path, error: (err as any)?.message || err });
+          return of(null);
+        })
+      )
+      .subscribe((url) => {
+        this.downloading.set(false);
+        const hasUrl = !!url;
+        this.log('fetchDownload: done', { path, success: hasUrl });
+        this.downloadUrl.set(url);
+      });
   }
 
   canReply = computed(() => {
