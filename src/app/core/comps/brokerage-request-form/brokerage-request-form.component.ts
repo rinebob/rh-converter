@@ -9,6 +9,7 @@ import { finalize } from 'rxjs/operators';
 import { StorageUploadService, type UploadProgress } from '../../services/storage-upload.service';
 import { DeviceIdService } from '../../services/device-id.service';
 import { TdcFilePickerComponent } from '../../../shared/comps/tdc-file-picker/tdc-file-picker.component';
+import { AnonymousNameService } from '../../services/anonymous-name.service';
 
 // Helpers for filename construction
 const sanitizeForFilename = (s: string): string =>
@@ -43,6 +44,11 @@ export class BrokerageRequestFormComponent {
   private readonly svc = inject(BrokerageRequestsService);
   private readonly uploadSvc = inject(StorageUploadService);
   private readonly deviceIdSvc = inject(DeviceIdService);
+  private readonly anonNameSvc = inject(AnonymousNameService);
+
+  constructor() {
+    this.initDisplayName();
+  }
 
   // Form state (signals)
   brokerageName = signal<string>('');
@@ -98,6 +104,15 @@ export class BrokerageRequestFormComponent {
     const id = this.deviceIdSvc.deviceId();
     if (id && id !== this.deviceId()) this.deviceId.set(id);
   });
+
+  // One-time initialization of displayName using persistent anonymous name from localStorage
+  private initDisplayName(): void {
+    const current = (this.displayName() || '').trim();
+    if (!current) {
+      const fallbackName = (this.anonNameSvc.getName() || '').toString().trim();
+      if (fallbackName) this.displayName.set(fallbackName.slice(0, 50));
+    }
+  }
 
   canSubmit = computed(() => !this.submitting() && this.brokerageName().trim().length > 0);
 
