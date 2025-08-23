@@ -91,7 +91,8 @@ export class AdminBrokerageRequestsComponent {
     this.replyMessage.set('');
     this.newStatus.set('');
     this.downloadUrl.set(null);
-    // Auto-fetch download URL for admins if a path is present
+
+    // Auto-fetch download URL when opening details (guarded to current selection)
     if (req.exampleFilePath) {
       this.fetchDownload(req.exampleFilePath);
     }
@@ -128,6 +129,7 @@ export class AdminBrokerageRequestsComponent {
     }
     this.downloading.set(true);
     this.log('fetchDownload: start', { path });
+    const selectedAtCall = this.selectedId();
     from(getDownloadURL(ref(this.storage, path)))
       .pipe(
         catchError((err) => {
@@ -139,7 +141,12 @@ export class AdminBrokerageRequestsComponent {
         this.downloading.set(false);
         const hasUrl = !!url;
         this.log('fetchDownload: done', { path, success: hasUrl });
-        this.downloadUrl.set(url);
+        // Only set URL if this request is still selected
+        if (this.selectedId() === selectedAtCall) {
+          this.downloadUrl.set(url);
+        } else {
+          this.log('fetchDownload: selection changed during fetch, ignoring URL', { path });
+        }
       });
   }
 
