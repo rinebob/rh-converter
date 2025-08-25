@@ -10,6 +10,8 @@ import { Observable, of } from 'rxjs';
 import { catchError, map } from 'rxjs/operators';
 import { toSignal } from '@angular/core/rxjs-interop';
 import { BrokerageRequestsService } from '../../services/brokerage-requests.service';
+import { DeviceIdService } from '../../services/device-id.service';
+import { AnonymousNameService } from '../../services/anonymous-name.service';
 
 /**
  * Lightweight view model for showing recent new broker requests publicly.
@@ -35,6 +37,8 @@ interface PublicBrokerRequestItem {
 export class BrokersListComponent {
   private readonly firestore = inject(Firestore);
   private readonly svc = inject(BrokerageRequestsService);
+  private readonly deviceIdSvc = inject(DeviceIdService);
+  private readonly anonNameSvc = inject(AnonymousNameService);
 
   // Loading/error state
   readonly loading = signal<boolean>(true);
@@ -73,10 +77,14 @@ export class BrokersListComponent {
   ];
 
   upvote(item: PublicBrokerRequestItem): void {
-    this.svc.vote({ requestId: item.id, direction: 'up' }).subscribe();
+    const deviceId = this.deviceIdSvc.deviceId();
+    const displayName = this.anonNameSvc.getName();
+    this.svc.vote({ requestId: item.id, direction: 'up', deviceId, displayName }).subscribe();
   }
 
   downvote(item: PublicBrokerRequestItem): void {
-    this.svc.vote({ requestId: item.id, direction: 'down' }).subscribe();
+    const deviceId = this.deviceIdSvc.deviceId();
+    const displayName = this.anonNameSvc.getName();
+    this.svc.vote({ requestId: item.id, direction: 'down', deviceId, displayName }).subscribe();
   }
 }

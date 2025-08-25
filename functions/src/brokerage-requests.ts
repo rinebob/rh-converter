@@ -33,12 +33,6 @@ interface LogContext {
   method: string;
   path: string;
   uid?: string | null;
-  ipHash?: string | null;
-}
-
-function getIpHash(request: Request): string | null {
-  const ip = (request.headers['x-forwarded-for'] || (request as any).ip || '').toString();
-  return ip ? `hash:${Buffer.from(ip).toString('base64').slice(0, 16)}` : null;
 }
 
 function makeContext(fn: string, request: Request, uid?: string | null): LogContext {
@@ -48,7 +42,6 @@ function makeContext(fn: string, request: Request, uid?: string | null): LogCont
     method: request.method,
     path: (request as any).path || (request as any).originalUrl || '/',
     uid: uid ?? null,
-    ipHash: getIpHash(request),
   };
 }
 
@@ -152,22 +145,94 @@ export const submitBrokerageRequest = onRequest({ cors: corsEnabled }, async (re
     // Private meta doc (PII, network info)
     const metaDoc = db.collection('brokerageRequestMeta').doc(reqDoc.id);
     const userAgent = (request.headers['user-agent'] || '').toString().slice(0, 256);
-    const ipHash = getIpHash(request);
 
     await metaDoc.set({
       requestId: reqDoc.id,
       uid: uid || null,
-      ipHash,
       userAgent,
       contactEmail: contactEmail || null,
       exampleFilePath: exampleFilePath || null,
       createdAt: now,
     });
 
+    // Seed initial vote event for requester (no dedupe). Store deviceId and displayName.
+    const seedVoteRef = reqDoc.collection('votes').doc();
+    await seedVoteRef.set({ value: 1, createdAt: now, type: 'seed', deviceId: deviceId || null, displayName: displayName || null });
+    logInfo(ctx, 'seed_initial_vote', { requestId: reqDoc.id, voteId: seedVoteRef.id, deviceId: deviceId || null, displayName: displayName || null });
+
     logInfo(ctx, 'success', { requestId: reqDoc.id, durationMs: Date.now() - start, exampleFilePath: exampleFilePath || null });
     response.status(200).json({ success: true, id: reqDoc.id });
   } catch (err) {
     const ctx = makeContext('submitBrokerageRequest', request);
+    logError(ctx, 'error', err);
+    response.status(500).json({ error: 'Internal Server Error' });
+  }
+});
+
+// Public: vote up/down on a brokerage request (adjust upvoteCount)
+interface VoteBody {
+  requestId: string;
+  direction: 'up' | 'down';
+  deviceId?: string | null;
+  displayName?: string | null;
+}
+
+export const voteBrokerageRequest = onRequest({ cors: corsEnabled }, async (request: Request, response: Response) => {
+  setCorsHeaders(response);
+  if (request.method === 'OPTIONS') { response.status(204).send(''); return; }
+  if (request.method !== 'POST') { response.status(405).send('Method Not Allowed'); return; }
+
+  try {
+    const start = Date.now();
+    const body = (request.body || {}) as Partial<VoteBody>;
+    const uid = await getRequestUserUid(request); // optional
+    const ctx = makeContext('voteBrokerageRequest', request, uid);
+    const requestId = sanitizeString(body.requestId, 128);
+    const direction = body.direction === 'down' ? 'down' : 'up';
+    if (!requestId) { response.status(400).json({ error: 'requestId required' }); return; }
+
+    const deviceId = sanitizeString(body.deviceId, 64);
+    const displayName = sanitizeString(body.displayName, 50);
+
+    const ref = db.collection('brokerageRequests').doc(requestId);
+    const voteEventRef = ref.collection('votes').doc();
+    await db.runTransaction(async (tx) => {
+      const snap = await tx.get(ref);
+      if (!snap.exists) throw new Error('not_found');
+      const data = snap.data() as any;
+      const current = typeof data.upvoteCount === 'number' ? data.upvoteCount : 0;
+
+      const next = current + (direction === 'up' ? 1 : -1); // single-step +/-1 per call
+      if (next !== current) {
+        tx.update(ref, { upvoteCount: next });
+      }
+      // Record vote event with deviceId and displayName
+      tx.set(voteEventRef, { direction, value: direction === 'up' ? 1 : -1, createdAt: Timestamp.now(), deviceId: deviceId || null, displayName: displayName || null });
+    });
+
+    const latest = await ref.get();
+    const count = (latest.data() as any)?.upvoteCount ?? 0;
+    logInfo(ctx, 'success', {
+      requestId,
+      direction,
+      newCount: count,
+      currentBefore: count - (direction === 'up' ? 1 : -1),
+      delta: direction === 'up' ? 1 : -1,
+      nextAfter: count,
+      deviceId: deviceId || null,
+      displayName: displayName || null,
+      requestAuthorDisplayName: (latest.data() as any)?.displayName || null,
+      durationMs: Date.now() - start,
+    });
+    response.status(200).json({ success: true, newCount: count });
+  } catch (err: any) {
+    if (err?.message === 'not_found') {
+      const ctx = makeContext('voteBrokerageRequest', request);
+      logInfo(ctx, 'not_found');
+      response.status(404).json({ error: 'Not found' });
+      return;
+    }
+    const ctx = makeContext('voteBrokerageRequest', request);
     logError(ctx, 'error', err);
     response.status(500).json({ error: 'Internal Server Error' });
   }
@@ -296,54 +361,6 @@ export const listBrokerageRequests = onRequest({ cors: corsEnabled }, async (req
     response.status(200).json({ success: true, items });
   } catch (err) {
     const ctx = makeContext('listBrokerageRequests', request);
-    logError(ctx, 'error', err);
-    response.status(500).json({ error: 'Internal Server Error' });
-  }
-});
-
-// Public: vote up/down on a brokerage request (adjust upvoteCount)
-interface VoteBody {
-  requestId: string;
-  direction: 'up' | 'down';
-  deviceId?: string | null;
-}
-
-export const voteBrokerageRequest = onRequest({ cors: corsEnabled }, async (request: Request, response: Response) => {
-  setCorsHeaders(response);
-  if (request.method === 'OPTIONS') { response.status(204).send(''); return; }
-  if (request.method !== 'POST') { response.status(405).send('Method Not Allowed'); return; }
-
-  try {
-    const start = Date.now();
-    const body = (request.body || {}) as Partial<VoteBody>;
-    const ctx = makeContext('voteBrokerageRequest', request);
-    const requestId = sanitizeString(body.requestId, 128);
-    const direction = body.direction === 'down' ? 'down' : 'up';
-    if (!requestId) { response.status(400).json({ error: 'requestId required' }); return; }
-
-    const ref = db.collection('brokerageRequests').doc(requestId);
-    await db.runTransaction(async (tx) => {
-      const snap = await tx.get(ref);
-      if (!snap.exists) throw new Error('not_found');
-      const data = snap.data() as any;
-      const current = typeof data.upvoteCount === 'number' ? data.upvoteCount : 0;
-      const delta = direction === 'up' ? 1 : -1;
-      const next = Math.max(0, current + delta);
-      tx.update(ref, { upvoteCount: next });
-    });
-
-    const latest = await ref.get();
-    const count = (latest.data() as any)?.upvoteCount ?? 0;
-    logInfo(ctx, 'success', { requestId, direction, newCount: count, durationMs: Date.now() - start });
-    response.status(200).json({ success: true, newCount: count });
-  } catch (err: any) {
-    if (err?.message === 'not_found') {
-      const ctx = makeContext('voteBrokerageRequest', request);
-      logInfo(ctx, 'not_found');
-      response.status(404).json({ error: 'Not found' });
-      return;
-    }
-    const ctx = makeContext('voteBrokerageRequest', request);
     logError(ctx, 'error', err);
     response.status(500).json({ error: 'Internal Server Error' });
   }

@@ -58,6 +58,7 @@ export interface VotePayload {
   requestId: string;
   direction: 'up' | 'down';
   deviceId?: string | null;
+  displayName?: string | null;
 }
 
 export interface VoteResponse {
@@ -94,6 +95,7 @@ export class BrokerageRequestsService {
     );
   }
 
+  // Voting uses deviceId (no Firebase Auth required)
   vote(payload: VotePayload): Observable<VoteResponse> {
     const url = `${this.baseUrl}/voteBrokerageRequest`;
     const headers = new HttpHeaders({ 'Content-Type': 'application/json' });
