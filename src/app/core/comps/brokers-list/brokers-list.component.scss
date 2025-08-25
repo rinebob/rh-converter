@@ -92,7 +92,7 @@
     width: 100%;
     border-collapse: collapse;
     font-size: 0.95rem;
-    table-layout: fixed;
+    table-layout: auto; // allow columns to grow/shrink based on content to avoid weird wraps
 
     th, td { vertical-align: middle; }
 
@@ -109,69 +109,94 @@
       padding: 0.75rem 1rem;
       border-bottom: 1px solid #f0f2f4;
       color: #2c3e50;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
     }
 
-    tbody tr:hover {
-      background: #fafbfc;
-    }
+    tbody tr:hover { background: #fafbfc; }
 
     // Angular Material column sizing (mat adds .mat-column-<name>)
+    .mat-column-requestor { width: rem(140); }
     .mat-column-votes { width: rem(72); text-align: center; }
-    .mat-column-actions { width: rem(140); text-align: center; }
+    .mat-column-actions { width: rem(150); min-width: rem(120); text-align: center; }
 
     // Align inner content wrappers that mat-table injects
     .mat-mdc-cell.mat-column-votes .mat-mdc-cell-content,
-    .mat-mdc-header-cell.mat-column-votes .mat-mdc-header-cell-content {
-      justify-content: center;
-    }
+    .mat-mdc-header-cell.mat-column-votes .mat-mdc-header-cell-content { justify-content: center; }
 
     .mat-mdc-cell.mat-column-actions .mat-mdc-cell-content,
     .mat-mdc-header-cell.mat-column-actions .mat-mdc-header-cell-content {
-      justify-content: center;
-    }
-
-    // Actions layout and spacing
-    .mat-mdc-cell.mat-column-actions .mat-mdc-cell-content {
       display: flex;
+      flex-direction: row !important;
+      flex-wrap: nowrap !important;
       align-items: center;
-      gap: rem(8);
+      gap: rem(6);
       white-space: nowrap;
+      justify-content: center;
+      min-width: max-content; // keep both buttons on one line inside the cell
     }
 
     // Vote cell: plain centered content, no flex grouping with actions
     .mat-mdc-cell.mat-column-votes .mat-mdc-cell-content { display: block; text-align: center; }
 
     // Circular icon buttons (up/down)
-    .mat-column-actions button.mat-mdc-icon-button {
-      width: rem(36);
-      height: rem(36);
-      padding: 0;
-      border-radius: 50%;
-    }
-
-    .mat-column-actions button.mat-mdc-icon-button mat-icon { font-size: rem(18); line-height: 1; }
+    .mat-column-actions button.mat-mdc-icon-button { width: rem(32); height: rem(32); padding: 0; border-radius: 50%; }
+    .mat-column-actions button.mat-mdc-icon-button mat-icon { font-size: rem(16); line-height: 1; }
 
     // Count
     .count { min-width: 2ch; text-align: center; font-variant-numeric: tabular-nums; }
+
+    // Actions column: keep buttons on one line and avoid clipping under layout shifts
+    .mat-mdc-cell.mat-column-actions,
+    .mat-mdc-header-cell.mat-column-actions { overflow: visible; padding-left: rem(6); padding-right: rem(6); position: relative; z-index: 1; }
+  }
+}
+
+// Responsive tightening so Up/Down buttons stay horizontal longer
+@media (max-width: 1140px) and (min-width: 1100px) {
+  .requests-table {
+    thead th, tbody td { padding: rem(10) rem(8); }
+    .mat-column-actions { width: rem(128); min-width: rem(108); }
+    .mat-mdc-cell.mat-column-actions .mat-mdc-cell-content,
+    .mat-mdc-header-cell.mat-column-actions .mat-mdc-header-cell-content { gap: rem(2); }
+    .mat-column-actions button.mat-mdc-icon-button { width: rem(26); height: rem(26); }
+  }
+}
+
+@media (max-width: 900px) {
+  .requests-table {
+    thead th, tbody td { padding: rem(8) rem(6); }
+    .mat-column-requestor { width: rem(92); }
+    .mat-column-actions { width: rem(112); min-width: rem(96); }
+  }
+}
+
+// Fine tune around the 760→730px range where wrap was seen
+@media (max-width: 760px) and (min-width: 730px) {
+  .requests-table {
+    .mat-column-actions { width: rem(116); min-width: rem(100); }
+    .mat-mdc-cell.mat-column-actions .mat-mdc-cell-content,
+    .mat-mdc-header-cell.mat-column-actions .mat-mdc-header-cell-content { gap: rem(2); }
+    .mat-column-actions button.mat-mdc-icon-button { width: rem(26); height: rem(26); }
+  }
+}
+
+// Tighten further near ~570px where content previously hid
+@media (max-width: 580px) {
+  .requests-table {
+    thead th, tbody td { padding: rem(6) rem(6); }
+    .mat-column-actions { width: rem(106); min-width: rem(92); }
+    .mat-column-actions button.mat-mdc-icon-button { width: rem(24); height: rem(24); }
   }
 }
 
 // Material accordion styling to align with .format-section visuals
 .format-accordion {
-  .mat-expansion-panel {
-    border-radius: 8px;
-    border: 1px solid #e1e4e8;
-    margin: 0 0 1.5rem 0;
-    overflow: hidden;
-    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
-  }
+  .mat-expansion-panel { border-radius: 8px; border: 1px solid #e1e4e8; margin: 0 0 1.5rem 0; overflow: hidden; box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05); }
 
   .mat-expansion-panel-header,
-  .mat-expansion-panel-header.mat-expanded {
-    padding: rem(20) rem(16); // 20px top/bottom, 16px sides
-    height: auto;
-    min-height: auto;
-  }
+  .mat-expansion-panel-header.mat-expanded { padding: rem(20) rem(16); height: auto; min-height: auto; }
 
   .mat-expansion-panel-header {
     background: #f6f8fa;
@@ -182,37 +207,14 @@
     gap: rem(16);
 
     // Stack the title/description vertically (inside the mat-content span)
-    ::ng-deep .mat-content {
-      display: flex;
-      flex-direction: column;
-      align-items: flex-start;
-      gap: rem(2);
-    }
+    ::ng-deep .mat-content { display: flex; flex-direction: column; align-items: flex-start; gap: rem(2); }
   }
 
-  .mat-expansion-panel-body {
-    padding: 1rem 1.5rem 1.5rem 1.5rem;
-  }
+  .mat-expansion-panel-body { padding: 1rem 1.5rem 1.5rem 1.5rem; }
 
   // Ensure smaller description text inside panel content
-  ::ng-deep .mat-expansion-panel-content p.format-description {
-    font-size: rem(12) !important;
-    line-height: 1.45;
-    color: #495057;
-    margin: rem(12) 0 rem(12) 0;
-  }
+  ::ng-deep .mat-expansion-panel-content p.format-description { font-size: rem(12) !important; line-height: 1.45; color: #495057; margin: rem(12) 0 rem(12) 0; }
 
-  .mat-expansion-panel-header .mat-expansion-panel-header-title {
-    color: #0078d4;
-    font-size: 1.1rem;
-    font-weight: 600;
-    margin-right: rem(8);
-  }
-
-  .mat-expansion-panel-header .mat-expansion-panel-header-description {
-    margin: 0 0 0 rem(4);
-    color: #495057;
-    font-size: 0.9rem;
-    opacity: 0.9;
-  }
+  .mat-expansion-panel-header .mat-expansion-panel-header-title { color: #0078d4; font-size: 1.1rem; font-weight: 600; margin-right: rem(8); }
+  .mat-expansion-panel-header .mat-expansion-panel-header-description { margin: 0 0 0 rem(4); color: #495057; font-size: 0.9rem; opacity: 0.9; }
 }

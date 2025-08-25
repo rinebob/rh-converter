@@ -17,6 +17,7 @@ import { BrokerageRequestsService } from '../../services/brokerage-requests.serv
  */
 interface PublicBrokerRequestItem {
   id: string;
+  displayName: string | null;
   brokerageName: string;
   country: string | null;
   upvoteCount: number;
@@ -46,6 +47,7 @@ export class BrokersListComponent {
   ) as Observable<any[]>).pipe(
     map(rows => rows.map(row => ({
       id: row.id,
+      displayName: row.displayName ?? null,
       brokerageName: row.brokerageName ?? 'Unknown',
       country: row.country ?? null,
       upvoteCount: typeof row.upvoteCount === 'number' ? row.upvoteCount : 0,
@@ -62,6 +64,7 @@ export class BrokersListComponent {
 
   // Column order for Angular Material table
   readonly displayedColumns: ReadonlyArray<string> = [
+    'requestor',
     'brokerageName',
     'country',
     'createdAt',
