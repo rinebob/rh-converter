@@ -4,7 +4,7 @@
 .admin-layout {
   display: flex;
   flex-direction: column;
-  min-height: 100vh;
+  height: 100vh; // lock to viewport to avoid page-level scrollbar
 }
 
 .admin-toolbar {
@@ -38,6 +38,8 @@
 
 .content {
   flex: 1 1 auto;
+  min-height: 0; // allow child to size without forcing page overflow
+  overflow: hidden; // no scrolling anywhere
   padding: 1.25rem;
   display: flex;
   flex-direction: column;
