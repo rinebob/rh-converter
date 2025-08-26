@@ -169,7 +169,11 @@ export class AdminBrokerageRequestsComponent {
   }
 
   canReply = computed(() => {
-    return !this.submitting() && !!this.selectedId() && this.replyMessage().trim().length > 0;
+    const hasMessage = this.replyMessage().trim().length > 0;
+    const selected = this.selectedRequest();
+    const ns = this.newStatus();
+    const hasStatusChange = !!ns && !!selected && selected.status !== ns;
+    return !this.submitting() && !!this.selectedId() && (hasMessage || hasStatusChange);
   });
 
   sendReply(): void {
@@ -177,10 +181,14 @@ export class AdminBrokerageRequestsComponent {
     const id = this.selectedId();
     if (!id) return;
 
+    const msg = this.replyMessage().trim();
+    const selected = this.selectedRequest();
+    const ns = this.newStatus() || null;
+    const changedStatus = selected && ns && selected.status !== ns ? ns : undefined;
     const payload: AdminReplyPayload = {
       requestId: id,
-      message: this.replyMessage().trim(),
-      newStatus: (this.newStatus() || undefined) as any,
+      message: msg || undefined,
+      newStatus: changedStatus as any,
     };
 
     this.submitting.set(true);
@@ -193,6 +201,12 @@ export class AdminBrokerageRequestsComponent {
         if (res?.success) {
           this.successMsg.set('Reply posted.');
           this.replyMessage.set('');
+          // Optimistically update UI if status changed
+          const current = this.selectedRequest();
+          const ns = this.newStatus();
+          if (current && ns && current.status !== ns) {
+            this.selectedRequest.set({ ...current, status: ns });
+          }
         } else {
           this.errorMsg.set(res?.error || 'Failed to post reply');
         }
