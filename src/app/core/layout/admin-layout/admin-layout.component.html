@@ -3,8 +3,8 @@
     <span class="title">Admin</span>
 
     <div class="nav">
-      <button mat-button routerLink="/admin/brokerage-requests" type="button">Brokerage Requests</button>
-      <button mat-button routerLink="/admin/requests-dashboard" type="button">Requests Dashboard</button>
+      <button mat-button routerLink="/admin/brokerage-requests" routerLinkActive="active" [routerLinkActiveOptions]="{ exact: true }" type="button">Brokerage Requests</button>
+      <button mat-button routerLink="/admin/requests-dashboard" routerLinkActive="active" [routerLinkActiveOptions]="{ exact: true }" type="button">Requests Dashboard</button>
     </div>
 
     <span class="spacer"></span>
