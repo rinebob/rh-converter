@@ -1,0 +1,109 @@
+@use '../../../../styles/variables' as v;
+@use '../../../../styles/mixins' as m;
+
+.requests-dashboard {
+  display: flex;
+  flex-direction: column;
+  gap: v.$gap-lg;
+
+  .controls {
+    @include m.row(v.$gap-lg, center, space-between);
+
+    .filters {
+      @include m.row(v.$gap-lg);
+
+      label {
+        @include m.row(v.$gap-sm);
+        font-size: v.$font-sm;
+
+        select {
+          font-size: v.$font-sm;
+          padding: v.rem(6) v.rem(10);
+          border-radius: v.$radius-sm;
+          border: 1px solid v.$border-light;
+          background: #fff;
+          color: #222;
+        }
+
+        input[type='checkbox'] {
+          width: v.rem(16);
+          height: v.rem(16);
+        }
+      }
+    }
+
+    .sort {
+      @include m.row(v.$gap-sm);
+
+      button {
+        font-size: v.$font-sm;
+      }
+    }
+  }
+
+  .empty {
+    @include m.card-border(false);
+    padding: v.$gap-lg;
+    font-size: v.$font-md;
+    color: v.$text-muted-light;
+  }
+
+  .table-wrapper {
+    overflow: auto;
+    @include m.card-border(false);
+  }
+
+  table.data-table {
+    width: 100%;
+    border-collapse: collapse;
+
+    thead th {
+      text-align: left;
+      font-weight: 600;
+      @include m.table-cell-padding;
+      background: v.$bg-subtle-light;
+      white-space: nowrap;
+    }
+
+    tbody td {
+      @include m.table-cell-padding;
+      border-top: 1px solid v.$border-light;
+      vertical-align: top;
+    }
+
+    td.num {
+      text-align: right;
+      width: 1%;
+      white-space: nowrap;
+    }
+
+    td.icon {
+      text-align: center;
+      width: 1%;
+    }
+  }
+}
+
+@media (prefers-color-scheme: dark) {
+  .requests-dashboard {
+    .controls {
+      .filters label select {
+        border-color: v.$border-dark;
+        background: #1f1f1f;
+        color: #f3f3f3;
+      }
+    }
+
+    .empty {
+      @include m.card-border(true);
+      color: v.$text-muted-dark;
+    }
+
+    .table-wrapper { @include m.card-border(true); }
+
+    table.data-table {
+      thead th { background: v.$bg-subtle-dark; }
+      tbody td { border-top-color: v.$border-dark; }
+    }
+  }
+}

@@ -1,0 +1,69 @@
+<section class="requests-dashboard">
+  <header class="controls">
+    <div class="filters">
+      <label>
+        <span>Status</span>
+        <select [value]="statusFilter()" (change)="statusFilter.set($any($event.target).value)">
+          <option value="all">All</option>
+          <option value="open">Open</option>
+          <option value="triaged">Triaged</option>
+          <option value="in_progress">In Progress</option>
+          <option value="done">Done</option>
+          <option value="rejected">Rejected</option>
+        </select>
+      </label>
+
+      <label class="checkbox">
+        <input type="checkbox" [checked]="onlyWithExample()" (change)="onlyWithExample.set($any($event.target).checked)" />
+        <span>Has example file</span>
+      </label>
+    </div>
+
+    <div class="sort">
+      <button mat-button type="button" (click)="toggleSort('hotScore')">Sort: Hot</button>
+      <button mat-button type="button" (click)="toggleSort('last24hVotes')">24h</button>
+      <button mat-button type="button" (click)="toggleSort('last7dVotes')">7d</button>
+      <button mat-button type="button" (click)="toggleSort('upvoteCount')">Score</button>
+      <button mat-button type="button" (click)="toggleSort('lastActivityMs')">Last Activity</button>
+    </div>
+  </header>
+
+  @if ((rows().length) === 0) {
+    <div class="empty">No requests match the current filters.</div>
+  } @else {
+    <div class="table-wrapper">
+      <table class="data-table">
+        <thead>
+          <tr>
+            <th>Requester</th>
+            <th>Brokerage</th>
+            <th>Region</th>
+            <th title="Net votes">Score</th>
+            <th title="Votes in last 24 hours">24h</th>
+            <th title="Votes in last 7 days">7d</th>
+            <th>Replies</th>
+            <th>Example</th>
+            <th>Last Activity</th>
+            <th>Hot</th>
+          </tr>
+        </thead>
+        <tbody>
+          @for (item of rows(); track item.id) {
+            <tr>
+              <td [title]="item.displayName || 'anon'">{{ item.displayName || 'anon' }}</td>
+              <td>{{ item.brokerageName }}</td>
+              <td>{{ item.country || '—' }}</td>
+              <td class="num">{{ item.upvoteCount }}</td>
+              <td class="num">{{ item.last24hVotes ?? 0 }}</td>
+              <td class="num">{{ item.last7dVotes ?? 0 }}</td>
+              <td class="num">{{ item.repliesCount ?? 0 }}</td>
+              <td class="icon">{{ item.hasExampleFile ? '✓' : '—' }}</td>
+              <td>{{ item.lastActivityMs ? (item.lastActivityMs | date:'yyyy-MM-dd HH:mm') : '—' }}</td>
+              <td class="num">{{ item.hotScore ?? 0 }}</td>
+            </tr>
+          }
+        </tbody>
+      </table>
+    </div>
+  }
+</section>
