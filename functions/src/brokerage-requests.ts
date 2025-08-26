@@ -64,7 +64,17 @@ interface SubmitBrokerageRequestBody {
   exampleFilePath?: string | null; // optional storage path to an uploaded CSV
 }
 
-type RequestStatus = 'open' | 'triaged' | 'in_progress' | 'done' | 'rejected';
+enum RequestStatus {
+  OPEN = 'open',
+  TRIAGED = 'triaged',
+  NEEDS_INFO = 'needs_info',
+  IN_PROGRESS = 'in_progress',
+  READY_FOR_QA = 'ready_for_qa',
+  DONE = 'done',
+  REJECTED = 'rejected',
+  DUPLICATE = 'duplicate',
+  PAUSED = 'paused',
+}
 
 function sanitizeString(input: unknown, max = 200): string | null {
   if (typeof input !== 'string') return null;

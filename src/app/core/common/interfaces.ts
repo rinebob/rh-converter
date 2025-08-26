@@ -26,6 +26,36 @@ export enum DownloadFormat {
   BOTH = 'both'
 }
 
+/**
+ * Request status values for brokerage requests (Admin workflow)
+ */
+export enum RequestStatus {
+  OPEN = 'open',
+  TRIAGED = 'triaged',
+  NEEDS_INFO = 'needs_info',
+  IN_PROGRESS = 'in_progress',
+  READY_FOR_QA = 'ready_for_qa',
+  DONE = 'done',
+  REJECTED = 'rejected',
+  DUPLICATE = 'duplicate',
+  PAUSED = 'paused',
+}
+
+/**
+ * Human-readable labels for RequestStatus values.
+ */
+export const REQUEST_STATUS_LABEL: Record<RequestStatus, string> = {
+  [RequestStatus.OPEN]: 'Open',
+  [RequestStatus.TRIAGED]: 'Triaged',
+  [RequestStatus.NEEDS_INFO]: 'Needs info',
+  [RequestStatus.IN_PROGRESS]: 'In progress',
+  [RequestStatus.READY_FOR_QA]: 'Ready for QA',
+  [RequestStatus.DONE]: 'Done',
+  [RequestStatus.REJECTED]: 'Rejected',
+  [RequestStatus.DUPLICATE]: 'Duplicate',
+  [RequestStatus.PAUSED]: 'Paused',
+};
+
 import { Timestamp } from 'firebase/firestore';
 
 /**
