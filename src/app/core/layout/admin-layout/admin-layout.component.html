@@ -1,6 +1,12 @@
 <div class="admin-layout">
   <mat-toolbar color="primary" class="admin-toolbar">
     <span class="title">Admin</span>
+
+    <div class="nav">
+      <button mat-button routerLink="/admin/brokerage-requests" type="button">Brokerage Requests</button>
+      <button mat-button routerLink="/admin/requests-dashboard" type="button">Requests Dashboard</button>
+    </div>
+
     <span class="spacer"></span>
     <button mat-button type="button" (click)="onLogout()">Logout</button>
   </mat-toolbar>

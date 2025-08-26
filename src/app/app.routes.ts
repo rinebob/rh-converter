@@ -51,6 +51,12 @@ export const routes: Routes = [
         loadComponent: () => import('./features/admin/brokerage-requests/admin-brokerage-requests.component')
           .then(m => m.AdminBrokerageRequestsComponent),
         title: 'Admin • Brokerage Requests'
+      },
+      {
+        path: 'requests-dashboard',
+        loadComponent: () => import('./features/admin/requests-dashboard/requests-dashboard.component')
+          .then(m => m.RequestsDashboardComponent),
+        title: 'Admin • Requests Dashboard'
       }
     ]
   },
