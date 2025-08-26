@@ -9,7 +9,7 @@ export const environment: Environment = {
     apiKey: 'AIzaSyDRbwbS5D-RGq1_Gv9rQkywh3p5Bvw3618',
     authDomain: 'rh-converter.firebaseapp.com',
     projectId: 'rh-converter',
-    storageBucket: 'rh-converter.appspot.com',
+    storageBucket: 'rh-converter.firebasestorage.app',
     messagingSenderId: '9526366257',
     appId: '1:9526366257:web:3658fba523aed7b1954510',
     measurementId: 'G-YYYYYYYYYY'
