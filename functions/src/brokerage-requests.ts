@@ -144,7 +144,7 @@ export const submitBrokerageRequest = onRequest({ cors: corsEnabled }, async (re
       authorUid: uid || null,
       authorDeviceId: deviceId || null,
       displayName: displayName || null,
-      status: 'open' as RequestStatus,
+      status: RequestStatus.OPEN as RequestStatus,
       upvoteCount: 1, // initial implicit upvote by the requester
     };
 
@@ -247,7 +247,7 @@ export const voteBrokerageRequest = onRequest({ cors: corsEnabled }, async (requ
 // Admin-only: reply to a brokerage request and optionally update status
 interface AdminReplyBody {
   requestId: string; // required
-  message: string; // required
+  message?: string; // optional if newStatus is provided
   newStatus?: RequestStatus; // optional
 }
 
@@ -273,7 +273,8 @@ export const adminReplyToBrokerageRequest = onRequest({ cors: corsEnabled }, asy
     const newStatus = body.newStatus as RequestStatus | undefined;
 
     if (!requestId) { response.status(400).json({ error: 'requestId required' }); return; }
-    if (!message) { response.status(400).json({ error: 'message required' }); return; }
+    // Require at least a message or a status change
+    if (!message && !newStatus) { response.status(400).json({ error: 'message_or_status_required' }); return; }
 
     const reqRef = db.collection('brokerageRequests').doc(requestId);
     const reqSnap = await reqRef.get();
@@ -281,20 +282,27 @@ export const adminReplyToBrokerageRequest = onRequest({ cors: corsEnabled }, asy
 
     const now = Timestamp.now();
 
-    // Write reply into subcollection
-    const replyRef = reqRef.collection('replies').doc();
-    await replyRef.set({
-      id: replyRef.id,
-      requestId,
-      message,
-      createdAt: now,
-      authorUid: uid,
-      // optional future fields: internal visibility, tags, etc.
-    });
+    let replyId: string | undefined;
+    const messagePreview: string | null = message ? (message.length > 120 ? message.slice(0, 120) + '…' : message) : null;
+    if (message) {
+      // Write reply into subcollection
+      const replyRef = reqRef.collection('replies').doc();
+      await replyRef.set({
+        id: replyRef.id,
+        requestId,
+        message,
+        createdAt: now,
+        authorUid: uid,
+        // optional future fields: internal visibility, tags, etc.
+      });
+      replyId = replyRef.id;
+    }
 
     // Optionally update status
-    if (newStatus) {
+    let didUpdateStatus = false;
+    if (newStatus && newStatus !== prevStatus) {
       await reqRef.update({ status: newStatus });
+      didUpdateStatus = true;
     }
 
     logInfo(ctx, 'success', { requestId, replyId: replyRef.id, newStatus: newStatus || null, durationMs: Date.now() - start });
@@ -339,7 +347,7 @@ export const listBrokerageRequests = onRequest({ cors: corsEnabled }, async (req
         authorUid: data.authorUid || null,
         authorDeviceId: data.authorDeviceId || null,
         displayName: data.displayName || null,
-        status: data.status || 'open',
+        status: data.status || RequestStatus.OPEN,
         upvoteCount: data.upvoteCount || 0,
       } as any;
     });
