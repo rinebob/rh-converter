@@ -1,15 +1,24 @@
-import { ChangeDetectionStrategy, Component, computed, effect, inject, signal, ViewChild, ElementRef, HostListener } from '@angular/core';
+import { ChangeDetectionStrategy, Component, computed, effect, inject, signal, ViewChild, ElementRef, HostListener, DestroyRef } from '@angular/core';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
+import { Firestore, collection, collectionData } from '@angular/fire/firestore';
 import { MatIconModule } from '@angular/material/icon';
 import { MatButtonModule } from '@angular/material/button';
+import { MatSelectModule } from '@angular/material/select';
 import { MatProgressBarModule } from '@angular/material/progress-bar';
+import { MatFormFieldModule } from '@angular/material/form-field';
+import { MatSnackBar, MatSnackBarModule } from '@angular/material/snack-bar';
+import { of } from 'rxjs';
+import { map, catchError, finalize } from 'rxjs/operators';
+
 import { BrokerageRequestsService, SubmitBrokerageRequestPayload } from '../../services/brokerage-requests.service';
-import { finalize } from 'rxjs/operators';
 import { StorageUploadService, type UploadProgress } from '../../services/storage-upload.service';
+import { AnonymousNameService } from '../../services/anonymous-name.service';
 import { DeviceIdService } from '../../services/device-id.service';
 import { TdcFilePickerComponent } from '../../../shared/comps/tdc-file-picker/tdc-file-picker.component';
-import { AnonymousNameService } from '../../services/anonymous-name.service';
+
+import { BROKERS, type Broker } from '../../data/brokers.data';
 
 // Helpers for filename construction
 const sanitizeForFilename = (s: string): string =>
@@ -35,19 +44,28 @@ const makeHashId = (): string =>
 @Component({
   selector: 'app-brokerage-request-form',
   standalone: true,
-  imports: [CommonModule, FormsModule, MatIconModule, MatButtonModule, MatProgressBarModule, TdcFilePickerComponent],
+  imports: [CommonModule, FormsModule, MatIconModule, MatButtonModule, MatProgressBarModule, MatFormFieldModule, MatSelectModule, MatSnackBarModule, TdcFilePickerComponent],
   templateUrl: './brokerage-request-form.component.html',
   styleUrls: ['./brokerage-request-form.component.scss'],
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class BrokerageRequestFormComponent {
+  private readonly destroyRef = inject(DestroyRef);
+  private readonly firestore = inject(Firestore);
   private readonly svc = inject(BrokerageRequestsService);
   private readonly uploadSvc = inject(StorageUploadService);
   private readonly deviceIdSvc = inject(DeviceIdService);
   private readonly anonNameSvc = inject(AnonymousNameService);
+  private readonly snack = inject(MatSnackBar);
 
   constructor() {
     this.initDisplayName();
+    this.requestedByName$
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe(map => {
+        this.requestedByName.set(map);
+        this.requestedNames.set(new Set(map.keys()));
+      });
   }
 
   // Form state (signals)
@@ -70,6 +88,36 @@ export class BrokerageRequestFormComponent {
   previewText = signal<string>('');
   // Drag-and-drop visual state for the drop zone
   dragActive = signal<boolean>(false);
+
+  // Flat brokers for the dropdown
+  readonly brokers: ReadonlyArray<Broker & { key: string }> = BROKERS.map(b => ({ ...b, key: b.name.toLowerCase() }));
+
+  // Note: BROKERS is pre-sorted at the data source (US first, then by country abbreviation, then by name).
+  // No additional sorting required here.
+
+  // Map of lowercased brokerage name -> formatted request date (yyyy-mm-dd)
+  readonly requestedByName = signal<Map<string, string>>(new Map());
+  // Set of lowercased names for quick has() checks
+  readonly requestedNames = signal<Set<string>>(new Set<string>());
+
+  private readonly requestedByName$ = collectionData(collection(this.firestore, 'brokerageRequests')).pipe(
+    map((rows: any[]) => {
+      // Build Map<lowerName, formattedDate>
+      const entries: Array<[string, string]> = [];
+      for (const r of rows as any[]) {
+        const name = (r?.brokerageName || '').toString().trim();
+        if (!name) continue;
+        const key = name.toLowerCase();
+        // createdAt may be a Firestore Timestamp; normalize to millis if possible
+        const ca: any = (r as any)?.createdAt;
+        const ms = typeof ca?.toMillis === 'function' ? ca.toMillis() : (typeof ca === 'number' ? ca : null);
+        const dateStr = ms ? formatDate(new Date(ms)) : '';
+        entries.push([key, dateStr]);
+      }
+      return new Map<string, string>(entries);
+    }),
+    catchError(() => of(new Map<string, string>()))
+  );
 
   // Reference to the native file input to clear its value
   @ViewChild('fileInput') private fileInput?: ElementRef<HTMLInputElement>;
@@ -112,7 +160,33 @@ export class BrokerageRequestFormComponent {
     }
   }
 
-  canSubmit = computed(() => !this.submitting() && this.brokerageName().trim().length > 0);
+  canSubmit = computed(() => {
+    const broker = this.brokerageName().trim();
+    const hasBroker = broker.length > 0;
+    const hasExample = !!(this.selectedFile() || this.exampleFilePath());
+    const notListed = broker.toLowerCase() === 'not listed';
+    const notesOk = notListed ? this.notes().trim().length > 0 : true;
+    return !this.submitting() && hasBroker && hasExample && notesOk;
+  });
+
+  // Selection handler for the broker dropdown; sets value and toasts if already requested
+  onPick(value: string): void {
+    this.brokerageName.set(value);
+    const key = (value || '').toLowerCase();
+    const isNotListed = key === 'not listed';
+
+    // Derive and set country abbreviation from selected broker for persistence
+    if (isNotListed) {
+      this.country.set('');
+    } else {
+      const match = this.brokers.find(b => b.name.toLowerCase() === key);
+      this.country.set(match?.abbreviation || '');
+    }
+
+    if (!isNotListed && this.requestedNames().has(key)) {
+      this.snack.open(`${value} has already been requested`, 'OK', { duration: 3500 });
+    }
+  }
 
   // ----- CSV upload handlers -----
   onFileInputChange(event: Event): void {

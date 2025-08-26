@@ -1,18 +1,34 @@
 <div class="request-form">
   <form (submit)="$event.preventDefault(); submit()">
     <div class="row">
-      <label for="brokerageName">Brokerage name*</label>
-      <input id="brokerageName" type="text" [value]="brokerageName()" (input)="brokerageName.set($any($event.target).value)" placeholder="e.g. Fidelity, E*TRADE" />
-    </div>
-
-    <div class="row">
-      <label for="country">Country/Region</label>
-      <input id="country" type="text" [value]="country()" (input)="country.set($any($event.target).value)" placeholder="e.g. US, CA, EU" />
+      <label for="brokerPicker">Brokerage*</label>
+      <mat-form-field appearance="outline">
+        <mat-label>Select a broker…</mat-label>
+        <mat-select id="brokerPicker" [value]="brokerageName()" (selectionChange)="onPick($event.value)">
+          <mat-option [value]="'Not listed'">Not listed</mat-option>
+          @for (b of brokers; track b.name) {
+            <mat-option [ngClass]="{ 'requested': requestedNames().has(b.key) }" [value]="b.name">
+              <div class="option-row">
+                <span class="label">{{ b.abbreviation }} — {{ b.name }}</span>
+                @if (requestedByName().get(b.key)) {
+                  <span class="status-pill" [attr.aria-label]="'Requested on ' + requestedByName().get(b.key)">
+                    requested {{ requestedByName().get(b.key) }}
+                  </span>
+                }
+              </div>
+            </mat-option>
+          }
+        </mat-select>
+      </mat-form-field>
     </div>
 
     <div class="row">
       <label for="notes">Notes</label>
-      <textarea id="notes" rows="4" [value]="notes()" (input)="notes.set($any($event.target).value)" placeholder="Share any format details or links"></textarea>
+      @if (brokerageName().trim().toLowerCase() === 'not listed') {
+        <textarea id="notes" rows="4" [value]="notes()" (input)="notes.set($any($event.target).value)" placeholder="Please enter the broker name first, e.g. 'BrokerName — any extra details (country, links, account type, etc.)'"></textarea>
+      } @else {
+        <textarea id="notes" rows="4" [value]="notes()" (input)="notes.set($any($event.target).value)" placeholder="Share any format details or links"></textarea>
+      }
     </div>
 
     <div class="row">
