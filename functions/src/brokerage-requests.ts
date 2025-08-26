@@ -280,6 +280,12 @@ export const adminReplyToBrokerageRequest = onRequest({ cors: corsEnabled }, asy
     const reqSnap = await reqRef.get();
     if (!reqSnap.exists) { response.status(404).json({ error: 'Not found' }); return; }
 
+    // Human-readable context for logging
+    const reqData = reqSnap.data() as any;
+    const prevStatus: RequestStatus = (reqData?.status as RequestStatus) || RequestStatus.OPEN;
+    const brokerageName: string | null = reqData?.brokerageName || null;
+    const requestDisplayName: string | null = reqData?.displayName || null;
+
     const now = Timestamp.now();
 
     let replyId: string | undefined;
@@ -305,8 +311,19 @@ export const adminReplyToBrokerageRequest = onRequest({ cors: corsEnabled }, asy
       didUpdateStatus = true;
     }
 
-    logInfo(ctx, 'success', { requestId, replyId: replyRef.id, newStatus: newStatus || null, durationMs: Date.now() - start });
-    response.status(200).json({ success: true, replyId: replyRef.id });
+    logInfo(ctx, 'success', {
+      requestId,
+      brokerageName,
+      requestDisplayName,
+      prevStatus,
+      newStatus: newStatus || null,
+      didUpdateStatus,
+      replyId: replyId || null,
+      messagePreviewLength: message ? message.length : 0,
+      messagePreview,
+      durationMs: Date.now() - start,
+    });
+    response.status(200).json({ success: true, replyId: replyId });
   } catch (err) {
     const ctx = makeContext('adminReplyToBrokerageRequest', request);
     logError(ctx, 'error', err);
