@@ -237,3 +237,28 @@ This is a general task list for project management.
       - Option C: hard-block with 403.
     - Client UX: author sees own shadowed posts; others do not; admins see all.
   - Notes: Not currently needed; defer until there is actual abuse volume.
+
+---
+
+## Admin Vote Reporting & Prioritization (2025-08-25)
+
+- [x] Review current brokerage request data model and admin list endpoint to design vote reporting metrics
+- [x] Define MVP metrics for prioritization: total score, 7d votes, 24h votes, recency, example file flag
+- [x] Frontend: Update BrokerageRequestsService DTOs and add optional sort/filter params
+- [x] Frontend: Create Admin Requests Dashboard component with sortable table (signals, standalone) showing prioritization metrics — In progress
+- [x] Backend: Extend listBrokerageRequests to include last24hVotes and last7dVotes by counting subcollection votes per request — In progress
+- [ ] Phase 2: Optimize with scheduled aggregation writing daily buckets to Firestore to avoid N+1 queries — Planned
+
+Notes:
+- Admin endpoints require Firebase Auth with admin custom claim.
+- Hot score = score + 2*24h + 1*7d + 0.5*replies (initial tuning; subject to iteration).
+
+---
+
+## Brokerage Requests UX & Storage Fixes (2025-08-26)
+
+- [x] Backend: Remove contactEmail from `brokerageRequestMeta` and request body; stop recording `userAgent` in meta
+- [x] Frontend: Remove contactEmail from `SubmitBrokerageRequestPayload` and form state
+- [x] Brokers tab: When brokerageName is "Not listed", display a sanitized snippet (first 30 chars) derived from `notes` instead of showing "Not listed"
+- [x] Brokerage request form: Dynamic Notes placeholder when "Not listed" is selected to instruct users to type the broker name first
+- [x] Firebase Storage: Fix `storageBucket` to `rh-converter.appspot.com` in both `environment.ts` and `environment.prod.ts`; deploy `storage.rules`; verify client uploads succeed
