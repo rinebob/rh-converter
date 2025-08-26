@@ -7,6 +7,7 @@ import { Observable, of, from } from 'rxjs';
 import { catchError, map } from 'rxjs/operators';
 import { BrokerageRequestsService, AdminReplyPayload } from '../../../core/services/brokerage-requests.service';
 import { Storage, ref, getDownloadURL } from '@angular/fire/storage';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 
 interface RequestDoc {
   id: string;
@@ -82,6 +83,17 @@ export class AdminBrokerageRequestsComponent {
       return of<RequestDoc[]>([]);
     })
   );
+
+  constructor() {
+    // Auto-select the first request when data arrives and nothing is selected yet
+    this.requests$
+      .pipe(takeUntilDestroyed())
+      .subscribe((list) => {
+        if (!this.selectedId() && list.length > 0) {
+          this.selectRequest(list[0]);
+        }
+      });
+  }
 
   selectRequest(req: RequestDoc): void {
     this.selectedId.set(req.id);
