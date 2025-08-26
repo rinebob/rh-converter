@@ -55,7 +55,6 @@ export class BrokerageRequestFormComponent {
   country = signal<string>('');
   notes = signal<string>('');
   displayName = signal<string>('');
-  contactEmail = signal<string>('');
   deviceId = signal<string>('');
 
   submitting = signal<boolean>(false);
@@ -85,8 +84,7 @@ export class BrokerageRequestFormComponent {
     if (id) {
       if (this.successTimer) clearTimeout(this.successTimer);
       this.successTimer = setTimeout(() => {
-        // Clear UI/file state when the success message auto-dismisses
-        this.removeSelectedFile();
+        // Only clear the success message after delay; file state is cleared immediately on success
         this.successId.set(null);
         this.successTimer = null;
       }, this.successClearMs);
@@ -283,12 +281,14 @@ export class BrokerageRequestFormComponent {
   }
 
   private submitRequestNow(): void {
+    const fallbackName = (this.anonNameSvc.getName() || '').toString().trim().slice(0, 50);
+    const nameWithFallback = (this.displayName().trim() || fallbackName);
+
     const payload: SubmitBrokerageRequestPayload = {
       brokerageName: this.brokerageName().trim(),
       country: this.country().trim() || null,
       notes: this.notes().trim() || null,
-      displayName: this.displayName().trim() || null,
-      contactEmail: this.contactEmail().trim() || null,
+      displayName: nameWithFallback || null,
       deviceId: this.deviceId().trim() || null,
       exampleFilePath: this.exampleFilePath() || null,
     };
@@ -308,10 +308,12 @@ export class BrokerageRequestFormComponent {
             this.brokerageName.set('');
             this.country.set('');
             this.notes.set('');
-            this.displayName.set('');
-            this.contactEmail.set('');
-            // Do not clear the file picker immediately; allow success message to show
-            // The auto-dismiss effect will clear the picker after delay
+            // Preserve displayName for subsequent requests; if empty, seed with fallback
+            if (!this.displayName().trim()) {
+              this.displayName.set(fallbackName);
+            }
+            // Clear the file picker and preview immediately upon success
+            this.removeSelectedFile();
           } else {
             this.errorMsg.set(res?.error || 'Request failed.');
           }
