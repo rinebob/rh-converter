@@ -10,7 +10,6 @@ export interface SubmitBrokerageRequestPayload {
   country?: string | null;
   notes?: string | null;
   displayName?: string | null;
-  contactEmail?: string | null;
   deviceId?: string | null;
   exampleFilePath?: string | null; // optional path in Firebase Storage
 }
@@ -46,6 +45,15 @@ export interface AdminListItemDto {
   upvoteCount: number;
   exampleFilePath?: string | null;
   exampleFileName?: string | null;
+  // New prioritization metrics
+  repliesCount?: number;
+  lastVotedAtMs?: number | null;
+  lastReplyAtMs?: number | null;
+  lastActivityMs?: number | null;
+  hasExampleFile?: boolean;
+  last24hVotes?: number;
+  last7dVotes?: number;
+  hotScore?: number;
 }
 
 export interface AdminListResponse {
