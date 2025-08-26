@@ -5,6 +5,7 @@ import { MatTableModule } from '@angular/material/table';
 import { MatButtonModule } from '@angular/material/button';
 import { MatExpansionModule } from '@angular/material/expansion';
 import { BrokerageRequestFormComponent } from '../brokerage-request-form/brokerage-request-form.component';
+import { BrokerRequestsTableComponent } from '../broker-requests-table/broker-requests-table.component';
 import { Firestore, collection, collectionData, limit, orderBy, query, Timestamp } from '@angular/fire/firestore';
 import { Observable, of } from 'rxjs';
 import { catchError, map } from 'rxjs/operators';
@@ -26,10 +27,24 @@ interface PublicBrokerRequestItem {
   createdAtMs: number | null;
 }
 
+// Derive a broker-like name from notes when user selected "Not listed"
+function deriveNameFromNotes(notes: unknown, fallback: string = 'Unspecified broker'): string {
+  const raw = (notes ?? '').toString();
+  if (!raw.trim()) return fallback;
+  // Sanitize: keep letters, numbers, spaces, basic punctuation; collapse whitespace
+  const cleaned = raw
+    .replace(/[^\p{L}\p{N}\s.,:;!@#&()_\-\/\\'"\[\]]+/gu, ' ')
+    .replace(/\s+/g, ' ')
+    .trim();
+  if (!cleaned) return fallback;
+  const snippet = cleaned.slice(0, 30);
+  return snippet;
+}
+
 @Component({
   selector: 'app-brokers-list',
   standalone: true,
-  imports: [CommonModule, MatIconModule, MatTableModule, MatButtonModule, MatExpansionModule, BrokerageRequestFormComponent],
+  imports: [CommonModule, MatIconModule, MatTableModule, MatButtonModule, MatExpansionModule, BrokerageRequestFormComponent, BrokerRequestsTableComponent],
   templateUrl: './brokers-list.component.html',
   styleUrls: ['./brokers-list.component.scss'],
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -49,15 +64,20 @@ export class BrokersListComponent {
     query(collection(this.firestore, 'brokerageRequests'), orderBy('createdAt', 'desc'), limit(20)),
     { idField: 'id' }
   ) as Observable<any[]>).pipe(
-    map(rows => rows.map(row => ({
-      id: row.id,
-      displayName: row.displayName ?? null,
-      brokerageName: row.brokerageName ?? 'Unknown',
-      country: row.country ?? null,
-      upvoteCount: typeof row.upvoteCount === 'number' ? row.upvoteCount : 0,
-      createdAtMs: row.createdAt && typeof row.createdAt.toMillis === 'function' ? row.createdAt.toMillis() : null,
-      // createdAt kept server-side; not displayed here
-    }) as PublicBrokerRequestItem)),
+    map(rows => rows.map(row => {
+      const rawName: string = (row.brokerageName ?? '').toString();
+      const isNotListed = rawName.trim().toLowerCase() === 'not listed';
+      const displayName = isNotListed ? deriveNameFromNotes(row.notes) : (rawName || 'Unknown');
+      return {
+        id: row.id,
+        displayName: row.displayName ?? null,
+        brokerageName: displayName,
+        country: row.country ?? null,
+        upvoteCount: typeof row.upvoteCount === 'number' ? row.upvoteCount : 0,
+        createdAtMs: row.createdAt && typeof row.createdAt.toMillis === 'function' ? row.createdAt.toMillis() : null,
+        // createdAt kept server-side; not displayed here
+      } as PublicBrokerRequestItem;
+    })),
     catchError(() => {
       this.loadError.set('Failed to load requests.');
       return of<PublicBrokerRequestItem[]>([]);
