@@ -1,0 +1,20 @@
+@use './variables' as v;
+
+// Flex row helper
+@mixin row($gap: v.$gap-md, $align: center, $justify: flex-start) {
+  display: flex;
+  align-items: $align;
+  justify-content: $justify;
+  gap: $gap;
+}
+
+// Card-like border wrapper, theme-aware
+@mixin card-border($dark: false) {
+  border: 1px solid if($dark, v.$border-dark, v.$border-light);
+  border-radius: v.$radius-sm;
+}
+
+// Table cell padding
+@mixin table-cell-padding {
+  padding: v.rem(8) v.rem(12);
+}

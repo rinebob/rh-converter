@@ -1,0 +1,34 @@
+// Global Sass variables and helpers
+// Base font-size: 16px => 1rem
+@function rem($px) {
+  @return ($px / 16) * 1rem;
+}
+
+// Spacing
+$gap-xs: rem(4);
+$gap-sm: rem(8);
+$gap-md: rem(12);
+$gap-lg: rem(16);
+$gap-xl: rem(24);
+
+// Radii
+$radius-sm: rem(4);
+$radius-md: rem(8);
+$radius-lg: rem(12);
+
+// Font sizes
+$font-xs: rem(12);
+$font-sm: rem(14);
+$font-md: rem(16);
+$font-lg: rem(18);
+$font-xl: rem(22);
+
+// Light theme tokens
+$border-light: rgba(0, 0, 0, 0.08);
+$bg-subtle-light: rgba(0, 0, 0, 0.03);
+$text-muted-light: rgba(0, 0, 0, 0.6);
+
+// Dark theme tokens
+$border-dark: rgba(255, 255, 255, 0.14);
+$bg-subtle-dark: rgba(255, 255, 255, 0.06);
+$text-muted-dark: rgba(255, 255, 255, 0.75);
