@@ -60,7 +60,6 @@ interface SubmitBrokerageRequestBody {
   country?: string | null; // optional country/region tag
   notes?: string | null; // optional free-form context
   displayName?: string | null; // optional pseudonymous handle
-  contactEmail?: string | null; // optional private email for follow-up
   deviceId?: string | null; // optional device id for anon ownership
   exampleFilePath?: string | null; // optional storage path to an uploaded CSV
 }
@@ -111,7 +110,6 @@ export const submitBrokerageRequest = onRequest({ cors: corsEnabled }, async (re
     const country = sanitizeString(body.country, 64);
     const notes = sanitizeString(body.notes, 1000);
     const displayName = sanitizeString(body.displayName, 50);
-    const contactEmail = sanitizeString(body.contactEmail, 254);
     const deviceId = sanitizeString(body.deviceId, 64);
     const exampleFilePath = sanitizeString(body.exampleFilePath, 512); // store as-is (private), path length limited
 
@@ -144,13 +142,11 @@ export const submitBrokerageRequest = onRequest({ cors: corsEnabled }, async (re
 
     // Private meta doc (PII, network info)
     const metaDoc = db.collection('brokerageRequestMeta').doc(reqDoc.id);
-    const userAgent = (request.headers['user-agent'] || '').toString().slice(0, 256);
 
     await metaDoc.set({
       requestId: reqDoc.id,
+      brokerageName,
       uid: uid || null,
-      userAgent,
-      contactEmail: contactEmail || null,
       exampleFilePath: exampleFilePath || null,
       createdAt: now,
     });
