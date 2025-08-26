@@ -3,6 +3,7 @@ import { CommonModule } from '@angular/common';
 import { MatTableModule } from '@angular/material/table';
 import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
+import { RequestStatus, REQUEST_STATUS_LABEL } from '../../common/interfaces';
 
 export interface PublicBrokerRequestItemInput {
   id: string;
@@ -11,6 +12,7 @@ export interface PublicBrokerRequestItemInput {
   country: string | null;
   upvoteCount: number;
   createdAtMs: number | null;
+  status?: RequestStatus; // optional if caller doesn't have it
 }
 
 @Component({
@@ -29,10 +31,19 @@ export class BrokerRequestsTableComponent {
   readonly upvote = output<PublicBrokerRequestItemInput>();
   readonly downvote = output<PublicBrokerRequestItemInput>();
 
+  // Labels
+  readonly statusLabel = REQUEST_STATUS_LABEL;
+
+  // Helper to avoid indexing with possibly-any from template context
+  statusToLabel(status: RequestStatus | undefined | null): string {
+    return status ? this.statusLabel[status] : '—';
+  }
+
   // Column order for Angular Material table
   readonly displayedColumns: ReadonlyArray<string> = [
     'requestor',
     'brokerageName',
+    'status',
     'country',
     'createdAt',
     'votes',

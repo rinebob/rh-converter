@@ -13,6 +13,7 @@ import { toSignal } from '@angular/core/rxjs-interop';
 import { BrokerageRequestsService } from '../../services/brokerage-requests.service';
 import { DeviceIdService } from '../../services/device-id.service';
 import { AnonymousNameService } from '../../services/anonymous-name.service';
+import { RequestStatus } from '../../common/interfaces';
 
 /**
  * Lightweight view model for showing recent new broker requests publicly.
@@ -25,6 +26,7 @@ interface PublicBrokerRequestItem {
   country: string | null;
   upvoteCount: number;
   createdAtMs: number | null;
+  status?: RequestStatus; // surfaced for table status column
 }
 
 // Derive a broker-like name from notes when user selected "Not listed"
@@ -75,6 +77,7 @@ export class BrokersListComponent {
         country: row.country ?? null,
         upvoteCount: typeof row.upvoteCount === 'number' ? row.upvoteCount : 0,
         createdAtMs: row.createdAt && typeof row.createdAt.toMillis === 'function' ? row.createdAt.toMillis() : null,
+        status: row.status as RequestStatus | undefined,
         // createdAt kept server-side; not displayed here
       } as PublicBrokerRequestItem;
     })),

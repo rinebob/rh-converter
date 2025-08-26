@@ -5,6 +5,7 @@ import { MatIconModule } from '@angular/material/icon';
 import { MatButtonModule } from '@angular/material/button';
 import { toSignal } from '@angular/core/rxjs-interop';
 import { BrokerageRequestsService, AdminListItemDto } from '../../../core/services/brokerage-requests.service';
+import { RequestStatus, REQUEST_STATUS_LABEL } from '../../../core/common/interfaces';
 
 // Simple sorting keys
 type SortKey = 'hotScore' | 'upvoteCount' | 'last24hVotes' | 'last7dVotes' | 'lastActivityMs' | 'createdAt';
@@ -24,10 +25,14 @@ export class RequestsDashboardComponent {
   private readonly responseSig = toSignal(this.svc.listRequests());
 
   // Filters & sorting (signals)
-  readonly statusFilter = signal<'all' | AdminListItemDto['status']>('all');
+  readonly statusFilter = signal<'all' | RequestStatus>('all');
   readonly onlyWithExample = signal<boolean>(false);
   readonly sortKey = signal<SortKey>('hotScore');
   readonly sortDesc = signal<boolean>(true);
+
+  // Expose statuses and labels for template
+  readonly statuses = Object.values(RequestStatus) as RequestStatus[];
+  readonly statusLabel = REQUEST_STATUS_LABEL;
 
   // Derived list with filters and sorting
   readonly rows = computed<AdminListItemDto[]>(() => {

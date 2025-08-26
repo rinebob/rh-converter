@@ -4,6 +4,7 @@ import { Observable, from } from 'rxjs';
 import { switchMap } from 'rxjs/operators';
 import { environment } from '../../../environments/environment';
 import { Auth, getIdToken } from '@angular/fire/auth';
+import { RequestStatus } from '../common/interfaces';
 
 export interface SubmitBrokerageRequestPayload {
   brokerageName: string;
@@ -22,8 +23,8 @@ export interface SubmitResponse {
 
 export interface AdminReplyPayload {
   requestId: string;
-  message: string;
-  newStatus?: 'open' | 'triaged' | 'in_progress' | 'done' | 'rejected';
+  message?: string;
+  newStatus?: RequestStatus;
 }
 
 export interface AdminReplyResponse {
@@ -41,7 +42,7 @@ export interface AdminListItemDto {
   authorUid: string | null;
   authorDeviceId: string | null;
   displayName: string | null;
-  status: 'open' | 'triaged' | 'in_progress' | 'done' | 'rejected';
+  status: RequestStatus;
   upvoteCount: number;
   exampleFilePath?: string | null;
   exampleFileName?: string | null;

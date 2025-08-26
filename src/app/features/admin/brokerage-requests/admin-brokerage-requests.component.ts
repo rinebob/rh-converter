@@ -8,6 +8,7 @@ import { catchError, map } from 'rxjs/operators';
 import { BrokerageRequestsService, AdminReplyPayload } from '../../../core/services/brokerage-requests.service';
 import { Storage, ref, getDownloadURL } from '@angular/fire/storage';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
+import { RequestStatus, REQUEST_STATUS_LABEL } from '../../../core/common/interfaces';
 
 interface RequestDoc {
   id: string;
@@ -18,7 +19,7 @@ interface RequestDoc {
   authorUid: string | null;
   authorDeviceId: string | null;
   displayName: string | null;
-  status: 'open' | 'triaged' | 'in_progress' | 'done' | 'rejected';
+  status: RequestStatus;
   upvoteCount: number;
   // example file metadata (admin only)
   exampleFilePath?: string | null;
@@ -60,7 +61,11 @@ export class AdminBrokerageRequestsComponent {
 
   // reply form
   replyMessage = signal<string>('');
-  newStatus = signal<RequestDoc['status'] | ''>('');
+  newStatus = signal<RequestStatus | ''>('');
+
+  // Expose statuses for template dropdown
+  readonly statuses = Object.values(RequestStatus) as RequestStatus[];
+  readonly statusLabel = REQUEST_STATUS_LABEL;
 
   // Fetch via HTTPS function using Firebase Auth admin claim
   readonly requests$: Observable<RequestDoc[]> = this.svc.listRequests().pipe(
@@ -101,7 +106,8 @@ export class AdminBrokerageRequestsComponent {
     this.errorMsg.set(null);
     this.successMsg.set(null);
     this.replyMessage.set('');
-    this.newStatus.set('');
+    // Preselect current status in the dropdown
+    this.newStatus.set(req.status);
     this.downloadUrl.set(null);
 
     // Auto-fetch download URL when opening details (guarded to current selection)

@@ -7,7 +7,7 @@
       <ul>
         @for (req of requests$ | async; track req.id) {
           <li (click)="selectRequest(req)" [class.active]="selectedId() === req.id">
-            <div class="primary">{{ req.brokerageName }} <span class="status">{{ req.status }}</span></div>
+            <div class="primary">{{ req.brokerageName }} <span class="status">{{ statusLabel[req.status] }}</span></div>
             <div class="meta">{{ req.displayName || 'anon' }} • {{ req.country || 'N/A' }}</div>
           </li>
         }
@@ -19,7 +19,7 @@
         <h3>Details</h3>
         <div class="card">
           <div><strong>Brokerage:</strong> {{ sel.brokerageName }}</div>
-          <div><strong>Status:</strong> {{ sel.status }}</div>
+          <div><strong>Status:</strong> {{ statusLabel[sel.status] }}</div>
           <div><strong>Country:</strong> {{ sel.country || '—' }}</div>
           <div><strong>Display name:</strong> {{ sel.displayName || '—' }}</div>
           <div><strong>Notes:</strong> {{ sel.notes || '—' }}</div>
@@ -56,12 +56,9 @@
           <div class="row">
             <label for="status">Set status</label>
             <select id="status" [value]="newStatus()" (change)="newStatus.set($any($event.target).value)">
-              <option value="">(no change)</option>
-              <option value="open">open</option>
-              <option value="triaged">triaged</option>
-              <option value="in_progress">in_progress</option>
-              <option value="done">done</option>
-              <option value="rejected">rejected</option>
+              @for (s of statuses; track s) {
+                <option [value]="s">{{ statusLabel[s] }}</option>
+              }
             </select>
           </div>
           <div class="actions">
