@@ -90,8 +90,12 @@ export class BrokerageRequestsService {
 
   adminReply(payload: AdminReplyPayload): Observable<AdminReplyResponse> {
     const url = `${this.baseUrl}/adminReplyToBrokerageRequest`;
-    const headers = new HttpHeaders({ 'Content-Type': 'application/json' });
-    return this.http.post<AdminReplyResponse>(url, JSON.stringify(payload), { headers });
+    return from(getIdToken(this.auth.currentUser!, true)).pipe(
+      switchMap((token) => {
+        const headers = new HttpHeaders({ 'Content-Type': 'application/json', Authorization: `Bearer ${token}` });
+        return this.http.post<AdminReplyResponse>(url, JSON.stringify(payload), { headers });
+      })
+    );
   }
 
   listRequests(): Observable<AdminListResponse> {
