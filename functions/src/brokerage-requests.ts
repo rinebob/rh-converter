@@ -353,8 +353,75 @@ export const listBrokerageRequests = onRequest({ cors: corsEnabled }, async (req
       };
     });
 
-    logInfo(ctx, 'success', { count: items.length, durationMs: Date.now() - start });
-    response.status(200).json({ success: true, items });
+    // Compute vote velocity and activity metrics per item (MVP)
+    const nowTs = Timestamp.now();
+    const nowMs = nowTs.toMillis();
+    const ms24h = 24 * 60 * 60 * 1000;
+    const ms7d = 7 * 24 * 60 * 60 * 1000;
+    const since24h = Timestamp.fromMillis(nowMs - ms24h);
+    const since7d = Timestamp.fromMillis(nowMs - ms7d);
+
+    const withMetrics = await Promise.all(items.map(async (it) => {
+      const reqRef = db.collection('brokerageRequests').doc(it.id);
+
+      // Fetch votes in last 7d (used to derive 7d and 24h) and replies (all)
+      const [votesSnap, repliesSnap] = await Promise.all([
+        reqRef.collection('votes')
+          .where('createdAt', '>=', since7d)
+          .orderBy('createdAt', 'desc')
+          .get(),
+        reqRef.collection('replies')
+          .orderBy('createdAt', 'desc')
+          .get(),
+      ]);
+
+      let last7dVotes = 0;
+      let last24hVotes = 0;
+      let lastVotedAtMs: number | null = null;
+      votesSnap.docs.forEach((d, idx) => {
+        const v = (d.data() as any);
+        const createdAt: Timestamp | undefined = v.createdAt;
+        const ms = createdAt ? createdAt.toMillis() : null;
+        const value = typeof v.value === 'number' ? v.value : (v.direction === 'down' ? -1 : 1);
+        last7dVotes += value;
+        if (ms && ms >= since24h.toMillis()) last24hVotes += value;
+        if (idx === 0 && ms) lastVotedAtMs = ms;
+      });
+
+      const repliesCount = repliesSnap.size;
+      const lastReplyAtMs = repliesSnap.docs.length ? ((repliesSnap.docs[0].data() as any).createdAt as Timestamp | undefined)?.toMillis() ?? null : null;
+
+      const lastActivityMs = Math.max(
+        it.createdAt || 0,
+        lastVotedAtMs || 0,
+        lastReplyAtMs || 0,
+      ) || null;
+
+      const hasExampleFile = !!it.exampleFilePath;
+
+      // Simple hot score: base score + recent velocity + replies signal
+      const hotScore = Math.round(
+        (it.upvoteCount || 0)
+        + (2 * last24hVotes)
+        + (1 * last7dVotes)
+        + (0.5 * repliesCount)
+      );
+
+      return {
+        ...it,
+        hasExampleFile,
+        last24hVotes,
+        last7dVotes,
+        repliesCount,
+        lastVotedAtMs,
+        lastReplyAtMs,
+        lastActivityMs,
+        hotScore,
+      };
+    }));
+
+    logInfo(ctx, 'success', { count: withMetrics.length, durationMs: Date.now() - start });
+    response.status(200).json({ success: true, items: withMetrics });
   } catch (err) {
     const ctx = makeContext('listBrokerageRequests', request);
     logError(ctx, 'error', err);
