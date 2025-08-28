@@ -3,6 +3,8 @@ import { CommonModule } from '@angular/common';
 import { MatTableModule, MatTableDataSource } from '@angular/material/table';
 import { MatSort, MatSortModule } from '@angular/material/sort';
 import { MatIconModule } from '@angular/material/icon';
+import { MatExpansionModule } from '@angular/material/expansion';
+import { FileFormatRobinhoodComponent } from '../file-format-robinhood/file-format-robinhood.component';
 
 interface ColumnDefinition {
   name: string;
@@ -16,7 +18,9 @@ interface ColumnDefinition {
     CommonModule,
     MatTableModule,
     MatSortModule,
-    MatIconModule
+    MatIconModule,
+    MatExpansionModule,
+    FileFormatRobinhoodComponent
   ],
   templateUrl: './file-formats-content.component.html',
   styleUrls: ['./file-formats-content.component.scss']
