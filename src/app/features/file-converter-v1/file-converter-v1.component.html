@@ -1,96 +1,98 @@
 <div class="page-with-ads">
-  <aside class="ad-rail left-rail" aria-label="Advertisement Left">
-    <!-- Google AdSense Left Rail -->
-    <!-- tdc-vertical-left -->
-    <ins #adUnit class="adsbygoogle"
-        style="display:block"
-        data-ad-client="ca-pub-2988205272404865"
-        data-ad-slot="3606736695"
-        data-ad-format="auto"
-        data-full-width-responsive="true"></ins>
-  </aside>
+    <aside class="ad-rail left-rail" aria-label="Advertisement Left">
+        <!-- Google AdSense Left Rail -->
+        <!-- tdc-vertical-left -->
+        <ins #adUnit class="adsbygoogle" style="display:block" data-ad-client="ca-pub-2988205272404865"
+            data-ad-slot="3606736695" data-ad-format="auto" data-full-width-responsive="true"></ins>
+    </aside>
 
-  <div class="converter-page">
-    <div class="main-content-column">
-      <!-- Header -->
-      <div class="app-header">
-        <div class="header-content-wrapper">
-          <h1 class="app-title">Trade Data File Converter</h1>
-          <p class="app-subtitle">Convert brokerage transaction CSV files to JSON and CSV</p>
+    <div class="converter-page">
+        <div class="main-content-column">
+            <!-- Header -->
+            <div class="app-header">
+                <div class="header-content-wrapper">
+                    <h1 class="app-title">Trade Data File Converter</h1>
+                    <p class="app-subtitle">Convert brokerage transaction CSV files to JSON and CSV</p>
 
-          <!-- SIGNIN BUTTON DO NOT DELETE -->
-          <!-- <div class="header-actions">
-              <button mat-raised-button color="primary" routerLink="/login" class="signin-button">
-                  <mat-icon>login</mat-icon>
-                  Sign In
-              </button>
-          </div> -->
+                    <!-- SIGNIN BUTTON DO NOT DELETE -->
+                    <!-- <div class="header-actions">
+                            <button mat-raised-button color="primary" routerLink="/login" class="signin-button">
+                                <mat-icon>login</mat-icon>
+                                Sign In
+                            </button>
+                        </div> -->
+                </div>
+            </div>
+
+            <!-- Tabs Interface -->
+            <div class="tabs-container">
+                <mat-tab-group (selectedTabChange)="onTabChange($event.index)" [selectedIndex]="activeTabIndex">
+                    <mat-tab label="Instructions">
+                        <div class="tab-content">
+                            <h2>Convert your transactions file</h2>
+                            <p class="app-description">
+                                Is your broker's transaction file format not suitable for your needs? Don't want to spend the time reformatting it?  With Trade Data Converter you can easily convert your poorly formatted transaction .csv files into properly formatted and organized .csv and/or .json files suitable for importing into another app or using as a data set for an app. 
+                            </p>
+                            <p class="app-description">
+                                Upload your file, and we'll transform it into clean, structured data. Transactions are automatically categorized into standard and dividend activity, with dates and numbers formatted for easy use.
+                            </p>
+                            <p class="app-description">
+                                We currently only support Robinhood but we're eager to add more brokers.  On the Brokers tab you can request support for a new broker and upload a sample transaction .csv file and we'll get right on it. 
+                            </p>
+                            <p class="app-description">
+                                Feel free to leave comments for new feature requests or anything we can improve on the site.  We're always looking to improve and make it easier for you to use our service.  
+                            
+                            </p>
+                            <app-instructions-content />
+                        </div>
+                    </mat-tab>
+
+                    <mat-tab label="Converter">
+                        <div class="tab-content">
+                            <rh-file-converter-legacy />
+                        </div>
+                    </mat-tab>
+                    
+                    <mat-tab label="Brokers">
+                        <div class="tab-content">
+                            <app-brokers-list />
+                        </div>
+                    </mat-tab>
+
+                    <mat-tab label="File Formats">
+                        <div class="tab-content">
+                            <app-file-formats-content />
+                        </div>
+                    </mat-tab>
+
+                    <mat-tab label="Comments">
+                        <div class="tab-content">
+                            <rh-comments-section />
+                        </div>
+                    </mat-tab>
+                </mat-tab-group>
+            </div>
+
+            <!-- Bottom Ad Container within center column -->
+            <div class="bottom-ad-container" aria-label="Advertisement Bottom">
+                <!-- tdc-horizontal-bottom -->
+                <ins #adUnit class="adsbygoogle" style="display:block" data-ad-client="ca-pub-2988205272404865"
+                    data-ad-slot="1479266804" data-ad-format="auto" data-full-width-responsive="true"></ins>
+            </div>
         </div>
-      </div>
-
-      <!-- Tabs Interface -->
-      <div class="tabs-container">
-        <mat-tab-group (selectedTabChange)="onTabChange($event.index)" [selectedIndex]="activeTabIndex">
-          <mat-tab label="Converter">
-            <div class="tab-content">
-              <rh-file-converter-legacy />
-            </div>
-          </mat-tab>
-
-          <mat-tab label="Brokers">
-            <div class="tab-content">
-              <app-brokers-list />
-            </div>
-          </mat-tab>
-
-          <mat-tab label="Instructions">
-            <div class="tab-content">
-              <app-instructions-content />
-            </div>
-          </mat-tab>
-
-          <mat-tab label="File Formats">
-            <div class="tab-content">
-              <app-file-formats-content />
-            </div>
-          </mat-tab>
-
-          <mat-tab label="Comments">
-            <div class="tab-content">
-              <rh-comments-section />
-            </div>
-          </mat-tab>
-        </mat-tab-group>
-      </div>
-
-      <!-- Bottom Ad Container within center column -->
-      <div class="bottom-ad-container" aria-label="Advertisement Bottom">
-        <!-- tdc-horizontal-bottom -->
-        <ins #adUnit class="adsbygoogle"
-            style="display:block"
-            data-ad-client="ca-pub-2988205272404865"
-            data-ad-slot="1479266804"
-            data-ad-format="auto"
-            data-full-width-responsive="true"></ins>
-      </div>
     </div>
-  </div>
 
-  <aside class="ad-rail right-rail" aria-label="Advertisement Right">
-    <!-- Google AdSense Right Rail -->
-    <!-- tdc-vertical-right -->
-    <ins #adUnit class="adsbygoogle"
-        style="display:block"
-        data-ad-client="ca-pub-2988205272404865"
-        data-ad-slot="4728246670"
-        data-ad-format="auto"
-        data-full-width-responsive="true"></ins>
-  </aside>
+    <aside class="ad-rail right-rail" aria-label="Advertisement Right">
+        <!-- Google AdSense Right Rail -->
+        <!-- tdc-vertical-right -->
+        <ins #adUnit class="adsbygoogle" style="display:block" data-ad-client="ca-pub-2988205272404865"
+            data-ad-slot="4728246670" data-ad-format="auto" data-full-width-responsive="true"></ins>
+    </aside>
 </div>
 
 <!-- Footer -->
 <footer class="app-footer">
-  <p> 2025 Trade Data File Converter</p>
-  <p class="disclaimer-text">This file converter does not store or save any of your transaction data. The output
-    provided should be verified for accuracy.</p>
+    <p> 2025 Trade Data File Converter</p>
+    <p class="disclaimer-text">This file converter does not store or save any of your transaction data. The output
+        provided should be verified for accuracy.</p>
 </footer>
