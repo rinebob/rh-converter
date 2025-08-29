@@ -1,0 +1,55 @@
+@use '../../../../styles/_variables' as v;
+
+:host {
+  display: flex;
+  flex-direction: column;
+  flex: 1 1 auto;
+  min-height: 0; // critical for nested scrollers
+}
+
+.legal-layout {
+  display: flex;
+  flex-direction: column;
+  align-items: center; // center inner sections
+  gap: v.$gap-xl;
+  padding: v.$gap-xl; // outer breathing room
+  flex: 1 1 auto;
+  min-height: 0;
+  background: v.$bg-subtle-light;
+}
+
+// Make header align with content width
+.legal-header {
+  display: flex;
+  justify-content: flex-start;
+  width: 100%;
+  max-width: v.rem(960);
+}
+
+.legal-content {
+  display: flex;
+  justify-content: center;
+  flex: 1 1 auto;
+  min-height: 0;
+  width: 100%;
+  max-width: v.rem(960);
+  margin: 0 auto;
+
+  // Card-like container with its own scrollbar
+  background: #fff;
+  border: 1px solid v.$border-light;
+  border-radius: v.$radius-lg;
+  padding: v.$gap-xl;
+  overflow: auto; // single scroller for legal content
+  box-shadow: 0 6px 20px rgba(0,0,0,0.06);
+}
+
+// Scrollbar styling (WebKit)
+.legal-content::-webkit-scrollbar { width: v.rem(10); }
+.legal-content::-webkit-scrollbar-track { background: transparent; }
+.legal-content::-webkit-scrollbar-thumb {
+  background-color: rgba(0,0,0,0.18);
+  border-radius: v.$radius-md;
+  border: v.rem(2) solid transparent;
+  background-clip: padding-box;
+}

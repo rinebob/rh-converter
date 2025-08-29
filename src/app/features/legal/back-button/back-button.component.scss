@@ -1,0 +1,25 @@
+@use '../../../../styles/_variables' as v;
+
+.back-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: v.$gap-sm;
+  padding: v.rem(8) v.rem(12);
+  border-radius: v.$radius-md;
+  border: 1px solid v.$border-light;
+  background: v.$bg-subtle-light;
+  color: #1f2937;
+  cursor: pointer;
+  font-size: v.$font-sm;
+  line-height: 1;
+  transition: background 120ms ease, border-color 120ms ease, transform 60ms ease;
+
+  .icon { font-size: v.$font-md; line-height: 1; }
+
+  &:hover { background: #f3f4f6; }
+  &:active { transform: translateY(1px); }
+  &:focus-visible {
+    outline: 2px solid #3b82f6;
+    outline-offset: 2px;
+  }
+}

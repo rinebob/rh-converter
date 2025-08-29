@@ -1,0 +1,111 @@
+@use '../../../../styles/_variables' as v;
+@use '../../../../styles/_mixins' as m;
+
+.legal-doc {
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  min-height: 100%;
+}
+
+/* Page container */
+.doc-container {
+  width: 100%;
+  max-width: 60rem; /* ~960px */
+  margin: 0 auto;
+  padding: v.$gap-xl v.$gap-lg;
+}
+
+/* Card */
+.doc-card {
+  background: #ffffff;
+  @include m.card-border(false);
+  border-radius: v.$radius-md;
+  box-shadow: 0 1px 2px rgba(0,0,0,0.04), 0 8px 24px rgba(0,0,0,0.06);
+  padding: v.$gap-xl;
+
+  /* Make the card itself scroll if content is long */
+  max-height: 72vh;
+  overflow: auto;
+}
+
+@media (max-width: 520px) {
+  .doc-card { padding: v.$gap-lg; max-height: 78vh; }
+}
+
+/* Title */
+.doc-title {
+  margin: 0 0 v.$gap-lg 0;
+  font-size: v.rem(26);
+  line-height: 1.2;
+  color: #0f172a; /* slate-900 */
+  letter-spacing: -0.01em;
+}
+
+/* Content */
+.doc-html {
+  color: #1f2937; // slate-800
+  line-height: 1.75;
+  font-size: v.$font-md;
+
+  h2, h3, h4 {
+    color: #111827;
+    margin: v.$gap-xl 0 v.$gap-md 0;
+    line-height: 1.25;
+    font-weight: 700;
+  }
+  h2 { font-size: v.rem(22); }
+  h3 { font-size: v.$font-lg; }
+  h4 { font-size: v.$font-md; }
+
+  p { margin: 0 0 v.$gap-md 0; }
+
+  ul, ol {
+    margin: 0 0 v.$gap-md v.$gap-xl;
+    padding-left: v.$gap-xl;
+  }
+  li { margin: 0 0 v.$gap-sm 0; }
+
+  a { color: #0f62fe; text-decoration: none; font-weight: 500; }
+  a:hover { text-decoration: underline; }
+
+  hr {
+    border: 0;
+    border-top: 1px solid v.$border-light;
+    margin: v.$gap-xl 0;
+  }
+
+  blockquote {
+    border-left: v.rem(4) solid v.$border-light;
+    padding-left: v.$gap-md;
+    color: v.$text-muted-light;
+    margin: 0 0 v.$gap-lg 0;
+  }
+
+  code {
+    font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+    background: v.$bg-subtle-light;
+    border: 1px solid v.$border-light;
+    border-radius: v.$radius-sm;
+    padding: 0 v.rem(4);
+    font-size: 0.95em;
+  }
+}
+
+/* Dark mode */
+@media (prefers-color-scheme: dark) {
+  .doc-card {
+    background: #0b1220;
+    @include m.card-border(true);
+    box-shadow: 0 1px 2px rgba(0,0,0,0.6), 0 8px 24px rgba(0,0,0,0.35);
+  }
+  .doc-title { color: #e5e7eb; }
+  .doc-html {
+    color: #e5e7eb;
+    h2, h3, h4 { color: #f3f4f6; }
+    hr { border-top-color: v.$border-dark; }
+    blockquote { border-left-color: v.$border-dark; color: v.$text-muted-dark; }
+    code { background: v.$bg-subtle-dark; border-color: v.$border-dark; }
+    a { color: #8ab4ff; }
+  }
+}
