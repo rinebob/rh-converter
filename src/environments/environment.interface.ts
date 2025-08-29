@@ -37,4 +37,13 @@ export interface Environment {
       yearlyPrice: number;
     };
   };
+  examples?: {
+    robinhood?: {
+      inputCsvUrl?: string; // Public Firebase Storage download URL for example input CSV
+      regularOutputCsvUrl?: string; // Optional: example regular transactions output CSV
+      dividendOutputCsvUrl?: string; // Optional: example dividend transactions output CSV
+      jsonOutputUrl?: string; // Optional: example JSON output
+      csvJsonZipOutputUrl?: string; // Optional: example CSV/JSON output zip file
+    };
+  };
 }
