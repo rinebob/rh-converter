@@ -49,3 +49,10 @@ firestore-debug.log
 # Firebase Emulator data
 /.firebase/emulator-data/
 /.firebase/hosting.*.cache
+src/assets/example-files/rh-export-example_transactions_2025-08-29T22-06-26-739Z.json
+src/assets/example-files/rh-export-example_transactions_2025-08-29T22-06-40-884Z_dividend.csv
+src/assets/example-files/rh-export-example_transactions_2025-08-29T22-06-40-884Z_regular.csv
+src/assets/example-files/rh-export-example_transactions_2025-08-29T22-06-52-567Z.zip
+src/assets/example-files/rh-export-example-anon.csv
+src/assets/example-files/rh-export-example-real.csv
+src/assets/example-files/rh-export-example.csv
