@@ -9,7 +9,6 @@ import { FileConverterLegacy } from '../../core/comps/file-converter-legacy/file
 import { CommentsSectionComponent } from './components/comments-section/comments-section.component';
 import { BrokersListComponent } from '../../core/comps/brokers-list/brokers-list.component';
 import { InstructionsContentComponent } from './components/instructions-content/instructions-content.component';
-import { FileFormatsContentComponent } from './components/file-formats-content/file-formats-content.component';
 
 /**
  * FileConverterV1Component
@@ -30,7 +29,6 @@ import { FileFormatsContentComponent } from './components/file-formats-content/f
     CommentsSectionComponent,
     BrokersListComponent,
     InstructionsContentComponent,
-    FileFormatsContentComponent
   ],
   templateUrl: './file-converter-v1.component.html',
   styleUrls: ['./file-converter-v1.component.scss']
