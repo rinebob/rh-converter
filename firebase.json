@@ -28,19 +28,19 @@
       "**/.*",
       "**/node_modules/**"
     ],
-    "rewrites": [
+    "headers": [
       {
-        "source": "/ads.txt",
-        "destination": "/ads.txt"
-      },
-      {
-        "source": "/robots.txt",
-        "destination": "/robots.txt"
-      },
-      {
-        "source": "/sitemap.xml",
-        "destination": "/sitemap.xml"
+        "source": "/legal/**",
+        "headers": [
+          { "key": "Cache-Control", "value": "no-store" }
+        ]
       }
+    ],
+    "rewrites": [
+      { "source": "/ads.txt", "destination": "/ads.txt" },
+      { "source": "/robots.txt", "destination": "/robots.txt" },
+      { "source": "/sitemap.xml", "destination": "/sitemap.xml" },
+      { "source": "**", "destination": "/index.html" }
     ]
   },
   "apphosting": {
