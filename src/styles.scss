@@ -37,7 +37,7 @@ html {
 }
 
 body {
-  min-height: 100vh; /* Use viewport height for body's minimum */
+  height: 100%; /* fill viewport to work with app shell flex */
   display: flex;
   flex-direction: column;
   width: 100%;
@@ -48,6 +48,7 @@ body {
   font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
   background-color: $background-color;
   color: $text-color;
+  overflow: hidden; /* prevent page/app-component scrolling; children handle scroll */
 }
 
 /* Make images easier to work with */
@@ -149,3 +150,24 @@ body { margin: 0; font-family: Roboto, "Helvetica Neue", sans-serif; } // This i
     }
   }
 }
+
+/* Typography for injected legal docs */
+.legal-content .doc-html {
+  color: #1f2937; /* slate-800 */
+  line-height: 1.65;
+}
+.legal-content .doc-html h1,
+.legal-content .doc-html h2,
+.legal-content .doc-html h3,
+.legal-content .doc-html h4 { color: #111827; line-height: 1.25; font-weight: 700; margin: 0 0 0.75rem 0; }
+.legal-content .doc-html h1 { font-size: 1.375rem; }
+.legal-content .doc-html h2 { font-size: 1.25rem; }
+.legal-content .doc-html h3 { font-size: 1rem; }
+.legal-content .doc-html p { margin: 0 0 0.75rem 0; }
+.legal-content .doc-html ul,
+.legal-content .doc-html ol { margin: 0 0 0.75rem 1.25rem; padding-left: 1.25rem; }
+.legal-content .doc-html li { margin: 0 0 0.4rem 0; }
+.legal-content .doc-html a { color: #0f62fe; text-decoration: none; }
+.legal-content .doc-html a:hover { text-decoration: underline; }
+.legal-content .doc-html hr { border: 0; border-top: 1px solid #e5e7eb; margin: 1rem 0; }
+.legal-content .doc-html blockquote { border-left: 4px solid #e5e7eb; padding-left: 0.75rem; color: rgba(0,0,0,0.6); margin: 0 0 1rem 0; }

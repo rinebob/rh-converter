@@ -1,1 +1,13 @@
-<router-outlet></router-outlet>
+<div class="app-content">
+  <router-outlet></router-outlet>
+</div>
+<footer class="app-footer" role="contentinfo">
+  <div class="footer-inner">
+    <p class="brand">&copy; {{ year() }} Trade Data File Converter</p>
+    <nav class="footer-nav" aria-label="Footer navigation">
+      <a routerLink="/legal/privacy-policy">Privacy</a>
+      <a routerLink="/legal/terms-of-service">Terms</a>
+    </nav>
+    <p class="disclaimer-text">This file converter does not store or save any of your transaction data. The output provided should be verified for accuracy.</p>
+  </div>
+</footer>

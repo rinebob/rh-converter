@@ -1,6 +1,76 @@
 :host {
   display: flex;
   flex-direction: column;
-  flex: 1; /* Fill the flex parent (body) */
-  width: 100%; /* Ensure full width */
+  min-height: 100vh; /* ensure footer sits at bottom of viewport */
+  width: 100%;
+}
+
+.app-content {
+  flex: 1 1 auto; /* take remaining height above footer */
+  display: flex;
+  flex-direction: column;
+  min-height: 0; /* keep to avoid flex child height issues */
+  overflow: visible; /* let the page (body) scroll so legal pages can use full viewport */
+}
+
+/* Footer */
+.app-footer {
+  background-color: #ffffff;
+  border-top: 1px solid #e5e7eb;
+  /* Let footer expand to fit its content to avoid clipping links */
+  min-height: 4.5rem;
+  padding: 0.75rem 1rem;
+  display: flex;
+  align-items: center;
+  justify-content: center; /* center vertically and horizontally */
+}
+
+.footer-inner {
+  width: 100%;
+  max-width: var(--content-max-width);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 0.35rem;
+  text-align: center;
+}
+
+.footer-inner .brand {
+  color: #111827;
+  font-weight: 600;
+  font-size: 0.95rem;
+}
+
+.footer-nav {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem 1rem;
+}
+
+.footer-nav a {
+  color: #374151;
+  text-decoration: none;
+  font-size: 0.9rem;
+  transition: color 120ms ease, opacity 120ms ease;
+}
+
+.footer-nav a:hover {
+  color: #111827;
+  text-decoration: underline;
+}
+
+.disclaimer-text {
+  font-size: 0.78rem;
+  color: #6b7280;
+  line-height: 1.3;
+}
+
+/* Small screens: tighten spacing */
+@media (max-width: 480px) {
+  .footer-inner { gap: 0.3rem; }
+  .footer-nav { gap: 0.4rem 0.75rem; }
+  .disclaimer-text { font-size: 0.75rem; }
 }

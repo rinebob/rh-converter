@@ -19,6 +19,33 @@ export const routes: Routes = [
       .then(m => m.FcLegacyWrapper),
     title: 'Legacy File Converter'
   },
+  // Legal routes (Angular-routed)
+  {
+    path: 'legal',
+    loadComponent: () => import('./features/legal/legal-layout/legal-layout.component')
+      .then(m => m.LegalLayoutComponent),
+    children: [
+      { path: '', redirectTo: 'privacy-policy', pathMatch: 'full' },
+      {
+        path: 'privacy-policy',
+        loadComponent: () => import('./features/legal/legal-doc/legal-doc.component').then(c => c.LegalDocComponent),
+        data: { src: '/legal/privacy-policy', title: 'Privacy Policy' }
+      },
+      {
+        path: 'terms-of-service',
+        loadComponent: () => import('./features/legal/legal-doc/legal-doc.component').then(c => c.LegalDocComponent),
+        data: { src: '/legal/terms-of-service', title: 'Terms of Service' }
+      },
+      // Deprecated slugs → redirects
+      { path: 'acceptable-use', redirectTo: 'terms-of-service', pathMatch: 'full' },
+      { path: 'disclaimer', redirectTo: 'terms-of-service', pathMatch: 'full' },
+      { path: 'security', redirectTo: 'terms-of-service', pathMatch: 'full' },
+      { path: 'cookie-policy', redirectTo: 'privacy-policy', pathMatch: 'full' },
+      { path: 'california-privacy', redirectTo: 'privacy-policy', pathMatch: 'full' },
+      { path: 'processors', redirectTo: 'privacy-policy', pathMatch: 'full' },
+      { path: 'accessibility', redirectTo: 'terms-of-service', pathMatch: 'full' },
+    ]
+  },
   {
     path: 'login',
     loadComponent: () => import('./features/auth/components/login/login.component').then(c => c.LoginComponent),
