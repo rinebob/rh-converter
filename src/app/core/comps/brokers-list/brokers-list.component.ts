@@ -14,6 +14,7 @@ import { BrokerageRequestsService } from '../../services/brokerage-requests.serv
 import { DeviceIdService } from '../../services/device-id.service';
 import { AnonymousNameService } from '../../services/anonymous-name.service';
 import { RequestStatus } from '../../common/interfaces';
+import { FileFormatRobinhoodComponent } from '../../../features/file-converter-v1/components/file-format-robinhood/file-format-robinhood.component';
 
 /**
  * Lightweight view model for showing recent new broker requests publicly.
@@ -46,7 +47,7 @@ function deriveNameFromNotes(notes: unknown, fallback: string = 'Unspecified bro
 @Component({
   selector: 'app-brokers-list',
   standalone: true,
-  imports: [CommonModule, MatIconModule, MatTableModule, MatButtonModule, MatExpansionModule, BrokerageRequestFormComponent, BrokerRequestsTableComponent],
+  imports: [CommonModule, MatIconModule, MatTableModule, MatButtonModule, MatExpansionModule, BrokerageRequestFormComponent, BrokerRequestsTableComponent, FileFormatRobinhoodComponent],
   templateUrl: './brokers-list.component.html',
   styleUrls: ['./brokers-list.component.scss'],
   changeDetection: ChangeDetectionStrategy.OnPush,

@@ -8,8 +8,17 @@
     </p>
     <div class="format-note">
       <mat-icon>info</mat-icon>
-      <span>Ensure your downloaded CSV from Robinhood matches the expected input format described in the "File Formats" tab.</span>
+      <span>Ensure your downloaded CSV from Robinhood matches the expected input format described below.</span>
     </div>
+    <mat-accordion class="format-accordion">
+      <mat-expansion-panel>
+        <mat-expansion-panel-header>
+          <mat-panel-title>Robinhood File Format</mat-panel-title>
+        </mat-expansion-panel-header>
+        <app-file-format-robinhood />
+      </mat-expansion-panel>
+    </mat-accordion>
+    
   </div>
 
   <mat-accordion multi class="format-accordion">

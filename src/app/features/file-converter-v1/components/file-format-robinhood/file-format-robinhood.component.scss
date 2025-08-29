@@ -2,11 +2,7 @@
 
 .format-section {
   background: white;
-  border-radius: 8px;
   padding: 2rem;
-  margin: 2rem 0;
-  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
-  border: 1px solid #e1e4e8;
 
   h3 {
     color: #0078d4;
@@ -38,7 +34,7 @@
     display: flex;
     align-items: flex-start;
     gap: 0.5rem;
-    margin-top: 1rem;
+    margin: 1rem 0;
     padding: 0.75rem 1rem;
     background-color: #f8f9fa;
     border-radius: 6px;
@@ -145,10 +141,7 @@
   }
 }
 
-// Ensure proper spacing between sections
 .format-section + .format-section {
-  margin-top: 2.5rem;
-  padding-top: 1.5rem;
   border-top: 1px solid #f1f5f9;
 }
 
