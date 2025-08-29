@@ -29,13 +29,13 @@ function createCsvRowConverter(
 ): (record: ProcessedRecord) => string {
   return (record: ProcessedRecord): string => {
     console.log('---------------- Processing record for CSV --------------------------')
-    console.log('fn util rTCR - input record:', record);
+    console.log('fn util cCRC - input record:', record);
     
     return headers.map(header => {
       // Get the field name from our mapping
       const fieldName = fieldMappings.get(header);
       if (!fieldName) {
-        console.warn(`fn util rTCR No mapping found for header: ${header}`);
+        console.warn(`fn util cCRC No mapping found for header: ${header}`);
         return '';
       }
       
@@ -63,23 +63,23 @@ function createCsvRowConverter(
         case ProcessedRecordField.Notes:
           // There will be only one note value if it exists
           value = record[ProcessedRecordField.Notes]?.[0] || '';
-          console.log('fn util rTCR recordToCsvRow - Processing Notes:', value);
+          console.log('fn util cCRC recordToCsvRow - Processing Notes:', value);
           break;
           
         case ProcessedRecordField.CUSIP:
           value = record[ProcessedRecordField.CUSIP] ?? '';
-          console.log('fn util rTCR recordToCsvRow - Processing CUSIP:', value);
+          console.log('fn util cCRC recordToCsvRow - Processing CUSIP:', value);
           break;
 
         case ProcessedRecordField.ActivityDate:
           value = record[ProcessedRecordField.ActivityDate] ?? '';
-          console.log('fn util rTCR recordToCsvRow - Processing ActivityDate:', value);
+          console.log('fn util cCRC recordToCsvRow - Processing ActivityDate:', value);
           break;
           
         default:
           // For standard fields, use the field name from our mapping
           value = record[fieldName as keyof ProcessedRecord] ?? '';
-          console.log(`fn util rTCR header/field: ${header}/${fieldName} = ${value}`);
+          console.log(`fn util cCRC header/field: ${header}/${fieldName} = ${value}`);
       }
       
       // Convert to string, escape quotes, and wrap in quotes
@@ -454,7 +454,7 @@ export const processRecord = (record: Record<string, string>): ProcessedRecord |
       BaseHeader.SettleDate
     ];
     const isDate = dateFields.includes(field as any);
-    console.log(`fn util isDateField('${field}') = ${isDate}`);
+    console.log(`uT fN pR isDateField('${field}') = ${isDate}`);
     return isDate;
   };
   
@@ -473,16 +473,16 @@ export const processRecord = (record: Record<string, string>): ProcessedRecord |
     
     // Get the normalized field name
     const fieldName = fieldMappings.get(key);
-    console.log(`fn util pR fieldName: ${fieldName}`);
+    console.log(`uT fN pR fieldName: ${fieldName}`);
     
     // Skip if we don't have a valid field name
     if (!fieldName) continue;
     
     // Process based on field type
     if (isDateField(key)) {
-      console.log(`fn util pR Processing date field '${key}' as '${fieldName}' with value: ${value}`);
+      console.log(`uT fN pR Processing date field '${key}' as '${fieldName}' with value: ${value}`);
       const formattedDate = formatDate(value);
-      console.log(`fn util pR Formatted date: ${formattedDate}`);
+      console.log(`uT fN pR Formatted date: ${formattedDate}`);
       if (formattedDate) {
         // Type assertion is safe here because we've already checked the field name
         processedRecord[fieldName] = formattedDate;
@@ -493,7 +493,7 @@ export const processRecord = (record: Record<string, string>): ProcessedRecord |
         // Type assertion is safe here because we've already checked the field name
         processedRecord[fieldName] = num;
       } else {
-        console.warn(`fn util pR Could not parse sanitized number for key '${key}': Original='${value}'`);
+        console.warn(`uT fN pR Could not parse sanitized number for key '${key}': Original='${value}'`);
       }
     } else {
       // Type assertion is safe here because we've already checked the field name
@@ -504,14 +504,14 @@ export const processRecord = (record: Record<string, string>): ProcessedRecord |
   // Extract CUSIP and notes from description
   if (processedRecord.description) {
     const description = processedRecord.description.toLowerCase();
-    console.log(`fn util pR Processing description: "${description}"`);
+    console.log(`uT fN pR Processing description: "${description}"`);
     
     // Extract CUSIP
     const cusip = extractCusip(description);
-    console.log(`fn util pR Extracted CUSIP: ${cusip || 'Not found'}`);
+    console.log(`uT fN pR Extracted CUSIP: ${cusip || 'Not found'}`);
     if (cusip) {
       processedRecord.cusip = cusip;
-      console.log(`fn util pR Set CUSIP on record: ${processedRecord.cusip}`);
+      console.log(`uT fN pR Set CUSIP on record: ${processedRecord.cusip}`);
     }
     
     // Process notes
@@ -526,7 +526,7 @@ export const processRecord = (record: Record<string, string>): ProcessedRecord |
     
     if (notes.length > 0) {
       processedRecord.notes = notes;
-      console.log(`fn util pR Set notes on record: ${notes.join(', ')}`);
+      console.log(`uT fN pR Set notes on record: ${notes.join(', ')}`);
     }
   }
   
@@ -557,7 +557,7 @@ export const handleError = (error: unknown, response: Response, context = ''): v
   
   // Log the full error stack in non-production environments
   if (process.env.NODE_ENV !== 'production' && errorStack) {
-    console.error('Stack trace:', errorStack);
+    console.error(`uT fN hE Stack trace:`, errorStack);
   }
   
   response.status(500).json({
@@ -598,7 +598,7 @@ export const handleFileUpload = (request: Request): Promise<FileUploadResult> =>
 
     bb.on('file', (fieldname: string, file: NodeJS.ReadableStream, info: BusboyModule.FileInfo) => {
       const { filename, mimeType } = info;
-      console.log(`fn util hFU File [${fieldname}]: filename: ${filename}, mimeType: ${mimeType}`);
+      console.log(`uT fN hFU File [${fieldname}]: filename: ${filename}, mimeType: ${mimeType}`);
       
       fileInfo = {
         filename,
@@ -609,16 +609,16 @@ export const handleFileUpload = (request: Request): Promise<FileUploadResult> =>
       } as FileUploadResult;
 
       file.on('data', (data: Buffer) => {
-        console.log(`fn util hFU File [${fieldname}] got ${data.length} bytes`);
+        console.log(`uT fN hFU File [${fieldname}] got ${data.length} bytes`);
         fileBuffer = Buffer.concat([fileBuffer, data]);
       });
 
       file.on('end', () => {
-        console.log(`fn util hFU File [${fieldname}] Finished`);
+        console.log(`uT fN hFU File [${fieldname}] Finished`);
       });
 
       file.on('error', (err: Error) => {
-        console.error(`fn util hFU File [${fieldname}] Error:`, err);
+        console.error(`uT fN hFU File [${fieldname}] Error:`, err);
         reject(new Error(`Error processing file: ${err.message}`));
       });
     });
@@ -641,7 +641,7 @@ export const handleFileUpload = (request: Request): Promise<FileUploadResult> =>
     });
 
     bb.on('error', (err: Error) => {
-      console.error('fn util hFU Busboy error:', err);
+      console.error(`uT fN hFU Busboy error:`, err);
       reject(new Error(`Upload failed: ${err.message}`));
     });
 
