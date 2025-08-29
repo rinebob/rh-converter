@@ -2,7 +2,14 @@
 
 <!-- Input CSV Format -->
 <div class="format-section">
-  <h3>1. Input CSV Format (From Brokerage)</h3>
+  <div class="section-header">
+  <h3>1. Input CSV Format</h3>
+    @if (inputCsvUrl()) {
+      <div class="section-actions">
+        <a class="download-link" [attr.href]="inputCsvUrl()" target="_blank" rel="noopener noreferrer">Download example input CSV</a>
+      </div>
+    }
+  </div>
   <p class="format-description">
     The converter is designed for CSV files from popular brokerages that use the following columns in this exact
     order:
@@ -41,7 +48,22 @@
 
 <!-- Regular Transactions Format -->
 <div class="format-section">
-  <h3>2. Output CSV Format - Regular Transactions</h3>
+  <div class="section-header">
+    <h3>2. Output CSV Format - Regular Transactions</h3>
+    @if (regularOutputCsvUrl() || csvJsonZipOutputUrl()) {
+      <div class="section-actions">
+        @if (regularOutputCsvUrl()) {
+          <a class="download-link" [attr.href]="regularOutputCsvUrl()" target="_blank" rel="noopener noreferrer">Download example regular CSV</a>
+        }
+        @if (regularOutputCsvUrl() && csvJsonZipOutputUrl()) {
+          <span aria-hidden="true" class="sep">·</span>
+        }
+        @if (csvJsonZipOutputUrl()) {
+          <a class="download-link" [attr.href]="csvJsonZipOutputUrl()" target="_blank" rel="noopener noreferrer">Download example ZIP</a>
+        }
+      </div>
+    }
+  </div>
   <p class="format-description">Converted regular transactions will include these columns:</p>
 
   <div class="mat-elevation-z2 format-table">
@@ -66,7 +88,14 @@
 
 <!-- Dividend Transactions Format -->
 <div class="format-section">
-  <h3>3. Output CSV Format - Dividend Transactions</h3>
+  <div class="section-header">
+    <h3>3. Output CSV Format - Dividend Transactions</h3>
+    @if (dividendOutputCsvUrl()) {
+      <div class="section-actions">
+        <a class="download-link" [attr.href]="dividendOutputCsvUrl()" target="_blank" rel="noopener noreferrer">Download example dividend CSV</a>
+      </div>
+    }
+  </div>
   <p class="format-description">Converted dividend transactions will include these columns:</p>
 
   <div class="mat-elevation-z2 format-table">
@@ -90,7 +119,14 @@
 </div>
 
 <div class="format-section">
-  <h3>4. Output JSON Format</h3>
+  <div class="section-header">
+    <h3>4. Output JSON Format</h3>
+    @if (jsonOutputUrl()) {
+      <div class="section-actions">
+        <a class="download-link" [attr.href]="jsonOutputUrl()" target="_blank" rel="noopener noreferrer">Download example JSON</a>
+      </div>
+    }
+  </div>
   <p class="format-description">The JSON output includes both regular and dividend transactions in this structure:
   </p>
   <pre class="code-block">

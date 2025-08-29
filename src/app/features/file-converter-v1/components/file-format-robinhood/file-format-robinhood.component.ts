@@ -3,6 +3,7 @@ import { CommonModule } from '@angular/common';
 import { MatTableModule, MatTableDataSource } from '@angular/material/table';
 import { MatSort, MatSortModule } from '@angular/material/sort';
 import { MatIconModule } from '@angular/material/icon';
+import { environment } from '../../../../../environments/environment';
 
 interface ColumnDefinition {
   name: string;
@@ -26,6 +27,13 @@ export class FileFormatRobinhoodComponent implements AfterViewInit {
   inputColumns = signal<string[]>(['name', 'description']);
   regularColumns = signal<string[]>(['name', 'description']);
   dividendColumns = signal<string[]>(['name', 'description']);
+
+  // Example links (from environment)
+  readonly inputCsvUrl = signal<string | null>(environment.examples?.robinhood?.inputCsvUrl ?? null);
+  readonly regularOutputCsvUrl = signal<string | null>(environment.examples?.robinhood?.regularOutputCsvUrl ?? null);
+  readonly dividendOutputCsvUrl = signal<string | null>(environment.examples?.robinhood?.dividendOutputCsvUrl ?? null);
+  readonly jsonOutputUrl = signal<string | null>(environment.examples?.robinhood?.jsonOutputUrl ?? null);
+  readonly csvJsonZipOutputUrl = signal<string | null>(environment.examples?.robinhood?.csvJsonZipOutputUrl ?? null);
 
   // Data sources as signals
   inputData = signal<MatTableDataSource<ColumnDefinition>>(new MatTableDataSource([
