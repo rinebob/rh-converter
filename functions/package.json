@@ -8,7 +8,8 @@
     "shell": "npm run build && firebase functions:shell",
     "start": "npm run shell",
     "deploy": "firebase deploy --only functions",
-    "logs": "firebase functions:log"
+    "logs": "firebase functions:log",
+    "test:smoke": "npm run build && node lib/convert-image.test.js"
   },
   "engines": {
     "node": "22"
@@ -17,6 +18,7 @@
   "dependencies": {
     "@types/cors": "^2.8.18",
     "@types/jszip": "^3.4.0",
+    "bmp-js": "^0.1.0",
     "busboy": "^1.6.0",
     "cors": "^2.8.5",
     "csv-parse": "^5.5.6",
@@ -24,15 +26,18 @@
     "express": "^5.1.0",
     "firebase-admin": "^12.6.0",
     "firebase-functions": "^6.3.2",
-    "jszip": "^3.10.1"
+    "jszip": "^3.10.1",
+    "sharp": "^0.33.5"
   },
   "devDependencies": {
     "@types/busboy": "^1.5.0",
     "@types/csv-stringify": "^1.4.3",
     "@types/express": "^5.0.2",
+    "@types/node": "^25.6.0",
     "concurrently": "^9.1.2",
     "firebase-functions-test": "^3.1.0",
     "nodemon": "^3.1.10",
+    "ts-node": "^10.9.2",
     "ts-node-dev": "^2.0.0",
     "typescript": "^5.7.3"
   },
