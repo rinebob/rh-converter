@@ -27,6 +27,23 @@ export enum DownloadFormat {
 }
 
 /**
+ * Supported image formats for conversion
+ */
+export enum ImageFormat {
+  PNG = 'png',
+  JPG = 'jpg',
+  BMP = 'bmp'
+}
+
+/**
+ * Options for image conversion
+ */
+export interface ImageConversionOptions {
+  /** Target format for conversion (default: PNG) */
+  targetFormat: ImageFormat;
+}
+
+/**
  * Request status values for brokerage requests (Admin workflow)
  */
 export enum RequestStatus {

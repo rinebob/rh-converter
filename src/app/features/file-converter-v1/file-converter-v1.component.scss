@@ -25,10 +25,21 @@
 .app-header {
     background-color: #0078d4;
     color: white;
-    text-align: center;
     box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
     border: none;
     padding: 1.5rem;
+
+    .header-content-wrapper {
+        display: flex;
+        justify-content: space-between;
+        align-items: flex-end;
+        gap: 2rem;
+    }
+
+    .header-text {
+        text-align: center;
+        flex: 1;
+    }
 
     .app-title {
         margin: 0 0 0.3rem 0;
@@ -59,9 +70,15 @@
 
     .header-actions {
         display: flex;
-        justify-content: flex-end;
-        padding: 0 0 1.5rem;
-        margin: 0;
+        align-items: flex-end;
+        padding-bottom: 0.5rem;
+
+        .image-converter-button {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            white-space: nowrap;
+        }
 
         .signin-button {
             display: flex;

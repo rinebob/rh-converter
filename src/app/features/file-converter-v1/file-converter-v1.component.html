@@ -11,9 +11,18 @@
             <!-- Header -->
             <div class="app-header">
                 <div class="header-content-wrapper">
-                    <h1 class="app-title">Trade Data File Converter</h1>
-                    <p class="app-subtitle">Convert brokerage transaction CSV files to JSON and CSV</p>
-
+                    <div class="header-text">
+                        <h1 class="app-title">Trade Data File Converter</h1>
+                        <p class="app-subtitle">Convert brokerage transaction CSV files to JSON and CSV</p>
+                    </div>
+                    
+                    <div class="header-actions">
+                        <button mat-raised-button color="accent" (click)="toggleConverter()" class="image-converter-button">
+                            <mat-icon>{{ showImageConverter() ? 'description' : 'image' }}</mat-icon>
+                            {{ showImageConverter() ? 'Convert Transactions' : 'Convert Images' }}
+                        </button>
+                    </div>
+                    
                     <!-- SIGNIN BUTTON DO NOT DELETE -->
                     <!-- <div class="header-actions">
                             <button mat-raised-button color="primary" routerLink="/login" class="signin-button">
@@ -49,7 +58,11 @@
 
                     <mat-tab label="Converter">
                         <div class="tab-content">
-                            <rh-file-converter-legacy />
+                            @if (showImageConverter()) {
+                                <rh-image-file-converter />
+                            } @else {
+                                <rh-file-converter-legacy />
+                            }
                         </div>
                     </mat-tab>
                     

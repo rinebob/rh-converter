@@ -1,0 +1,105 @@
+<mat-card class="image-converter-card">
+  <mat-card-header>
+    <mat-card-title>Convert Image Files</mat-card-title>
+    <mat-card-subtitle>Convert BMP, PNG, and JPG files</mat-card-subtitle>
+  </mat-card-header>
+
+  <mat-card-content>
+    <tdc-file-picker
+      [accept]="'.bmp,.png,.jpg,.jpeg,image/bmp,image/png,image/jpeg'"
+      [multiple]="true"
+      [disabled]="isProcessing()"
+      (filesSelected)="onFilesPicked($event)"
+    />
+
+    @if (selectedFiles().length > 0) {
+      <div class="selected-files-section">
+        <div class="section-header">
+          <h3 class="section-title">Selected Files ({{ selectedFiles().length }})</h3>
+          <button 
+            mat-button 
+            color="warn" 
+            (click)="clearAllFiles()"
+            [disabled]="isProcessing()">
+            <mat-icon>clear_all</mat-icon>
+            Clear All
+          </button>
+        </div>
+
+        <div class="file-list">
+          @for (file of selectedFiles(); track file.name; let i = $index) {
+            <div class="file-item">
+              <div class="file-icon">
+                <mat-icon>image</mat-icon>
+              </div>
+              <div class="file-info">
+                <div class="file-name">{{ file.name }}</div>
+                <div class="file-meta">
+                  <span class="file-type">{{ getFileExtension(file.name) }}</span>
+                  <span class="file-size">{{ formatFileSize(file.size) }}</span>
+                </div>
+              </div>
+              <button 
+                mat-icon-button 
+                color="warn" 
+                (click)="removeFile(i)"
+                [disabled]="isProcessing()"
+                aria-label="Remove file">
+                <mat-icon>close</mat-icon>
+              </button>
+            </div>
+          }
+        </div>
+      </div>
+    }
+
+    <div class="conversion-options">
+      <mat-form-field appearance="outline">
+        <mat-label>Convert To</mat-label>
+        <mat-select 
+          [value]="targetFormat()" 
+          (valueChange)="targetFormat.set($event)"
+          [disabled]="isProcessing()">
+          @for (format of formats; track format.value) {
+            <mat-option [value]="format.value">{{ format.label }}</mat-option>
+          }
+        </mat-select>
+      </mat-form-field>
+      <p class="quality-note">All conversions use maximum quality (100)</p>
+    </div>
+
+    @if (conversionError()) {
+      <div class="error-message">
+        <mat-icon>error</mat-icon>
+        <span>{{ conversionError() }}</span>
+      </div>
+    }
+
+    @if (isProcessing()) {
+      <div class="loading-overlay">
+        <mat-spinner diameter="50"></mat-spinner>
+        <p>Converting your images. This may take a moment...</p>
+      </div>
+    }
+  </mat-card-content>
+
+  <mat-card-actions align="end">
+    <button 
+      mat-raised-button 
+      color="primary" 
+      (click)="onConvertClicked()"
+      [disabled]="isConvertDisabled"
+      class="convert-button">
+      @if (!isProcessing()) {
+        <mat-icon>download</mat-icon>
+      } @else {
+        <mat-spinner diameter="20" class="spinner"></mat-spinner>
+      }
+      @if (isProcessing()) {
+        Converting...
+      } @else {
+        Convert & Download
+      }
+    </button>
+  </mat-card-actions>
+</mat-card>

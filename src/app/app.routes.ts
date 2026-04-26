@@ -19,6 +19,12 @@ export const routes: Routes = [
       .then(m => m.FcLegacyWrapper),
     title: 'Legacy File Converter'
   },
+  {
+    path: 'convert-images',
+    loadComponent: () => import('./features/image-converter/image-file-converter.component')
+      .then(m => m.ImageFileConverterComponent),
+    title: 'Image File Converter'
+  },
   // Legal routes (Angular-routed)
   {
     path: 'legal',

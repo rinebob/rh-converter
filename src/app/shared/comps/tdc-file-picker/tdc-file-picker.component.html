@@ -9,6 +9,7 @@
     id="tdcFileInput"
     type="file"
     [accept]="accept()"
+    [multiple]="multiple()"
     class="visually-hidden"
     (change)="onFileInputChange($event)"
     [disabled]="disabled()" />

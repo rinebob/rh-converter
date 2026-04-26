@@ -8,6 +8,9 @@ import { SubscriptionPlan } from './interfaces';
 const PROD_UPLOAD_CSV_URL = 'https://uploadcsv-65tsqwgeba-uc.a.run.app';
 const DEV_UPLOAD_CSV_URL = 'http://127.0.0.1:5001/rh-converter/us-central1/uploadCsv';
 
+const PROD_CONVERT_IMAGE_URL = 'https://convertimage-65tsqwgeba-uc.a.run.app';
+const DEV_CONVERT_IMAGE_URL = 'http://127.0.0.1:5001/rh-converter/us-central1/convertImage';
+
 /**
  * Maximum length for comments.
  */
@@ -45,5 +48,6 @@ export const FALLBACK_FREE_PLAN: SubscriptionPlan = {
  * Automatically selects the correct URL based on the environment (dev/prod).
  */
 export const CLOUD_FUNCTION_URLS = {
-  UPLOAD_CSV: isDevMode() ? DEV_UPLOAD_CSV_URL : PROD_UPLOAD_CSV_URL
+  UPLOAD_CSV: isDevMode() ? DEV_UPLOAD_CSV_URL : PROD_UPLOAD_CSV_URL,
+  CONVERT_IMAGE: isDevMode() ? DEV_CONVERT_IMAGE_URL : PROD_CONVERT_IMAGE_URL
 } as const;

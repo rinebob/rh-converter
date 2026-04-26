@@ -21,9 +21,11 @@ export class TdcFilePickerComponent {
   // Inputs (signal-based)
   accept = input<string>('.csv,text/csv');
   disabled = input<boolean>(false);
+  multiple = input<boolean>(false);
 
   // Output (signal-based)
   fileSelected = output<File>();
+  filesSelected = output<File[]>();
 
   // Internal state
   dragActive = signal(false);
@@ -45,10 +47,21 @@ export class TdcFilePickerComponent {
 
   onFileInputChange(event: Event): void {
     const inputEl = event.target as HTMLInputElement;
-    const file = inputEl.files && inputEl.files[0] ? inputEl.files[0] : null;
-    if (!file) return;
-    this.selectedFileName.set(file.name);
-    this.fileSelected.emit(file);
+    const files = inputEl.files;
+    if (!files || files.length === 0) return;
+
+    if (this.multiple()) {
+      // Multiple files mode
+      const fileArray = Array.from(files);
+      this.selectedFileName.set(`${fileArray.length} file(s) selected`);
+      this.filesSelected.emit(fileArray);
+    } else {
+      // Single file mode
+      const file = files[0];
+      this.selectedFileName.set(file.name);
+      this.fileSelected.emit(file);
+    }
+    
     // Clear the native input so same file can be picked again later
     inputEl.value = '';
   }
@@ -79,9 +92,18 @@ export class TdcFilePickerComponent {
     this.dragActive.set(false);
     const files = event.dataTransfer?.files;
     if (!files || files.length === 0) return;
-    const file = files[0];
-    this.selectedFileName.set(file.name);
-    this.fileSelected.emit(file);
+
+    if (this.multiple()) {
+      // Multiple files mode
+      const fileArray = Array.from(files);
+      this.selectedFileName.set(`${fileArray.length} file(s) selected`);
+      this.filesSelected.emit(fileArray);
+    } else {
+      // Single file mode
+      const file = files[0];
+      this.selectedFileName.set(file.name);
+      this.fileSelected.emit(file);
+    }
   }
 
   // Window-level guards to avoid browser downloading files when dropped outside target

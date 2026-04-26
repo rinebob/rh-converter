@@ -1,5 +1,6 @@
-import { Component, ElementRef, ViewChildren, QueryList, AfterViewInit } from '@angular/core';
+import { Component, ElementRef, ViewChildren, QueryList, AfterViewInit, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import { RouterModule } from '@angular/router';
 import { MatButtonModule } from '@angular/material/button';
 import { MatCardModule } from '@angular/material/card';
 import { MatIconModule } from '@angular/material/icon';
@@ -9,6 +10,7 @@ import { FileConverterLegacy } from '../../core/comps/file-converter-legacy/file
 import { CommentsSectionComponent } from './components/comments-section/comments-section.component';
 import { BrokersListComponent } from '../../core/comps/brokers-list/brokers-list.component';
 import { InstructionsContentComponent } from './components/instructions-content/instructions-content.component';
+import { ImageFileConverterComponent } from '../image-converter/image-file-converter.component';
 
 /**
  * FileConverterV1Component
@@ -19,7 +21,8 @@ import { InstructionsContentComponent } from './components/instructions-content/
   selector: 'app-file-converter-v1',
   standalone: true,
   imports: [
-    CommonModule, 
+    CommonModule,
+    RouterModule,
     MatButtonModule,
     MatCardModule,
     MatIconModule,
@@ -29,12 +32,14 @@ import { InstructionsContentComponent } from './components/instructions-content/
     CommentsSectionComponent,
     BrokersListComponent,
     InstructionsContentComponent,
+    ImageFileConverterComponent,
   ],
   templateUrl: './file-converter-v1.component.html',
   styleUrls: ['./file-converter-v1.component.scss']
 })
 export class FileConverterV1Component implements AfterViewInit {
   activeTabIndex = 0;
+  showImageConverter = signal(false);
 
   @ViewChildren('adUnit') private adUnits!: QueryList<ElementRef<HTMLElement>>;
 
@@ -50,6 +55,12 @@ export class FileConverterV1Component implements AfterViewInit {
 
   onTabChange(index: number) {
     this.activeTabIndex = index;
+  }
+
+  toggleConverter() {
+    this.showImageConverter.update(v => !v);
+    // Switch to Converter tab (index 1) when toggling
+    this.activeTabIndex = 1;
   }
 
   /**
