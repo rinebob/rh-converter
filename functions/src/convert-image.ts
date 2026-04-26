@@ -120,7 +120,12 @@ const parseMultipartFiles = (request: Request): Promise<UploadedFile[]> => {
       reject(error);
     });
 
-    request.pipe(busboy);
+    // Use rawBody if available (Firebase Functions v2), otherwise pipe the request
+    if (request.rawBody) {
+      busboy.end(request.rawBody);
+    } else {
+      request.pipe(busboy);
+    }
   });
 };
 
@@ -133,7 +138,26 @@ const convertSingleImage = async (
   quality?: number
 ): Promise<Buffer> => {
   try {
-    let sharpInstance = sharp(fileData);
+    let sharpInstance: sharp.Sharp;
+
+    // Check if input is BMP - Sharp doesn't support BMP input, so decode with bmp-js first
+    const isBMP = fileData[0] === 0x42 && fileData[1] === 0x4D; // BM header
+    
+    if (isBMP) {
+      console.log('fn cI Detected BMP input, decoding with bmp-js');
+      const bmpData = bmp.decode(fileData);
+      
+      // Convert RGBA to RGB if needed (bmp-js returns RGBA)
+      sharpInstance = sharp(bmpData.data, {
+        raw: {
+          width: bmpData.width,
+          height: bmpData.height,
+          channels: 4
+        }
+      });
+    } else {
+      sharpInstance = sharp(fileData);
+    }
 
     // Apply format-specific conversion
     switch (targetFormat) {
@@ -211,7 +235,8 @@ export const convertImage = onRequest(
     cors: corsEnabled,
     memory: '2GiB',
     timeoutSeconds: 540,
-    maxInstances: 10
+    maxInstances: 10,
+    invoker: 'public'
   },
   async (request: Request, response: Response) => {
     setCorsHeaders(response);
