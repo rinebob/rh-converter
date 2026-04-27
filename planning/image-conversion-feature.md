@@ -1,21 +1,77 @@
 # Image Conversion Feature - Implementation Plan
 
 **Created:** 2026-04-25  
-**Status:** In Progress - Phase 1 Complete ✅
+**Updated:** 2026-04-26 (Cloud Storage Implementation)  
+**Status:** Phase 1-5 Complete ✅ | Cloud Storage V2 Deployed ✅
+
+---
+
+## ⚠️ Production Issues & Cloud Storage Solution (April 26, 2026)
+
+### Issues Discovered in Production
+After initial deployment, two critical issues were identified:
+
+1. **413 Content Too Large Error**
+   - Cloud Run has 32MB HTTP request/response limit (cannot be increased)
+   - Multiple 12MB BMP files = 36MB request → 413 error
+   - Converted 8MB PNGs also hit response size limit
+
+2. **Slow Performance (30+ seconds)**
+   - Cold start latency on first request
+   - Poor user experience
+
+### Cloud Storage Solution (V2 Architecture)
+
+**New Flow:**
+```
+User → Upload to Cloud Storage → HTTP POST (storage paths) → 
+  Cloud Function reads from Storage → Converts → 
+  Writes to Storage → Returns download URLs → 
+  User downloads from Storage
+```
+
+**Benefits:**
+- ✅ No HTTP size limits (files go through Storage)
+- ✅ Handles unlimited file sizes and counts
+- ✅ Better performance (minInstances: 1 keeps function warm)
+- ✅ More scalable architecture
+
+**Implementation:**
+- New Cloud Function: `convertImageV2`
+- Storage paths: `image-converter/uploads/{userId}/{sessionId}/`
+- Signed download URLs (1 hour expiration)
+- Client-side ZIP creation (JSZip) for multiple files
+- Auto-cleanup after 24 hours (Storage lifecycle rules)
+
+**Backend Changes:**
+- Created `storage-helpers.ts` (upload/download/signed URLs)
+- Created `convert-image-v2.ts` (Cloud Storage version)
+- Updated `storage.rules` for image converter paths
+- Optimized: 512MiB memory, 120s timeout, minInstances: 1
+
+**Frontend Changes:**
+- Created `storage.service.ts` (file uploads with progress)
+- Created `image-conversion-v2.service.ts` (orchestrates flow)
+- Updated component with progress tracking UI
+- Upload → Convert → Download stages visible to user
+
+**Status:** Deployed to production (April 26, 2026)
 
 ---
 
 ## Use Case
 
-Add capability to convert different image file types (BMP, PNG, JPG, WEBP, GIF, TIFF, AVIF) to the rh-converter app. This feature will:
+Add capability to convert different image file types to the rh-converter app. This feature will:
 
 - Support batch conversion of multiple image files
+- **Supported formats:** PNG, JPEG, BMP (WEBP, GIF, TIFF, AVIF removed for simplicity)
 - Allow users to select target format (PNG, JPG, BMP)
 - **Primary use case:** BMP → PNG conversion (default)
 - Handle large batches (100s-1000s of BMPs >10MB each)
 - Live in a new standalone component (not modifying existing file-converter-legacy)
 - Provide separate UI pathway for image conversion
 - **No quality slider** - always use maximum quality (100)
+- **Cloud Storage architecture** - no HTTP size limits
 
 ---
 
@@ -27,23 +83,32 @@ Add capability to convert different image file types (BMP, PNG, JPG, WEBP, GIF, 
 - **New Pathways:** All new routes, services, and UI for image conversion
 
 ### Backend Approach
-- **Cloud Function:** `convertImage` (Firebase Cloud Functions)
+- **Cloud Functions:** 
+  - `convertImage` (Legacy - multipart upload, deprecated)
+  - `convertImageV2` (Cloud Storage - production version)
 - **Image Processing:** Sharp library (high-performance, supports most formats)
-- **BMP Support:** bmp-js library (Sharp doesn't support BMP output natively)
-- **Configuration:**
-  - Memory: 2GiB (handles large BMP files)
-  - Timeout: 540s (9 minutes max)
+- **BMP Support:** bmp-js library (Sharp doesn't support BMP input/output natively)
+- **Configuration (V2):**
+  - Memory: 512MiB (optimized for faster cold starts)
+  - Timeout: 120s (sufficient for Cloud Storage flow)
+  - Min Instances: 1 (keeps function warm, eliminates cold starts)
   - Max Instances: 10 (auto-scaling)
 
 ### Large File Strategy
 For handling 100s-1000s of BMPs >10MB:
-- **Processing:** Parallel conversion (Promise.all) for maximum speed
+- **Architecture:** Cloud Storage upload/download (no HTTP limits)
+- **Processing:** Sequential conversion per file (Cloud Function V2)
 - **Performance:** ~16ms per 10MB BMP→PNG conversion
-- **Capacity:** 1000 files in ~16 seconds (well within 540s timeout)
+- **Capacity:** Unlimited file sizes and counts
 - **File Limits:** 
-  - Per file: 50MB (increased from 10MB)
-  - Total batch: 1GB (increased from 50MB)
-  - Cloud Function: 2GB memory, 540s timeout
+  - Per file: No limit (Cloud Storage handles any size)
+  - Total batch: No limit (files uploaded to Storage first)
+  - Cloud Function: 512MiB memory, 120s timeout per request
+- **User Experience:**
+  - Upload progress tracking (parallel uploads)
+  - Conversion progress feedback
+  - Download via signed URLs (1 hour expiration)
+  - Client-side ZIP creation for multiple files
 
 ---
 
