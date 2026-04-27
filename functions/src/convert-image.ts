@@ -233,9 +233,10 @@ const generateOutputFilename = (originalFilename: string, targetFormat: ImageFor
 export const convertImage = onRequest(
   { 
     cors: corsEnabled,
-    memory: '2GiB',
-    timeoutSeconds: 540,
+    memory: '512MiB',
+    timeoutSeconds: 120,
     maxInstances: 10,
+    minInstances: 1,
     invoker: 'public'
   },
   async (request: Request, response: Response) => {

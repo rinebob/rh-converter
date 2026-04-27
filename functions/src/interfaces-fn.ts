@@ -283,3 +283,41 @@ export interface Response {
   statusCode?: number;
   [key: string]: any; // Allow any other properties
 }
+
+/**
+ * Image conversion interfaces for Cloud Storage flow
+ */
+
+export enum ImageFormat {
+  PNG = 'png',
+  JPEG = 'jpeg',
+  BMP = 'bmp'
+}
+
+export interface StorageFileReference {
+  storagePath: string;
+  originalName: string;
+}
+
+export interface ImageConversionRequest {
+  sessionId: string;
+  userId: string;
+  files: StorageFileReference[];
+  targetFormat: ImageFormat;
+  quality: number;
+}
+
+export interface ConvertedFileInfo {
+  originalName: string;
+  convertedName: string;
+  downloadUrl: string;
+  expiresAt: string;
+  size: number;
+}
+
+export interface ImageConversionResponse {
+  success: boolean;
+  files: ConvertedFileInfo[];
+  sessionId: string;
+  error?: string;
+}
