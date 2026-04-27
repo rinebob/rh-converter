@@ -1,5 +1,5 @@
 import { Injectable, inject } from '@angular/core';
-import { Storage, ref, uploadBytesResumable, UploadTaskSnapshot } from '@angular/fire/storage';
+import { Storage, ref, uploadBytesResumable, UploadTaskSnapshot, getBlob } from '@angular/fire/storage';
 import { Observable, from, map } from 'rxjs';
 
 /**
@@ -127,6 +127,14 @@ export class StorageService {
         });
       });
     });
+  }
+
+  /**
+   * Download a file from Storage as a Blob
+   */
+  async downloadFile(storagePath: string): Promise<Blob> {
+    const storageRef = ref(this.storage, storagePath);
+    return await getBlob(storageRef);
   }
 }
 

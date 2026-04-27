@@ -120,7 +120,7 @@ export class ImageConversionV2Service {
 
         // Step 3: Download converted files
         this.progress.set({ stage: 'downloading', message: 'Downloading converted files...' });
-        return this.downloadConvertedFiles(response.files, targetFormat);
+        return this.downloadConvertedFiles(response.files, response.sessionId, targetFormat);
       }),
       finalize(() => {
         this.isProcessing.set(false);
@@ -170,18 +170,19 @@ export class ImageConversionV2Service {
   }
 
   /**
-   * Download converted files from signed URLs
-   * TODO: Add ZIP support when JSZip is available
+   * Download converted files from Storage using Firebase SDK
    */
-  private downloadConvertedFiles(files: ConvertedFileInfo[], targetFormat: ImageFormat): Observable<Blob> {
+  private downloadConvertedFiles(files: ConvertedFileInfo[], sessionId: string, targetFormat: ImageFormat): Observable<Blob> {
     if (files.length === 1) {
-      // Single file - download directly
-      return this.http.get(files[0].downloadUrl, { responseType: 'blob' });
+      // Single file - download directly from Storage
+      const storagePath = `image-converter/converted/${this.storageService.getUserId()}/${sessionId}/${files[0].convertedName}`;
+      return from(this.storageService.downloadFile(storagePath));
     } else {
       // Multiple files - download first file only for now
       // TODO: Create ZIP when JSZip is available
       console.warn('Multiple file download: Downloading first file only. Install JSZip for ZIP support.');
-      return this.http.get(files[0].downloadUrl, { responseType: 'blob' });
+      const storagePath = `image-converter/converted/${this.storageService.getUserId()}/${sessionId}/${files[0].convertedName}`;
+      return from(this.storageService.downloadFile(storagePath));
     }
   }
 
