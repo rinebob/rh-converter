@@ -1,6 +1,6 @@
 import { Injectable, inject, signal } from '@angular/core';
 import { HttpClient, HttpErrorResponse } from '@angular/common/http';
-import { Observable, throwError, forkJoin, from, of } from 'rxjs';
+import { Observable, throwError, forkJoin, from, of, timer } from 'rxjs';
 import { catchError, finalize, switchMap, map, tap } from 'rxjs/operators';
 import { CLOUD_FUNCTION_URLS } from '../common/constants';
 import { ImageFormat } from '../common/interfaces';
@@ -103,12 +103,18 @@ export class ImageConversionV2Service {
           fileNames.push(file.name);
         });
 
-        console.log(`[ImageConversionV2Service] Calling conversion function with sessionId: ${sessionId}`);
+        console.log(`[ImageConversionV2Service] Upload complete, waiting for Storage propagation...`);
+        console.log(`[ImageConversionV2Service] Session ID: ${sessionId}`);
         console.log(`[ImageConversionV2Service] Storage paths:`, storagePaths);
 
-        // Step 2: Call Cloud Function with storage paths
-        this.progress.set({ stage: 'converting', message: 'Converting images...' });
-        return this.callConversionFunction(userId, sessionId, storagePaths, fileNames, targetFormat);
+        // Wait 2 seconds for Storage to propagate the uploaded files
+        return timer(2000).pipe(
+          tap(() => {
+            console.log(`[ImageConversionV2Service] Calling conversion function after delay`);
+            this.progress.set({ stage: 'converting', message: 'Converting images...' });
+          }),
+          switchMap(() => this.callConversionFunction(userId, sessionId, storagePaths, fileNames, targetFormat))
+        );
       }),
       switchMap((response: ImageConversionResponse) => {
         if (!response.success) {
