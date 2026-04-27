@@ -44,6 +44,8 @@ export class StorageService {
    */
   uploadFile(file: File, userId: string, sessionId: string): Observable<UploadProgress> {
     const storagePath = `image-converter/uploads/${userId}/${sessionId}/${file.name}`;
+    console.log(`[StorageService] Uploading to path: ${storagePath}`);
+    console.log(`[StorageService] Session ID: ${sessionId}`);
     const storageRef = ref(this.storage, storagePath);
     const uploadTask = uploadBytesResumable(storageRef, file);
 

@@ -78,6 +78,8 @@ export class ImageConversionV2Service {
 
     const userId = this.storageService.getUserId();
     const sessionId = this.storageService.generateSessionId();
+    
+    console.log(`[ImageConversionV2Service] Starting conversion with userId: ${userId}, sessionId: ${sessionId}`);
 
     // Step 1: Upload files to Storage
     this.progress.set({ stage: 'uploading', uploadProgress: 0, message: 'Uploading files...' });
@@ -100,6 +102,9 @@ export class ImageConversionV2Service {
           storagePaths.push(storagePath);
           fileNames.push(file.name);
         });
+
+        console.log(`[ImageConversionV2Service] Calling conversion function with sessionId: ${sessionId}`);
+        console.log(`[ImageConversionV2Service] Storage paths:`, storagePaths);
 
         // Step 2: Call Cloud Function with storage paths
         this.progress.set({ stage: 'converting', message: 'Converting images...' });

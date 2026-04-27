@@ -6,11 +6,6 @@ import sharp from 'sharp';
 import * as bmp from 'bmp-js';
 
 /**
- * CORS configuration
- */
-const corsEnabled = true;
-
-/**
  * Set CORS headers on response
  */
 const setCorsHeaders = (response: Response) => {
@@ -118,14 +113,13 @@ const generateOutputFilename = (originalFilename: string, targetFormat: ImageFor
  */
 export const convertImageV2 = onRequest(
   { 
-    cors: corsEnabled,
     memory: '512MiB',
     timeoutSeconds: 120,
     maxInstances: 10,
-    minInstances: 1,
     invoker: 'public'
   },
   async (request: Request, response: Response) => {
+    // Set CORS headers first
     setCorsHeaders(response);
 
     // Handle CORS preflight
@@ -137,6 +131,9 @@ export const convertImageV2 = onRequest(
     try {
       // Parse request body
       const body: ImageConversionRequest = request.body;
+      
+      logger.info('fn cI2 Request body:', JSON.stringify(body));
+      logger.info(`fn cI2 Body fields - sessionId: ${body.sessionId}, userId: ${body.userId}, files: ${body.files?.length}, targetFormat: ${body.targetFormat}`);
       
       if (!body.sessionId || !body.userId || !body.files || !body.targetFormat) {
         logger.error('fn cI2 Missing required fields in request');

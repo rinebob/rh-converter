@@ -5,7 +5,7 @@ import { logger } from 'firebase-functions/v2';
  * Storage helper functions for image converter
  */
 
-const BUCKET_NAME = process.env.FIREBASE_STORAGE_BUCKET || 'rh-converter.appspot.com';
+const BUCKET_NAME = 'rh-converter.firebasestorage.app';
 
 /**
  * Download a file from Cloud Storage
@@ -13,9 +13,15 @@ const BUCKET_NAME = process.env.FIREBASE_STORAGE_BUCKET || 'rh-converter.appspot
 export const downloadFromStorage = async (storagePath: string): Promise<Buffer> => {
   try {
     logger.info(`fn sH dFS Downloading file from Storage: ${storagePath}`);
-    const bucket = getStorage().bucket(BUCKET_NAME);
+    
+    const storage = getStorage();
+    const bucket = storage.bucket(BUCKET_NAME);
+    
+    logger.info(`fn sH dFS Using bucket: ${bucket.name}`);
+    
     const file = bucket.file(storagePath);
     
+    // Try direct download without exists check
     const [fileBuffer] = await file.download();
     logger.info(`fn sH dFS Downloaded ${fileBuffer.length} bytes from ${storagePath}`);
     
