@@ -1,6 +1,6 @@
 import { Injectable, inject, signal } from '@angular/core';
 import { HttpClient, HttpErrorResponse } from '@angular/common/http';
-import { Observable, throwError, forkJoin, from, of, timer } from 'rxjs';
+import { Observable, throwError, forkJoin, from, of, timer, last } from 'rxjs';
 import { catchError, finalize, switchMap, map, tap } from 'rxjs/operators';
 import { CLOUD_FUNCTION_URLS } from '../common/constants';
 import { ImageFormat } from '../common/interfaces';
@@ -84,9 +84,6 @@ export class ImageConversionV2Service {
     // Step 1: Upload files to Storage
     this.progress.set({ stage: 'uploading', uploadProgress: 0, message: 'Uploading files...' });
     
-    const storagePaths: string[] = [];
-    const fileNames: string[] = [];
-
     this.storageService.uploadFiles(files, userId, sessionId).pipe(
       tap((uploadProgress: BatchUploadProgress) => {
         this.progress.set({
@@ -95,13 +92,13 @@ export class ImageConversionV2Service {
           message: `Uploading ${uploadProgress.completedFiles}/${uploadProgress.totalFiles} files...`
         });
       }),
+      last(),
       switchMap(() => {
-        // Collect storage paths
-        files.forEach(file => {
-          const storagePath = `image-converter/uploads/${userId}/${sessionId}/${file.name}`;
-          storagePaths.push(storagePath);
-          fileNames.push(file.name);
-        });
+        // Build storage paths from files
+        const storagePaths = files.map(file => 
+          `image-converter/uploads/${userId}/${sessionId}/${file.name}`
+        );
+        const fileNames = files.map(file => file.name);
 
         console.log(`[ImageConversionV2Service] Upload complete, waiting for Storage propagation...`);
         console.log(`[ImageConversionV2Service] Session ID: ${sessionId}`);
