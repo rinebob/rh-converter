@@ -1,0 +1,233 @@
+import { Injectable, inject, signal } from '@angular/core';
+import { HttpClient, HttpErrorResponse } from '@angular/common/http';
+import { Observable, throwError, forkJoin, from, of } from 'rxjs';
+import { catchError, finalize, switchMap, map, tap } from 'rxjs/operators';
+import { CLOUD_FUNCTION_URLS } from '../common/constants';
+import { ImageFormat } from '../common/interfaces';
+import { StorageService, BatchUploadProgress } from './storage.service';
+// TODO: Add JSZip when network is available
+// import JSZip from 'jszip';
+
+/**
+ * Storage file reference for Cloud Function
+ */
+interface StorageFileReference {
+  storagePath: string;
+  originalName: string;
+}
+
+/**
+ * Request body for Cloud Function
+ */
+interface ImageConversionRequest {
+  sessionId: string;
+  userId: string;
+  files: StorageFileReference[];
+  targetFormat: string;
+  quality: number;
+}
+
+/**
+ * Converted file info from Cloud Function
+ */
+interface ConvertedFileInfo {
+  originalName: string;
+  convertedName: string;
+  downloadUrl: string;
+  expiresAt: string;
+  size: number;
+}
+
+/**
+ * Response from Cloud Function
+ */
+interface ImageConversionResponse {
+  success: boolean;
+  files: ConvertedFileInfo[];
+  sessionId: string;
+  error?: string;
+}
+
+/**
+ * Overall conversion progress
+ */
+export interface ConversionProgress {
+  stage: 'uploading' | 'converting' | 'downloading' | 'complete';
+  uploadProgress?: number;
+  message: string;
+}
+
+/**
+ * Service for converting image files using Cloud Storage flow
+ */
+@Injectable({ providedIn: 'root' })
+export class ImageConversionV2Service {
+  private readonly http = inject(HttpClient);
+  private readonly storageService = inject(StorageService);
+
+  readonly isProcessing = signal<boolean>(false);
+  readonly conversionError = signal<string | null>(null);
+  readonly progress = signal<ConversionProgress>({ stage: 'uploading', message: 'Preparing...' });
+
+  /**
+   * Convert images using Cloud Storage flow
+   */
+  convertAndDownload(files: File[], targetFormat: ImageFormat = ImageFormat.PNG): void {
+    this.isProcessing.set(true);
+    this.conversionError.set(null);
+
+    const userId = this.storageService.getUserId();
+    const sessionId = this.storageService.generateSessionId();
+
+    // Step 1: Upload files to Storage
+    this.progress.set({ stage: 'uploading', uploadProgress: 0, message: 'Uploading files...' });
+    
+    const storagePaths: string[] = [];
+    const fileNames: string[] = [];
+
+    this.storageService.uploadFiles(files, userId, sessionId).pipe(
+      tap((uploadProgress: BatchUploadProgress) => {
+        this.progress.set({
+          stage: 'uploading',
+          uploadProgress: uploadProgress.overallProgress,
+          message: `Uploading ${uploadProgress.completedFiles}/${uploadProgress.totalFiles} files...`
+        });
+      }),
+      switchMap(() => {
+        // Collect storage paths
+        files.forEach(file => {
+          const storagePath = `image-converter/uploads/${userId}/${sessionId}/${file.name}`;
+          storagePaths.push(storagePath);
+          fileNames.push(file.name);
+        });
+
+        // Step 2: Call Cloud Function with storage paths
+        this.progress.set({ stage: 'converting', message: 'Converting images...' });
+        return this.callConversionFunction(userId, sessionId, storagePaths, fileNames, targetFormat);
+      }),
+      switchMap((response: ImageConversionResponse) => {
+        if (!response.success) {
+          throw new Error(response.error || 'Conversion failed');
+        }
+
+        // Step 3: Download converted files
+        this.progress.set({ stage: 'downloading', message: 'Downloading converted files...' });
+        return this.downloadConvertedFiles(response.files, targetFormat);
+      }),
+      finalize(() => {
+        this.isProcessing.set(false);
+      })
+    ).subscribe({
+      next: (blob) => {
+        this.progress.set({ stage: 'complete', message: 'Download complete!' });
+        const filename = this.generateDownloadFilename(files, targetFormat);
+        this.downloadFile(blob, filename);
+      },
+      error: (error) => {
+        console.error('[ImageConversionV2Service] Conversion failed:', error);
+        this.conversionError.set(error.message || 'Conversion failed');
+        this.progress.set({ stage: 'uploading', message: 'Error occurred' });
+      }
+    });
+  }
+
+  /**
+   * Call Cloud Function with storage paths
+   */
+  private callConversionFunction(
+    userId: string,
+    sessionId: string,
+    storagePaths: string[],
+    fileNames: string[],
+    targetFormat: ImageFormat
+  ): Observable<ImageConversionResponse> {
+    const files: StorageFileReference[] = storagePaths.map((path, index) => ({
+      storagePath: path,
+      originalName: fileNames[index]
+    }));
+
+    const requestBody: ImageConversionRequest = {
+      sessionId,
+      userId,
+      files,
+      targetFormat,
+      quality: 100
+    };
+
+    const url = CLOUD_FUNCTION_URLS.CONVERT_IMAGE_V2;
+
+    return this.http.post<ImageConversionResponse>(url, requestBody).pipe(
+      catchError((error: HttpErrorResponse) => this.handleError(error))
+    );
+  }
+
+  /**
+   * Download converted files from signed URLs
+   * TODO: Add ZIP support when JSZip is available
+   */
+  private downloadConvertedFiles(files: ConvertedFileInfo[], targetFormat: ImageFormat): Observable<Blob> {
+    if (files.length === 1) {
+      // Single file - download directly
+      return this.http.get(files[0].downloadUrl, { responseType: 'blob' });
+    } else {
+      // Multiple files - download first file only for now
+      // TODO: Create ZIP when JSZip is available
+      console.warn('Multiple file download: Downloading first file only. Install JSZip for ZIP support.');
+      return this.http.get(files[0].downloadUrl, { responseType: 'blob' });
+    }
+  }
+
+  /**
+   * Generate appropriate filename for download
+   */
+  private generateDownloadFilename(files: File[], targetFormat: ImageFormat): string {
+    const originalName = files[0].name;
+    const nameWithoutExt = originalName.substring(0, originalName.lastIndexOf('.')) || originalName;
+    
+    if (files.length === 1) {
+      return `${nameWithoutExt}.${targetFormat}`;
+    } else {
+      // TODO: Return ZIP filename when JSZip is available
+      return `${nameWithoutExt}.${targetFormat}`;
+    }
+  }
+
+  /**
+   * Trigger browser download of a Blob
+   */
+  private downloadFile(blob: Blob, filename: string): void {
+    const url = window.URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = filename;
+    link.style.display = 'none';
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    window.URL.revokeObjectURL(url);
+  }
+
+  /**
+   * Handle HTTP errors
+   */
+  private handleError(error: HttpErrorResponse): Observable<never> {
+    let errorMessage = 'Image conversion failed';
+
+    if (error.error instanceof ErrorEvent) {
+      errorMessage = `Network error: ${error.error.message}`;
+    } else if (error.status === 0) {
+      errorMessage = 'Unable to connect to server. Please check your connection.';
+    } else if (error.status === 400) {
+      errorMessage = 'Invalid request. Please check file formats.';
+    } else if (error.status === 500) {
+      errorMessage = 'Server error during conversion. Please try again.';
+    } else if (error.status === 504) {
+      errorMessage = 'Conversion timed out. Please try with fewer files.';
+    } else {
+      errorMessage = `Conversion failed: ${error.statusText || 'Unknown error'}`;
+    }
+
+    this.conversionError.set(errorMessage);
+    return throwError(() => new Error(errorMessage));
+  }
+}

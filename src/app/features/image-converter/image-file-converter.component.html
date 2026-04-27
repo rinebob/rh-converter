@@ -78,7 +78,13 @@
     @if (isProcessing()) {
       <div class="loading-overlay">
         <mat-spinner diameter="50"></mat-spinner>
-        <p>Converting your images. This may take a moment...</p>
+        <p>{{ progress().message }}</p>
+        @if (progress().uploadProgress !== undefined) {
+          <mat-progress-bar 
+            mode="determinate" 
+            [value]="progress().uploadProgress">
+          </mat-progress-bar>
+        }
       </div>
     }
   </mat-card-content>

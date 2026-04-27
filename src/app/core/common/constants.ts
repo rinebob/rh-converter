@@ -11,6 +11,9 @@ const DEV_UPLOAD_CSV_URL = 'http://127.0.0.1:5001/rh-converter/us-central1/uploa
 const PROD_CONVERT_IMAGE_URL = 'https://convertimage-65tsqwgeba-uc.a.run.app';
 const DEV_CONVERT_IMAGE_URL = 'http://127.0.0.1:5001/rh-converter/us-central1/convertImage';
 
+const PROD_CONVERT_IMAGE_V2_URL = 'https://convertimagev2-65tsqwgeba-uc.a.run.app';
+const DEV_CONVERT_IMAGE_V2_URL = 'http://127.0.0.1:5001/rh-converter/us-central1/convertImageV2';
+
 /**
  * Maximum length for comments.
  */
@@ -49,5 +52,6 @@ export const FALLBACK_FREE_PLAN: SubscriptionPlan = {
  */
 export const CLOUD_FUNCTION_URLS = {
   UPLOAD_CSV: isDevMode() ? DEV_UPLOAD_CSV_URL : PROD_UPLOAD_CSV_URL,
-  CONVERT_IMAGE: isDevMode() ? DEV_CONVERT_IMAGE_URL : PROD_CONVERT_IMAGE_URL
+  CONVERT_IMAGE: isDevMode() ? DEV_CONVERT_IMAGE_URL : PROD_CONVERT_IMAGE_URL,
+  CONVERT_IMAGE_V2: isDevMode() ? DEV_CONVERT_IMAGE_V2_URL : PROD_CONVERT_IMAGE_V2_URL
 } as const;

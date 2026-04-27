@@ -4,10 +4,11 @@ import { MatButtonModule } from '@angular/material/button';
 import { MatCardModule } from '@angular/material/card';
 import { MatIconModule } from '@angular/material/icon';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
+import { MatProgressBarModule } from '@angular/material/progress-bar';
 import { MatSelectModule } from '@angular/material/select';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { TdcFilePickerComponent } from 'src/app/shared/comps/tdc-file-picker/tdc-file-picker.component';
-import { ImageConversionService } from 'src/app/core/services/image-conversion.service';
+import { ImageConversionV2Service } from 'src/app/core/services/image-conversion-v2.service';
 import { ImageFormat } from 'src/app/core/common/interfaces';
 
 /**
@@ -24,6 +25,7 @@ import { ImageFormat } from 'src/app/core/common/interfaces';
     MatCardModule,
     MatIconModule,
     MatProgressSpinnerModule,
+    MatProgressBarModule,
     MatSelectModule,
     MatFormFieldModule,
     TdcFilePickerComponent
@@ -33,7 +35,7 @@ import { ImageFormat } from 'src/app/core/common/interfaces';
   changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class ImageFileConverterComponent {
-  private readonly conversionService = inject(ImageConversionService);
+  private readonly conversionService = inject(ImageConversionV2Service);
 
   readonly selectedFiles = signal<File[]>([]);
   readonly targetFormat = signal<ImageFormat>(ImageFormat.PNG);
@@ -52,6 +54,10 @@ export class ImageFileConverterComponent {
 
   get conversionError() {
     return this.conversionService.conversionError;
+  }
+
+  get progress() {
+    return this.conversionService.progress;
   }
 
   get isConvertDisabled(): boolean {
