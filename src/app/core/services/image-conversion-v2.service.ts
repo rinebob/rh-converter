@@ -5,8 +5,7 @@ import { catchError, finalize, switchMap, map, tap } from 'rxjs/operators';
 import { CLOUD_FUNCTION_URLS } from '../common/constants';
 import { ImageFormat } from '../common/interfaces';
 import { StorageService, BatchUploadProgress } from './storage.service';
-// TODO: Add JSZip when network is available
-// import JSZip from 'jszip';
+import { zipSync } from 'fflate';
 
 /**
  * Storage file reference for Cloud Function
@@ -173,17 +172,60 @@ export class ImageConversionV2Service {
    * Download converted files from Storage using Firebase SDK
    */
   private downloadConvertedFiles(files: ConvertedFileInfo[], sessionId: string, targetFormat: ImageFormat): Observable<Blob> {
+    const userId = this.storageService.getUserId();
+    
     if (files.length === 1) {
       // Single file - download directly from Storage
-      const storagePath = `image-converter/converted/${this.storageService.getUserId()}/${sessionId}/${files[0].convertedName}`;
+      const storagePath = `image-converter/converted/${userId}/${sessionId}/${files[0].convertedName}`;
       return from(this.storageService.downloadFile(storagePath));
     } else {
-      // Multiple files - download first file only for now
-      // TODO: Create ZIP when JSZip is available
-      console.warn('Multiple file download: Downloading first file only. Install JSZip for ZIP support.');
-      const storagePath = `image-converter/converted/${this.storageService.getUserId()}/${sessionId}/${files[0].convertedName}`;
-      return from(this.storageService.downloadFile(storagePath));
+      // Multiple files - download all and create ZIP
+      const downloadObservables = files.map(file => {
+        const storagePath = `image-converter/converted/${userId}/${sessionId}/${file.convertedName}`;
+        return from(this.storageService.downloadFile(storagePath)).pipe(
+          map(blob => ({ filename: file.convertedName, blob }))
+        );
+      });
+
+      return forkJoin(downloadObservables).pipe(
+        map(fileData => {
+          // Create ZIP using fflate
+          const zipData: Record<string, Uint8Array> = {};
+          
+          fileData.forEach(({ filename, blob }) => {
+            // Convert Blob to Uint8Array synchronously
+            const reader = new FileReader();
+            reader.readAsArrayBuffer(blob);
+            const arrayBuffer = new Uint8Array(blob.size);
+            // Note: This is a simplified sync approach for demo
+            // In production, you might want to use async blob.arrayBuffer()
+          });
+
+          // For now, use async approach with Promise
+          return this.createZipFromBlobs(fileData);
+        }),
+        switchMap(zipPromise => from(zipPromise))
+      );
     }
+  }
+
+  /**
+   * Create ZIP file from multiple blobs
+   */
+  private async createZipFromBlobs(fileData: Array<{ filename: string; blob: Blob }>): Promise<Blob> {
+    const zipData: Record<string, Uint8Array> = {};
+
+    // Convert all blobs to Uint8Array
+    for (const { filename, blob } of fileData) {
+      const arrayBuffer = await blob.arrayBuffer();
+      zipData[filename] = new Uint8Array(arrayBuffer);
+    }
+
+    // Create ZIP
+    const zipped = zipSync(zipData, { level: 6 });
+
+    // Convert to Blob (cast to any to avoid TypeScript ArrayBufferLike issue)
+    return new Blob([zipped as any], { type: 'application/zip' });
   }
 
   /**
@@ -196,8 +238,7 @@ export class ImageConversionV2Service {
     if (files.length === 1) {
       return `${nameWithoutExt}.${targetFormat}`;
     } else {
-      // TODO: Return ZIP filename when JSZip is available
-      return `${nameWithoutExt}.${targetFormat}`;
+      return `converted-images-${Date.now()}.zip`;
     }
   }
 
