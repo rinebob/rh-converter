@@ -1,4 +1,4 @@
-import { Component, inject, signal, ChangeDetectionStrategy } from '@angular/core';
+import { Component, inject, signal, ChangeDetectionStrategy, viewChild } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { MatButtonModule } from '@angular/material/button';
 import { MatCardModule } from '@angular/material/card';
@@ -36,6 +36,8 @@ import { ImageFormat } from 'src/app/core/common/interfaces';
 })
 export class ImageFileConverterComponent {
   private readonly conversionService = inject(ImageConversionV2Service);
+
+  readonly filePicker = viewChild(TdcFilePickerComponent);
 
   readonly selectedFiles = signal<File[]>([]);
   readonly targetFormat = signal<ImageFormat>(ImageFormat.PNG);
@@ -77,6 +79,7 @@ export class ImageFileConverterComponent {
 
   clearAllFiles(): void {
     this.selectedFiles.set([]);
+    this.filePicker()?.clear();
   }
 
   onConvertClicked(): void {
